@@ -7,7 +7,7 @@ library(here) # here
 library(purrr) # map, reduce
 library(tibble) #add_column
 
-mh_raw <- read.csv("data-raw/MH_DOWNLOAD_FEB_21_2025.csv",
+mh_raw <- read.csv("data-raw/MH_DOWNLOAD_JUL_30_2026.csv",
                    stringsAsFactors = FALSE,
                    colClasses=c("REGULATION_ID" = "numeric",
                                 "START_DAY" = "numeric",
@@ -21,7 +21,7 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_FEB_21_2025.csv",
                    fileEncoding = 'Windows-1252') |>
   # Reformat data frame for date formats and NAs
   # Format dates to be mm/dd/yyyy to match added data (this may not be an issue in the future when pull directly from the database)
-  dplyr::mutate(end_timeseries = as.Date("2024-12-31", "%Y-%m-%d"),
+  dplyr::mutate(end_timeseries = as.Date("2025-12-31", "%Y-%m-%d"),
                 EFFECTIVE_DATE = as.Date(EFFECTIVE_DATE, "%m/%d/%Y"),
                 INEFFECTIVE_DATE = as.Date(INEFFECTIVE_DATE, "%m/%d/%Y"),
                 #Remove ="..." characters in species ITIS codes
@@ -267,8 +267,8 @@ multi_subsector_key <- mh_sector_id |>
 
 # CREATE: variables to track SUBSECTOR expansion process for GOM Reef Fish records
 expansions <- multi_subsector_key |>
-  dplyr::filter(FMP == "REEF FISH RESOURCES OF THE GULF OF MEXICO",
-         SECTOR_USE == "RECREATIONAL") |>
+  # dplyr::filter(FMP == "REEF FISH RESOURCES OF THE GULF OF MEXICO",
+  #        SECTOR_USE == "RECREATIONAL") |>
   dplyr::select(SECTOR_ID, SECTOR_USE, SUBSECTOR_KEY, subsector_all_used) |>
   dplyr::distinct() |>
   #CREATE: the variables of expand_from, expand_temp, and expand_to to track the SUBSECTOR expansion process
@@ -300,7 +300,7 @@ cluster_files <- dir(here::here('data-raw/clusters'), full.names = TRUE)
 if(length(cluster_files) > 0) {
   existing_clusters <- cluster_files |>
     purrr::map(read.csv) |>
-    purrr::reduce(rbind)
+    purrr::reduce(dplyr::bind_rows)
 } else {
   existing_clusters <- mh_subsect_expanded |>
     dplyr::select(dplyr::one_of(cluster.match)) |>
@@ -322,7 +322,8 @@ new_clusters <- mh_subsect_expanded |>
 # Export new CLUSTERs
 if(length(new_clusters$CLUSTER) > 0) {
   write.csv(new_clusters,
-            here::here("data-raw/clusters", paste0("mh_unique_clusters_", format(Sys.Date(), "%d%b%Y"),".csv")))
+            here::here("data-raw/clusters", paste0("mh_unique_clusters_", format(Sys.Date(), "%d%b%Y"),".csv")),
+            row.names = FALSE)
 }
 
 # Join old CLUSTER groupings with new CLUSTER groupings ####
@@ -406,7 +407,8 @@ mh_dates_detailed <- mh_cluster_ids |>
 # A REVERSION record is a duplicate of the non-ADJUSTMENT record prior to an ADJUSTMENT record that goes back into effect when ADJUSTMENT ends
 # ADJUSTMENT regulations that are FIRST_REG do not need a reversion since they either end or are overwritten and there is no regulations prior to them
 # REVERSION records are only added after ADJUSTMENT records that are not FIRST_REG
-mh_reversions <- mh_dates_detailed |>
+mh_reversions <- mh_dates_detailed |> dplyr::ungroup() |>
+  dplyr::select(LINK, REGULATION_ID, START_DATE, END_DATE) |> dplyr::distinct() |>
   # Filter data frame to only include ADJUSTMENT records (LINK > 0)
   dplyr::filter(abs(LINK) > 0) |>
   dplyr::group_by(LINK, REGULATION_ID) |>
@@ -421,7 +423,7 @@ mh_reversions <- mh_dates_detailed |>
                 # Overwrite the REGULATION_ID with the LINK number of the ADJUSTMENT record to indicate that the REVERSION record is a duplication of the record prior to the ADJUSTMENT record
                 REGULATION_ID = LINK) |>
   # Join mh_reversions data frame to the mh_dates_detailed data frame by REGULATION_ID
-  dplyr::left_join(mh_dates_detailed, by = "REGULATION_ID") |>
+  dplyr::left_join(mh_dates_detailed, by = c("REGULATION_ID"), relationship = "many-to-many") |>
   dplyr::bind_rows(mh_dates_detailed) |>
   # Adjust START_DATE_USE to accommodate REVERSION records in whole data set
   dplyr::mutate(START_DATE_USE = dplyr::case_when(is.na(START_DATE_USE) ~ START_DATE,
@@ -436,78 +438,84 @@ mh_reversions <- mh_dates_detailed |>
 # Create date related logic and overwrite end date for DETAILED MANAGEMENT_TYPEs excluding CATCH LIMITS
 # Add CHANGE_DATE logic to sorted records
 # Create END_DATE variable dependent on INEFFECTIVE_DATE of current record, START_DATE of next record, and CHANGE_DATE of current record
+# Define a helper function to safely handle max() on empty vectors or all-NA groups
+safe_max <- function(x) {
+  if (length(x) == 0 || all(is.na(x))) return(NA)
+  max(x, na.rm = TRUE)
+}
+
 mh_dates1 <- mh_reversions |>
   dplyr::arrange(CLUSTER, dplyr::desc(SORT_DATE_USE), dplyr::desc(vol), dplyr::desc(page)) |>
   dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE) |>
   # Create the variable of diff and diff_days to signify the length of time between a regulation and its subsequent replacement (amount of days the regulation is effective for)
   # The most recent regulation in each grouping gets NA for diff because no regulations happens after it (it is the most recent and at the top of the list)
   dplyr::mutate(diff = as.numeric(dplyr::lag(START_DATE_USE) - START_DATE_USE, units = 'days'),
-         # If a record doesn't have a START_TIME diff should be adjusted by -1 (one day prior)
-         # This indicates that the regulation started at start of the START_DAY listed and
-         # ended the day before the next regulation started (day before START_DAY of subsequent regulation)
-         diff_days = dplyr::case_when(is.na(dplyr::lag(START_TIME_USE)) ~ diff - 1,
-                               # When START_TIME is "12:01:00 AM", diff should days should be lagged by one day
-                               # This will infer that the regulation began at the start of the day, not one minute into the day
-                               # This will help properly calculate diff_days
-                               dplyr::lag(START_TIME_USE) == "12:01:00 AM" ~ diff - 1,
-                               # When START_TIME is "12:02:00 AM", diff should days should be lagged by one day
-                               # This will infer that the regulation began at the start of the day, not two minutes into the day
-                               # This will help properly calculate diff_days
-                               dplyr::lag(START_TIME_USE) == "12:02:00 AM" ~ diff - 1,
-                               TRUE ~ diff),
-         # Create the variable of CHANGE_DATE to indicate when a regulation changed to the subsequent regulation (day before START_DATE_USE of subsequent regulation)
-         # When diff_days is not calculated due to there being no subsequent regulation,
-         # the end of the time series should be used as the CHANGE_DATE
-         # This variable just indicates the time of a subsequent regulation, it does not necessarily mean the regulation ended then
-         CHANGE_DATE = dplyr::case_when(is.na(diff_days) ~ end_timeseries,
-                                 TRUE ~ START_DATE_USE + diff_days),
-         # When diff_days is calculated as -1, the CHANGE_DATE should be lagged by one day
-         # For most cases, a diff_day of -1 indicates that the regulation never went into effect (except in the cases of MULTI_REG regulations)
-         # Therefore, the CHANGE_DATE is lagged by one day to indicate that the regulation is not implemented
-         # and allow the information from the prior regulation to link with the subsequent regulation that is implemented.
-         # Lagging the change date is different than subtracting one day from the duration (since the diff_days variable is equal to -1)
-         CHANGE_DATE = dplyr::case_when(diff_days == -1 ~ dplyr::lag(CHANGE_DATE),
-                                 TRUE ~ CHANGE_DATE),
-         CHANGE_DATE = dplyr::case_when(CHANGE_DATE > dplyr::lag(CHANGE_DATE) ~ dplyr::lag(CHANGE_DATE),
-                                 TRUE ~ CHANGE_DATE),
-         # When an END_DATE is provided it should be used to signify the END_DATE
-         # Otherwise, the CHANGE_DATE should be used for the END_DATE information
-         END_DATE = dplyr::case_when(EFFECTIVE_DATE == INEFFECTIVE_DATE ~ START_DATE,
-                              !is.na(END_DATE) ~ END_DATE,
-                              # is.na(END_YEAR) & !is.na(INEFFECTIVE_DATE) ~ INEFFECTIVE_DATE,
-                              TRUE ~ CHANGE_DATE),
-         # If the CHANGE_DATE is after the END_DATE and there is an END_DATE provided, then the END_DATE should be used
-         # If the CHANGE_DATE is after the INEFFECTIVE_DATE and an INEFFECTIVE_DATE is provided, then the END_DATE should be used
-         # Otherwise, the CHANGE_DATE should be used as the END_DATE
-         END_DATE = dplyr::case_when(CHANGE_DATE > END_DATE & !is.na(END_DATE) ~ END_DATE,
-                              CHANGE_DATE > INEFFECTIVE_DATE & !is.na(INEFFECTIVE_DATE) ~ END_DATE,
-                              TRUE ~ CHANGE_DATE),
-         # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were created but never went into effect
-         # When the MULTI_REG_VALUE variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
-         # When the MULTI_REG_SEASONAL variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
-         # When the diff_days variable is less than or equal to -1, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-         # When the START_DATE_USE is after the END_DATE, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-         # When MULTI_REG_FORECAST is flagged (1) and the START_DATE_USE is equal to the START_DATE_USE of a later FR_CITATION, then NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-         NEVER_IMPLEMENTED = dplyr::case_when(MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & START_DATE_USE == dplyr::lag(START_DATE_USE) & END_DATE != dplyr::lag(END_DATE) & VALUE != dplyr::lag(VALUE) ~ 0,
-                                       MULTI_REG_SEASONAL == 1 ~ 0,
-                                       START_DATE_USE > END_DATE ~ 1,
-                                       MULTI_REG_VALUE == 1 ~ 0,
-                                       diff_days <= -1 ~ 1,
-                                       # Added 2/2/24 - if multi reg forcast & only include start year, do not want to flag
-                                       MULTI_REG_FORECAST == 1 & is.na(START_DAY_USE) & is.na(START_MONTH) & !is.na(START_YEAR) ~ 0,
-                                       MULTI_REG_FORECAST == 1 & START_DATE_USE == max(START_DATE_USE[FR_CITATION > FR_CITATION]) ~ 1,
-                                       # Added 2/5/24 to hard code the two cases of WITHDRAWN/DELAYED regulations
-                                       REGULATION_ID %in% c(1355, 1589, 1356, 1463, 1341) ~ 1,
-                                       TRUE ~ 0),
-         # ADJUST THE START DATE AND START TIME FOR CLUSTER 306 WHEN THE REOPENING ENDS IN THE MIDDLE OF THE DAY
-         START_TIME_USE = dplyr::case_when(dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == 'SIMPLE' & VALUE == 'OPEN') & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ format(as.POSIXct(dplyr::lead(END_TIME_USE), format = '%I:%M:%S %p') + lubridate::as.difftime(1, units = "mins"), "%I:%M:%S %p"),
-                                    TRUE ~ START_TIME_USE),
-         START_DATE_USE = dplyr::case_when(dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == 'SIMPLE' & VALUE == 'OPEN') & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ dplyr::lead(END_DATE),
-                                    TRUE ~ START_DATE_USE)) |>
+                # If a record doesn't have a START_TIME diff should be adjusted by -1 (one day prior)
+                # This indicates that the regulation started at start of the START_DAY listed and
+                # ended the day before the next regulation started (day before START_DAY of subsequent regulation)
+                diff_days = dplyr::case_when(is.na(dplyr::lag(START_TIME_USE)) ~ diff - 1,
+                                             # When START_TIME is "12:01:00 AM", diff should days should be lagged by one day
+                                             # This will infer that the regulation began at the start of the day, not one minute into the day
+                                             # This will help properly calculate diff_days
+                                             dplyr::lag(START_TIME_USE) == "12:01:00 AM" ~ diff - 1,
+                                             # When START_TIME is "12:02:00 AM", diff should days should be lagged by one day
+                                             # This will infer that the regulation began at the start of the day, not two minutes into the day
+                                             # This will help properly calculate diff_days
+                                             dplyr::lag(START_TIME_USE) == "12:02:00 AM" ~ diff - 1,
+                                             TRUE ~ diff),
+                # Create the variable of CHANGE_DATE to indicate when a regulation changed to the subsequent regulation (day before START_DATE_USE of subsequent regulation)
+                # When diff_days is not calculated due to there being no subsequent regulation,
+                # the end of the time series should be used as the CHANGE_DATE
+                # This variable just indicates the time of a subsequent regulation, it does not necessarily mean the regulation ended then
+                CHANGE_DATE = dplyr::case_when(is.na(diff_days) ~ end_timeseries,
+                                               TRUE ~ START_DATE_USE + diff_days),
+                # When diff_days is calculated as -1, the CHANGE_DATE should be lagged by one day
+                # For most cases, a diff_day of -1 indicates that the regulation never went into effect (except in the cases of MULTI_REG regulations)
+                # Therefore, the CHANGE_DATE is lagged by one day to indicate that the regulation is not implemented
+                # and allow the information from the prior regulation to link with the subsequent regulation that is implemented.
+                # Lagging the change date is different than subtracting one day from the duration (since the diff_days variable is equal to -1)
+                CHANGE_DATE = dplyr::case_when(diff_days == -1 ~ dplyr::lag(CHANGE_DATE),
+                                               TRUE ~ CHANGE_DATE),
+                CHANGE_DATE = dplyr::case_when(CHANGE_DATE > dplyr::lag(CHANGE_DATE) ~ dplyr::lag(CHANGE_DATE),
+                                               TRUE ~ CHANGE_DATE),
+                # When an END_DATE is provided it should be used to signify the END_DATE
+                # Otherwise, the CHANGE_DATE should be used for the END_DATE information
+                END_DATE = dplyr::case_when(EFFECTIVE_DATE == INEFFECTIVE_DATE ~ START_DATE,
+                                            !is.na(END_DATE) ~ END_DATE,
+                                            # is.na(END_YEAR) & !is.na(INEFFECTIVE_DATE) ~ INEFFECTIVE_DATE,
+                                            TRUE ~ CHANGE_DATE),
+                # If the CHANGE_DATE is after the END_DATE and there is an END_DATE provided, then the END_DATE should be used
+                # If the CHANGE_DATE is after the INEFFECTIVE_DATE and an INEFFECTIVE_DATE is provided, then the END_DATE should be used
+                # Otherwise, the CHANGE_DATE should be used as the END_DATE
+                END_DATE = dplyr::case_when(CHANGE_DATE > END_DATE & !is.na(END_DATE) ~ END_DATE,
+                                            CHANGE_DATE > INEFFECTIVE_DATE & !is.na(INEFFECTIVE_DATE) ~ END_DATE,
+                                            TRUE ~ CHANGE_DATE),
+                # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were created but never went into effect
+                # When the MULTI_REG_VALUE variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
+                # When the MULTI_REG_SEASONAL variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
+                # When the diff_days variable is less than or equal to -1, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+                # When the START_DATE_USE is after the END_DATE, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+                # When MULTI_REG_FORECAST is flagged (1) and the START_DATE_USE is equal to the START_DATE_USE of a later FR_CITATION, then NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+                NEVER_IMPLEMENTED = dplyr::case_when(MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & START_DATE_USE == dplyr::lag(START_DATE_USE) & END_DATE != dplyr::lag(END_DATE) & VALUE != dplyr::lag(VALUE) ~ 0,
+                                                     MULTI_REG_SEASONAL == 1 ~ 0,
+                                                     START_DATE_USE > END_DATE ~ 1,
+                                                     MULTI_REG_VALUE == 1 ~ 0,
+                                                     diff_days <= -1 ~ 1,
+                                                     # Added 2/2/24 - if multi reg forcast & only include start year, do not want to flag
+                                                     MULTI_REG_FORECAST == 1 & is.na(START_DAY_USE) & is.na(START_MONTH) & !is.na(START_YEAR) ~ 0,
+                                                     MULTI_REG_FORECAST == 1 & START_DATE_USE == purrr::map_dbl(FR_CITATION, \(current_fr) safe_max(START_DATE_USE[FR_CITATION > current_fr])) ~ 1,
+                                                     # Added 2/5/24 to hard code the two cases of WITHDRAWN/DELAYED regulations
+                                                     REGULATION_ID %in% c(1355, 1589, 1356, 1463, 1341) ~ 1,
+                                                     TRUE ~ 0),
+                # ADJUST THE START DATE AND START TIME FOR CLUSTER 306 WHEN THE REOPENING ENDS IN THE MIDDLE OF THE DAY
+                START_TIME_USE = dplyr::case_when(dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == 'SIMPLE' & VALUE == 'OPEN') & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ format(as.POSIXct(dplyr::lead(END_TIME_USE), format = '%I:%M:%S %p') + lubridate::as.difftime(1, units = "mins"), "%I:%M:%S %p"),
+                                                  TRUE ~ START_TIME_USE),
+                START_DATE_USE = dplyr::case_when(dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == 'SIMPLE' & VALUE == 'OPEN') & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ dplyr::lead(END_DATE),
+                                                  TRUE ~ START_DATE_USE)) |>
   dplyr::group_by(CLUSTER, FR_CITATION) |>
-  dplyr::mutate(END_DATE_adjust = dplyr::case_when(MULTI_REG_VALUE == 1 & MULTI_REG_FORECAST != 1 & MULTI_REG_SEASONAL != 1 ~ max(END_DATE)),
-         END_DATE = dplyr::case_when(MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
-                              TRUE ~ END_DATE)) |>
+  dplyr::mutate(END_DATE_adjust = dplyr::case_when(MULTI_REG_VALUE == 1 & MULTI_REG_FORECAST != 1 & MULTI_REG_SEASONAL != 1 ~ safe_max(END_DATE)),
+                END_DATE = dplyr::case_when(MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
+                                            TRUE ~ END_DATE)) |>
   # Added 2/2/24 - do not include records that were added because of an adjustment, but not actually implemented
   dplyr::filter(!(NEVER_IMPLEMENTED == 1 & REVERSION == TRUE))
 
@@ -840,7 +848,8 @@ mh_sp_expanded_y1 <- mh_dates |>
   dplyr::filter(DETAILED == 'YES') |>
   dplyr::filter(!(SPP_TYPE == "COMMON_NAME" & SPP_NAME != "ALL")) |>
   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-  dplyr::full_join(sp_info_use_s, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME")) |>
+  dplyr::full_join(sp_info_use_s, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
+                   relationship = "many-to-many") |>
   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
   dplyr::filter(!is.na(REGULATION_ID)) |>
   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPP_NAME,
@@ -858,7 +867,8 @@ mh_sp_expanded_y2 <- mh_dates |>
   # Filter to remove non-DETAILED records
   dplyr::filter(DETAILED == 'YES') |>
   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-  dplyr::full_join(sp_info_use_m, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME")) |>
+  dplyr::full_join(sp_info_use_m, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
+                   relationship = "many-to-many") |>
   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the dataset or are regulated by FMPs that are not in the dataset (i.e. HMS)
   dplyr::filter(!is.na(REGULATION_ID), !is.na(ADDED_SP_DATE)) |>
   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPP_NAME,
@@ -904,51 +914,6 @@ mh_sp_expanded <- mh_sp_expanded_y1 |>
 
 # REMOVE expanded species that are no longer a part of that group
 # ADJUST START or END DATES using SPECIES ADDED and REMOVED dates
-
-# Adjust dates based on the dates that species were added and/or removed ####
-# First perform check to make sure we understand all potential situations related to species added/removed dates
-# Assign numbers to each situation
-# ADDED_SP_DATE indicates the date that the species was added to the SPECIES_AGGREGATE or SPECIES_GROUP
-# REMOVED_SP_DATE indicates the date that the species was removed from the SPECIES_AGGREGATE or SPECIES_GROUP
-chk_spp <- mh_sp_expanded |>
-  dplyr::ungroup() |>
-  dplyr::mutate(chk_spp = dplyr::case_when(REMOVED_SP_DATE < START_DATE_USE ~ 1,
-                             REMOVED_SP_DATE < END_DATE & REMOVED_SP_DATE > START_DATE_USE ~ 2,
-                             ADDED_SP_DATE > START_DATE_USE & END_DATE > ADDED_SP_DATE  ~ 3,
-                             ADDED_SP_DATE > START_DATE_USE & END_DATE < ADDED_SP_DATE ~ 4,
-                             REMOVED_SP_DATE == START_DATE_USE ~ 5,
-                             ADDED_SP_DATE > START_DATE_USE ~ 6,
-                             is.na(REMOVED_SP_DATE) ~ 6,
-                             ADDED_SP_DATE > START_DATE_USE & REMOVED_SP_DATE < END_DATE ~ 6,
-                             ADDED_SP_DATE < START_DATE_USE & END_DATE < REMOVED_SP_DATE ~ 6,
-                             ADDED_SP_DATE == START_DATE_USE & END_DATE < REMOVED_SP_DATE ~ 6,
-                             ADDED_SP_DATE < START_DATE_USE & REMOVED_SP_DATE == END_DATE ~ 6,
-                             ADDED_SP_DATE == START_DATE_USE & REMOVED_SP_DATE == END_DATE ~ 6,
-                             TRUE ~ 0),
-         # Assign associated explanation to each number
-         chk_reason = dplyr::case_when(chk_spp == 1 ~ 'spp removed before reg started',
-                                chk_spp == 2 ~ 'spp removed before end date',
-                                chk_spp == 3 ~ 'spp added after start date but within range',
-                                chk_spp == 4 ~ 'spp added after start date and outside range',
-                                chk_spp == 5 ~ 'spp removed same day regulation started',
-                                chk_spp == 6 ~ 'spp within range',
-                                chk_spp == 0 ~ 'not considered')) |>
-  dplyr::select(CLUSTER, REGULATION_ID, MANAGEMENT_TYPE, MANAGEMENT_TYPE_USE, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPECIES_ITIS_USE, COMMON_NAME_USE,
-         EFFECTIVE_DATE, INEFFECTIVE_DATE, ADDED_SP_DATE, REMOVED_SP_DATE, START_DATE_USE, END_DATE,
-         chk_spp, chk_reason)
-
-# CHECK: do all records fall under one of these categories
-# Any records that do not meet these cases should be investigated
-chk_spp_sum <- chk_spp |>
-  dplyr::group_by(chk_spp, chk_reason) |>
-  dplyr::summarize(N = dplyr::n()) |>
-  dplyr::mutate(resolution = dplyr::case_when(chk_spp == 1 ~ 'remove',
-                                chk_spp == 2 ~ 'adjust end date',
-                                chk_spp == 3 ~ 'adjust start date',
-                                chk_spp == 4 ~ 'remove',
-                                chk_spp == 5 ~ 'remove',
-                                chk_spp == 6 ~ 'no adjustment',
-                                chk_spp == 0 ~ 'manual check'))
 
 # Adjust START_DATE_USE and END_DATE information based on the ADDED_SP_DATE and REMOVED_SP_DATE
 # Results in the mh_expanded data frame
@@ -1214,66 +1179,13 @@ zone_remove_flags <- zone_reversion_remove |>
 
 # Join Zone forks with zone_interest
 zone_interest_filter <- zone_interest |>
-  dplyr::filter(!(CLUSTER %in% c("342","343","1","2",
-                          "360",
-                          "296",
-                          "297",
-                          "80",
-                          "118",
-                          "119",
-                          "30",
-                          "1043",
-                          "39",
-                          "33",
-                          "1042",
-                          "1607",
-                          "1611",
-                          "2003",
-                          "1173",
-                          "1174",
-                          "1617",
-                          "1618",
-                          "10",
-                          "11",
-                          "50",
-                          "49",
-                          "54",
-                          "79",
-                          "53",
-                          "282",
-                          "283",
-                          "1132",
-                          "511",
-                          "1484",
-                          "1485",
-                          "1905",
-                          "241",
-                          "952",
-                          "1202",
-                          "1048",
-                          "99",
-                          "100",
-                          "101",
-                          "102",
-                          "382",
-                          "383",
-                          "393",
-                          "843",
-                          "844",
-                          "711",
-                          "718",
-                          "723",
-                          "725",
-                          "727",
-                          "729",
-                          "2026",
-                          "226",
-                          "108",
-                          "275",
-                          "276",
-                          "281",
-                          "1101",
-                          "166")))
+  dplyr::filter(!(CLUSTER %in% c("342","343","1","2","360","296","297","80","118",
+                          "119","30","1043", "39","33", "1042","1607","1611","2003",
+                          "1173","1174", "1617","1618","10","11","50","49","54","79",
+                          "53", "282","283","1132","511","1484","1485","1905","241",
+                          "952","1202","1048","99","100","101","102","382","383","393",
+                          "843","844","711","718","723","725","727","729","2026","226",
+                          "108","275","276", "281","1101","166")))
 
 # Hard coding trip limits
 mh_zone_triplimits <- zone_interest |>
