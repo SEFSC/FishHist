@@ -228,7 +228,8 @@ new_sector_clusters <- mh_setup |>
 # Export new sector groupings into mh_sector_clusters_ CSV file
 if(length(new_sector_clusters$SECTOR_ID) > 0) {
   write.csv(new_sector_clusters,
-            here::here("data-raw/sector_clusters", paste0("mh_sector_clusters_", format(Sys.Date(), "%d%b%Y"),".csv")))
+            here::here("data-raw/sector_clusters", paste0("mh_sector_clusters_", format(Sys.Date(), "%d%b%Y"),".csv")),
+            row.names = FALSE)
 }
 
 # Merge old and new sector groupings into unique_sector_clusters data frame
@@ -812,7 +813,8 @@ mh_dates <- mh_dates1 |>
                                     TRUE ~ START_DATE))
 
 # Read in sp_info_use
-sp_info_use <- readRDS("data-raw/MH_clean_spp_tables.RDS")
+sp_info_use <- readRDS("data-raw/MH_clean_spp_tables.RDS") |>
+  dplyr::mutate(SPP_NAME = str_replace_all(SPP_NAME, fixed("?"), "—"))
 
 # CHECK: species tables -- 5 duplicates still exist because they are species that were a part of an SPECIES_AGGREGATE, were removed from the SPECIES_AGGREGATE, and were later reinstated
 count_sp_info_use <- sp_info_use |>
@@ -841,11 +843,8 @@ sp_info_use_a <- sp_info_use |>
 
 # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for single records ####
 # Results in the mh_sp_expanded_y1 data frame
-# Records are only expanded for MANAGEMENT_TYPE that are considered DETAILED
 # Expansion is performed for cases where there is a single record for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
 mh_sp_expanded_y1 <- mh_dates |>
-  # Filter to remove non-DETAILED records
-  dplyr::filter(DETAILED == 'YES') |>
   dplyr::filter(!(SPP_TYPE == "COMMON_NAME" & SPP_NAME != "ALL")) |>
   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
   dplyr::full_join(sp_info_use_s, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
@@ -861,11 +860,8 @@ mh_sp_expanded_y1 <- mh_dates |>
 
 # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for multiple records ####
 # Results in the mh_sp_expanded_y2 data frame
-# Records are only expanded for DETAILED MANAGEMENT_TYPEs
 # Expansion is performed for cases where there are multiple records for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
 mh_sp_expanded_y2 <- mh_dates |>
-  # Filter to remove non-DETAILED records
-  dplyr::filter(DETAILED == 'YES') |>
   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
   dplyr::full_join(sp_info_use_m, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
                    relationship = "many-to-many") |>
@@ -882,10 +878,8 @@ mh_sp_expanded_y2 <- mh_dates |>
 # Results in the mh_sp_expanded_y3 data frame
 # Records are only adjusted for DETAILED MANAGEMENT_TYPEs
 mh_sp_expanded_y3 <- mh_dates |>
-  # Filter to remove non-DETAILED records
   # Filter to cases where SPP_TYPE == "COMMON_NAME"
   # Filter to remove cases where SPP_NAME == "ALL"
-  dplyr::filter(DETAILED == "YES") |>
   dplyr::filter(SPP_TYPE == "COMMON_NAME") |>
   dplyr::filter(SPP_NAME != "ALL") |>
   # Create SPP_ITIS_USE for join
@@ -897,20 +891,9 @@ mh_sp_expanded_y3 <- mh_dates |>
   # Remove species expansion variable
   dplyr::select(-c(SCIENTIFIC_NAME))
 
-# Join data frames that include species expansion information with data frame of non-DETAILED records
-# Results in mh_sp_expanded_n data frame
-# First create data frame of only non-DETAILED records
-mh_sp_expanded_n <- mh_dates |>
-  # Filter original data frame to remove DETAILED records
-  dplyr::filter(DETAILED == 'NO') |>
-  # mutate field names to match those used in expansion
-  dplyr::mutate(COMMON_NAME_USE = SPP_NAME,
-         SPECIES_ITIS_USE = as.character(SPECIES_ITIS)) |>
-  dplyr::select(-SPECIES_ITIS)
-
 # Join expanded data frames with data frame of non-DETAILED records
 mh_sp_expanded <- mh_sp_expanded_y1 |>
-  dplyr::bind_rows(mh_sp_expanded_y2, mh_sp_expanded_y3, mh_sp_expanded_n)
+  dplyr::bind_rows(mh_sp_expanded_y2, mh_sp_expanded_y3)
 
 # REMOVE expanded species that are no longer a part of that group
 # ADJUST START or END DATES using SPECIES ADDED and REMOVED dates
@@ -940,17 +923,21 @@ mh_expanded <- mh_sp_expanded |>
          # CREATE: the variable of IMP_END_DATE (0 or 1 field) to flag cases where the END_DATE of the regulation should be adjusted
          # The END_DATE should be adjusted when:
          # The REMOVED_SP_DATE is prior to the END_DATE of the regulation and the REMOVED_SP_DATE is after the START_DATE_USE of the regulation
-         IMP_END_DATE = dplyr::case_when(REMOVED_SP_DATE < END_DATE & REMOVED_SP_DATE > START_DATE_USE ~ 1,
+         IMP_END_DATE = dplyr::case_when(is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ 1,
+                                         REMOVED_SP_DATE < END_DATE & REMOVED_SP_DATE > START_DATE_USE ~ 1,
                                   TRUE ~ 0),
          # CREATE: the variable of END_DATE2 to adjust the END_DATE accordingly
          # When IMP_END_DATE is flagged (= 1) the REMOVED_SP_DATE should be used as the END_DATE
          # Otherwise the END_DATE should be used for END_DATE2
          END_DATE2 = dplyr::case_when(IMP_END_DATE == 1 ~ REMOVED_SP_DATE,
+                                      is.na(END_DATE) ~ end_timeseries,
                                TRUE ~ END_DATE)) |>
   # Clean cases where Common name is old or where using scientific name
   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(COMMON_NAME_USE == 'Caulolatilus' ~ 'TILEFISHES',
                                      COMMON_NAME_USE == 'JEWFISH' ~ 'GROUPER, GOLIATH',
                                      COMMON_NAME_USE == 'Centropristis melana' ~ 'BASS, BLACK SEA',
+                                     COMMON_NAME_USE == 'TILEFISH' & SPECIES_ITIS_USE == '168546' ~ 'TILEFISH, GOLDEN',
+                                     COMMON_NAME_USE == 'CONEY' ~ 'GROUPER, CONEY',
                                      TRUE ~ COMMON_NAME_USE)) |>
   dplyr::filter(RM_SPP != 1)
 
@@ -1312,6 +1299,6 @@ mh_data_log_final <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, t
   dplyr::arrange(CLUSTER) |>
   dplyr::select(-zone_specific_use, -zone_general_use, -ZONE_CLASS, -interest_cluster)
 
-fishhist <- mh_data_log_final
+fishhist <- mh_data_log_final |> dplyr::ungroup()
 
 usethis::use_data(fishhist, overwrite = TRUE)
