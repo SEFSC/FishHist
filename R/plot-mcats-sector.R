@@ -26,7 +26,7 @@
 #' @return A plot
 #'
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
-plot_mtypes <- function(data=fishhist, FMP_filter){
+plot_mcats_sector <- function(data=fishhist, FMP_filter){
 
     dat2 <- fishhist |>
       dplyr::filter(FMP == FMP_filter) |>
