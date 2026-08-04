@@ -41,11 +41,11 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::mutate(YEAR = lubridate::year(date_sequence)) |>
     dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR) |>
     dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, date_sequence) |>
-    dplyr::mutate(change = VALUE != dplyr::lag(VALUE, default = first(VALUE)) |
-             YEAR != dplyr::lag(YEAR, default = first(YEAR))) |>
+    dplyr::mutate(change = VALUE != dplyr::lag(VALUE, default = dplyr::first(VALUE)) |
+             YEAR != dplyr::lag(YEAR, default = dplyr::first(YEAR))) |>
     dplyr::mutate(group = cumsum(change)) |>
     dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR, VALUE, group) |>
-    dplyr::summarize(ndays = n(),
+    dplyr::summarize(ndays = dplyr::n(),
               start = min(date_sequence),
               end = max(date_sequence),
               .groups = 'drop') |>
@@ -65,18 +65,18 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> summarise(n = n()) |> ungroup() |>
+    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
     dplyr::mutate(month = factor(month, levels = month.abb))
 
-  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
+  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(option = "viridis", name = "Days Open", na.value = "white") +
     ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = 20) +
     ggplot2::facet_grid(SUBSECTOR_USE~SECTOR_USE) +
     ggplot2::labs(x = "Year",y = "Month") +
     ggplot2::theme_classic() +
-    ggplot2::theme(panel.grid = element_line(color = "grey92", linewidth = 0.2),
-                   strip.text = element_text(face = "bold", size = 11),
+    ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
+                   strip.text = ggplot2::element_text(face = "bold", size = 11),
                    legend.position = "bottom" )
 
   # Heatmap of Days Closed
@@ -84,22 +84,22 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> summarise(n = n()) |> ungroup() |>
+    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
     dplyr::mutate(month = factor(month, levels = month.abb)) |>
     tidyr::complete(SECTOR_USE, SUBSECTOR_USE,
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
                     month,
                     fill = list(n = 0))
 
-  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
+  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(option = "viridis", name = "Days Closed", na.value = "white", direction=-1) +
     ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = 20) +
     ggplot2::facet_grid(SUBSECTOR_USE~SECTOR_USE) +
     ggplot2::labs(x = "Year",y = "Month") +
     ggplot2::theme_classic() +
-    ggplot2::theme(panel.grid = element_line(color = "grey92", linewidth = 0.2),
-                   strip.text = element_text(face = "bold", size = 11),
+    ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
+                   strip.text = ggplot2::element_text(face = "bold", size = 11),
                    legend.position = "bottom" )
 
   # Save everything as a list
