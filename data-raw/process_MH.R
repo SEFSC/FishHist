@@ -239,54 +239,8 @@ unique_sector_clusters <- rbind(existing_sector_clusters, new_sector_clusters)
 mh_sector_id <- mh_setup |>
   dplyr::left_join(unique_sector_clusters,
             by = c("JURISDICTION", "REGION", "JURISDICTIONAL_WATERS", "FMP",
-                   "SECTOR_USE", "SPP_NAME", "MANAGEMENT_TYPE_USE"))
-
-# Create variables to outline how SUBSECTOR expands ####
-multi_subsector <- mh_sector_id |>
-  dplyr::filter(DETAILED == "YES", MANAGEMENT_CATEGORY != "CATCH LIMITS") |>
-  dplyr::select(FMP, SECTOR_USE, SECTOR_ID, SUBSECTOR) |>
-  dplyr::distinct() |>
-  dplyr::group_by(FMP, SECTOR_USE, SECTOR_ID) |>
-  dplyr::mutate(subsector_count = length(SUBSECTOR),
-                # Create flag to indicate if SUBSECTOR "ALL" is used
-                subsector_all_used = sum(SUBSECTOR == "ALL")) |>
-  dplyr::filter(subsector_count > 1) |>
-  dplyr::ungroup()
-
-# CREATE: the variable SUBSECTOR_KEY to expand SUBSECTOR "ALL" into all components
-multi_subsector_key <- mh_sector_id |>
-  dplyr::select(FMP, SECTOR_USE, SECTOR_ID, SUBSECTOR, EFFECTIVE_DATE) |>
-  dplyr::group_by(FMP, SECTOR_USE, SECTOR_ID, SUBSECTOR) |>
-  dplyr::summarize(start_use = min(EFFECTIVE_DATE), .groups = "drop") |>
-  dplyr::right_join(multi_subsector, by = c("FMP", "SECTOR_USE", "SECTOR_ID", "SUBSECTOR")) |>
-  dplyr::group_by(SECTOR_ID) |>
-  dplyr::mutate(date_count = length(unique(start_use)),
-                SUBSECTOR_KEY = paste(unique(SUBSECTOR), collapse = ", ")) |>
-  dplyr::filter(!(subsector_all_used == 0 & date_count == 1)) |>
-  dplyr::ungroup()
-
-
-# CREATE: variables to track SUBSECTOR expansion process for GOM Reef Fish records
-expansions <- multi_subsector_key |>
-  # dplyr::filter(FMP == "REEF FISH RESOURCES OF THE GULF OF MEXICO",
-  #        SECTOR_USE == "RECREATIONAL") |>
-  dplyr::select(SECTOR_ID, SECTOR_USE, SUBSECTOR_KEY, subsector_all_used) |>
-  dplyr::distinct() |>
-  #CREATE: the variables of expand_from, expand_temp, and expand_to to track the SUBSECTOR expansion process
-  dplyr::mutate(column_name = "SUBSECTOR",
-         expand_from = dplyr::case_when(subsector_all_used == 1 ~ "ALL"),
-         expand_temp = stringr::str_remove(SUBSECTOR_KEY, paste0(expand_from, ", ")),
-         expand_to = dplyr::case_when(stringr::str_count(expand_temp, ',') >= 1 ~ expand_temp,
-                               TRUE ~ "MANUAL CHECK"))
-
-# Perform expansion by separating SUBSECTOR information into new variable of SUBSECTOR_USE ####
-# Join mh_sector_id to the expansions data frame and use the expand_from and expand_to variables to track the expansion process
-# Results in the mh_subsect_expanded data frame
-mh_subsect_expanded <- dplyr::left_join(mh_sector_id, expansions, by = c("SECTOR_USE", "SECTOR_ID")) |>
-  dplyr::mutate(SUBSECTOR_USE = dplyr::case_when(!is.na(expand_to) & expand_from == SUBSECTOR ~ expand_to,
-                                   TRUE ~ SUBSECTOR)) |>
-  # Expand SUBSECTOR_USE at the commas
-  tidyr::separate_rows(SUBSECTOR_USE, sep = ", ")
+                   "SECTOR_USE", "SPP_NAME", "MANAGEMENT_TYPE_USE")) |>
+  dplyr::mutate(SUBSECTOR_USE = SUBSECTOR)
 
 # Define matching variables for CLUSTER groupings
 cluster.match <- c("MANAGEMENT_TYPE_USE",
@@ -303,7 +257,7 @@ if(length(cluster_files) > 0) {
     purrr::map(read.csv) |>
     purrr::reduce(dplyr::bind_rows)
 } else {
-  existing_clusters <- mh_subsect_expanded |>
+  existing_clusters <- mh_sector_id |>
     dplyr::select(dplyr::one_of(cluster.match)) |>
     dplyr::filter(FMP == "") |>
     tibble::add_column(CLUSTER = NA)
@@ -314,7 +268,7 @@ clusters_max = max(as.numeric(existing_clusters$CLUSTER), na.rm = TRUE, 0)
 
 # Create new CLUSTER IDs for new files ####
 # CREATE: Assign new CLUSTER_ID to any new CLUSTER groupings
-new_clusters <- mh_subsect_expanded |>
+new_clusters <- mh_sector_id |>
   dplyr::select(dplyr::one_of(cluster.match)) |>
   dplyr::distinct() |>
   dplyr::anti_join(existing_clusters, by = cluster.match) |>
@@ -333,7 +287,7 @@ unique_clusters <- rbind(existing_clusters, new_clusters)
 
 # Join CLUSTERS to entire data set
 # Results in the mh_prep data frame
-mh_prep <- mh_subsect_expanded |>
+mh_prep <- mh_sector_id |>
   dplyr::left_join(unique_clusters, by = cluster.match) |>
   dplyr::mutate(REG_CHANGE = 1)
 
@@ -1284,10 +1238,10 @@ triplimits_281 <- mh_zone_triplimits |>
 
 tripllimits_1101 <- mh_zone_triplimits |>
   dplyr::filter(CLUSTER == "1101") |>
-  dplyr::mutate(END_DATE2 = dplyr::case_when(REGULATION_ID == "5037" ~ as.Date("2021-12-31"),
-                               REGULATION_ID == "5036" ~ as.Date("2021-12-31"),
-                               REGULATION_ID == "5035" ~ as.Date("2021-12-31"),
-                               REGULATION_ID == "5034" ~ as.Date("2021-12-31"),
+  dplyr::mutate(END_DATE2 = dplyr::case_when(REGULATION_ID == "5037" ~ as.Date("2025-12-31"),
+                               REGULATION_ID == "5036" ~ as.Date("2025-12-31"),
+                               REGULATION_ID == "5035" ~ as.Date("2025-12-31"),
+                               REGULATION_ID == "5034" ~ as.Date("2025-12-31"),
                                TRUE ~ END_DATE2))
 #join
 trip <- dplyr::bind_rows(triplimits_108, triplimits_275, triplimits_276, triplimits_281, tripllimits_1101)
@@ -1299,6 +1253,6 @@ mh_data_log_final <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, t
   dplyr::arrange(CLUSTER) |>
   dplyr::select(-zone_specific_use, -zone_general_use, -ZONE_CLASS, -interest_cluster)
 
-fishhist <- mh_data_log_final |> dplyr::ungroup()
+fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct()
 
 usethis::use_data(fishhist, overwrite = TRUE)
