@@ -1255,4 +1255,9 @@ mh_data_log_final <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, t
 
 fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct()
 
+# Check that the number of starting FRs matches the number of FRs after processing
+length(unique(mh_raw$FR_CITATION))
+
+length(unique(mh_data_log_final$FR_CITATION))
+
 usethis::use_data(fishhist, overwrite = TRUE)
