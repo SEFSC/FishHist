@@ -89,7 +89,7 @@ process_closures <- function(data=fishhist, spp, region){
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
     dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
     dplyr::mutate(month = factor(month, levels = month.abb)) |>
-    tidyr::complete(SECTOR_USE, SUBSECTOR_USE,
+    tidyr::complete(tidyr::nesting(SECTOR_USE, SUBSECTOR_USE), # return only combos that exist
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
                     month,
                     fill = list(n = 0)) |>
