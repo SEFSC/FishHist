@@ -10,10 +10,10 @@
 process_closures <- function(data=fishhist, spp, region){
 
   # Filter data to species, region, and all management types related to closures
-  mh_spp_closure <- data |>
-    dplyr::filter(COMMON_NAME_USE == spp,
-           REGION == region,
-           MANAGEMENT_TYPE_USE %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
+  mh_spp_closure <- fishhist |>
+    dplyr::filter(COMMON_NAME_USE == 'AMBERJACK, GREATER',
+           REGION == 'SOUTH ATLANTIC',
+           MANAGEMENT_TYPE_USE %in% c('CLOSURE', 'FISHING SEASON', #'FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
                                       'PROHIBITED SPECIES')) |>
     dplyr::mutate(VALUE = dplyr::case_when(MANAGEMENT_TYPE_USE %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
