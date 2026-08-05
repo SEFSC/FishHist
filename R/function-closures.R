@@ -66,20 +66,23 @@ process_closures <- function(data=fishhist, spp, region){
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
     dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
-    dplyr::mutate(month = factor(month, levels = month.abb))
+    dplyr::mutate(month = factor(month, levels = month.abb),
+                  SECT_SUBSECT = paste0(SECTOR_USE, " - ", SUBSECTOR_USE))
 
   plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "viridis", name = "Days Open", na.value = "white") +
-    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = 20) +
-    ggplot2::facet_grid(SUBSECTOR_USE~SECTOR_USE) +
-    ggplot2::labs(x = "Year",y = "Month") +
+    ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Open", na.value = "white") +
+    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year))/3) +
+    ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all") +
+    ggplot2::labs(x = "",y = "") +
     ggplot2::theme_classic() +
     ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
                    strip.text = ggplot2::element_text(face = "bold", size = 11),
+                   legend.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
+                   legend.box.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
                    legend.position = "bottom" )
 
-  # Heatmap of Days Closed
+  # Heatmap of Days Closed (ZONE ALL)
   heatmap_c <- spp_closure_story |> dplyr::filter(VALUE=='CLOSE', ZONE_USE == 'ALL') |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
@@ -89,17 +92,20 @@ process_closures <- function(data=fishhist, spp, region){
     tidyr::complete(SECTOR_USE, SUBSECTOR_USE,
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
                     month,
-                    fill = list(n = 0))
+                    fill = list(n = 0)) |>
+    dplry::mutate(SECT_SUBSECT = paste0(SECTOR_USE, " - ", SUBSECTOR_USE))
 
   plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "viridis", name = "Days Closed", na.value = "white", direction=-1) +
-    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = 20) +
-    ggplot2::facet_grid(SUBSECTOR_USE~SECTOR_USE) +
-    ggplot2::labs(x = "Year",y = "Month") +
+    ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Closed", na.value = "white", direction=-1) +
+    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year))/3) +
+    ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all") +
+    ggplot2::labs(x = "",y = "") +
     ggplot2::theme_classic() +
     ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
                    strip.text = ggplot2::element_text(face = "bold", size = 11),
+                   legend.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
+                   legend.box.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
                    legend.position = "bottom" )
 
   # Save everything as a list
