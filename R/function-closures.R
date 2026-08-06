@@ -62,6 +62,15 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::summarize(Days_Open = sum(ndays), .groups = "drop") |>
     dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR)
 
+  # Plot number of Days Open
+  plot_days_open <- ggplot2::ggplot(summ_days_open, aes(x=YEAR, y=Days_Open)) +
+    ggplot2::geom_col(fill = "steelblue") +
+    ggplot2::geom_text(aes(label = Days_Open), vjust = -0.5) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
+    ggplot2::scale_x_continuous(n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR))/3) +
+    ggplot2::labs(x="", y= "Number of Days Open") +
+    ggplot2::facet_wrap(~SECTOR_USE, ncol=1) + ggplot2::theme_bw()
+
   # Summarize table for start-end dates by management type and values
   mtype_fr_tab <- spp_closure_story |>
     dplyr::group_by(SECTOR_USE, COMMON_NAME_USE, REGION, ZONE_USE, SUBSECTOR_USE, FR_CITATION, MANAGEMENT_TYPE_USE, VALUE) |>
@@ -69,8 +78,8 @@ process_closures <- function(data=fishhist, spp, region){
                      END = max(date_sequence)) |>
     dplyr::arrange(SECTOR_USE, ZONE_USE, START) |>
     # For this summary table change closures - value (open) to REOPENING
-    dplyr::mutate(MANAGEMENT_TYPE_USE = case_when(VALUE == 'OPEN' & MANAGEMENT_TYPE_USE == 'CLOSURE' ~ 'REOPENING',
-                                                  TRUE ~ MANAGEMENT_TYPE_USE)) |> dplyr::select(-VALUE)
+    dplyr::mutate(MANAGEMENT_TYPE_USE = dplyr::case_when(VALUE == 'OPEN' & MANAGEMENT_TYPE_USE == 'CLOSURE' ~ 'REOPENING',
+                                                         TRUE ~ MANAGEMENT_TYPE_USE)) |> dplyr::select(-VALUE)
 
 
   # Heatmap of Days Open (ZONE ALL)
@@ -122,8 +131,8 @@ process_closures <- function(data=fishhist, spp, region){
                    legend.position = "bottom" )
 
   # Save everything as a list
-  out <- list(spp_closure_story, summ_days_open, mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
-  names(out) <- c("data", "tab_sum_days_open", "tab_fr_dateranges", "heatmap_open", "heatmap_closed")
+  out <- list(spp_closure_story, summ_days_open, plot_days_open, mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
+  names(out) <- c("data", "tab_sum_days_open", "plot_days_open", "tab_fr_dateranges", "heatmap_open", "heatmap_closed")
   return(out)
 
 }
