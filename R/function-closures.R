@@ -60,6 +60,17 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::summarize(Days_Open = sum(ndays), .groups = "drop") |>
     dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR)
 
+  # Summarize table for start-end dates by management type and values
+  mtype_fr_tab <- spp_closure_story |>
+    dplyr::group_by(SECTOR_USE, COMMON_NAME_USE, REGION, ZONE_USE, SUBSECTOR_USE, FR_CITATION, MANAGEMENT_TYPE_USE, VALUE) |>
+    dplyr::summarise(START = min(date_sequence),
+                     END = max(date_sequence)) |>
+    dplyr::arrange(SECTOR_USE, ZONE_USE, START) |>
+    # For this summary table change closures - value (open) to REOPENING
+    dplyr::mutate(MANAGEMENT_TYPE_USE = case_when(VALUE == 'OPEN' & MANAGEMENT_TYPE_USE == 'CLOSURE' ~ 'REOPENING',
+                                                  TRUE ~ MANAGEMENT_TYPE_USE)) |> dplyr::select(-VALUE)
+
+
   # Heatmap of Days Open (ZONE ALL)
   heatmap_o <- spp_closure_story |> dplyr::filter(VALUE=='OPEN', ZONE_USE == 'ALL') |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
@@ -109,8 +120,8 @@ process_closures <- function(data=fishhist, spp, region){
                    legend.position = "bottom" )
 
   # Save everything as a list
-  out <- list(spp_closure_story, summ_days_open, plot_heatmap_o, plot_heatmap_c)
-  names(out) <- c("data", "sum_days_open", "heatmap_open", "heatmap_closed")
+  out <- list(spp_closure_story, summ_days_open, mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
+  names(out) <- c("data", "tab_sum_days_open", "tab_fr_dateranges", "heatmap_open", "heatmap_closed")
   return(out)
 
 }
