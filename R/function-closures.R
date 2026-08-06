@@ -13,7 +13,7 @@ process_closures <- function(data=fishhist, spp, region){
   mh_spp_closure <- data |>
     dplyr::filter(COMMON_NAME_USE == spp,
            REGION == region,
-           MANAGEMENT_TYPE_USE %in% c('CLOSURE', 'FISHING SEASON', #'FISHING YEAR',
+           MANAGEMENT_TYPE_USE %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
                                       'PROHIBITED SPECIES')) |>
     dplyr::mutate(VALUE = dplyr::case_when(MANAGEMENT_TYPE_USE %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
@@ -33,7 +33,9 @@ process_closures <- function(data=fishhist, spp, region){
            MANAGEMENT_TYPE_USE, FR_CITATION, TIME, VALUE) |>
     dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, date_sequence) |>
     # Keep ONLY the row with the most recent FR_CITATION within each group
-    dplyr::slice_max(order_by = FR_CITATION, n = 1, with_ties = FALSE) |>
+    # IF there are two then take the CLOSE record because that overwrites OPEN
+    dplyr::slice_max(order_by = tibble::tibble(FR_CITATION, is_close = VALUE == "CLOSE"),
+                     n = 1, with_ties = FALSE) |>
     dplyr::ungroup()
 
   # Summarize the open and closed periods for each year
