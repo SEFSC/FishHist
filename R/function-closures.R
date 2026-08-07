@@ -66,7 +66,7 @@ process_closures <- function(data=fishhist, spp, region){
   plot_days_open <- ggplot2::ggplot(summ_days_open |> dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)),
                                     ggplot2::aes(x=YEAR, y=Days_Open)) +
     ggplot2::geom_col(fill = "steelblue") +
-    ggplot2::geom_text(ggplot2::aes(label = Days_Open), vjust = -0.5) +
+    ggplot2::geom_text(ggplot2::aes(label = Days_Open), vjust = -0.5, size = 3) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
     ggplot2::scale_x_continuous(n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR))/3) +
     ggplot2::labs(x="", y= "Number of Days Open") +
