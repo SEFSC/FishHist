@@ -21,7 +21,7 @@ process_closures <- function(data=fishhist, spp, region){
                              MANAGEMENT_TYPECLEAN == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'NO' ~ 'CLOSE',
                              MANAGEMENT_TYPECLEAN == 'PROHIBITED SPECIES' ~ 'CLOSE',
                              TRUE ~ VALUE)) |>
-    dplyr::arrange(SECTOR_CLEAN, START_DATE2)
+    dplyr::arrange(SECTOR_CLEAN, STARTDATE_CLEAN)
 
   unique_types <- unique(mh_spp_closure$MANAGEMENT_TYPECLEAN)
 
@@ -63,13 +63,14 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR)
 
   # Plot number of Days Open
-  plot_days_open <- ggplot2::ggplot(summ_days_open, aes(x=YEAR, y=Days_Open)) +
+  plot_days_open <- ggplot2::ggplot(summ_days_open |> dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)),
+                                    ggplot2::aes(x=YEAR, y=Days_Open)) +
     ggplot2::geom_col(fill = "steelblue") +
-    ggplot2::geom_text(aes(label = Days_Open), vjust = -0.5) +
+    ggplot2::geom_text(ggplot2::aes(label = Days_Open), vjust = -0.5) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
     ggplot2::scale_x_continuous(n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR))/3) +
     ggplot2::labs(x="", y= "Number of Days Open") +
-    ggplot2::facet_wrap(~SECTOR_CLEAN, ncol=1) + ggplot2::theme_bw()
+    ggplot2::facet_wrap(~SECT_SUBSECT, ncol=1) + ggplot2::theme_bw()
 
   # Summarize table for start-end dates by management type and values
   mtype_fr_tab <- spp_closure_story |>
