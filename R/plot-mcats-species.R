@@ -14,7 +14,7 @@ plot_mcats_spp <- function(data=fishhist, FMP_filter){
   # Get currently managed species
   managed_spp <- data |> dplyr::ungroup() |> dplyr::filter(END_DATE == dt) |>
     dplyr::distinct(COMMON_NAME_CLEAN) |>
-    pull(COMMON_NAME_CLEAN)
+    dplyr::pull(COMMON_NAME_CLEAN)
 
   dat2 <- data |>
     dplyr::filter(FMP == FMP_filter, COMMON_NAME_CLEAN %in% managed_spp, MANAGEMENT_TYPECLEAN != 'DEFINITION') |>
