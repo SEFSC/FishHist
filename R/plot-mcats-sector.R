@@ -8,7 +8,7 @@
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
 plot_mcats_sector <- function(data=fishhist, FMP_filter){
 
-    dat2 <- fishhist |>
+    dat2 <- data |>
       dplyr::filter(FMP == FMP_filter) |>
       dplyr::group_by(FMP, SECTOR_CLEAN, MANAGEMENTCATEGORY) |>
       dplyr::summarise(nrecs = dplyr::n_distinct(REG_ID)) |>
