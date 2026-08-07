@@ -8,22 +8,22 @@
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
 plot_mcats_spp <- function(data=fishhist, FMP_filter){
 
-  dt <- data |> dplyr::group_by(END_DATE2) |> dplyr::summarize(n= n()) |>
-    dplyr::filter(n == max(n)) |> dplyr::pull(END_DATE2)
+  dt <- data |> dplyr::group_by(END_DATE) |> dplyr::summarize(n= n()) |>
+    dplyr::filter(n == max(n)) |> dplyr::pull(END_DATE)
 
   # Get currently managed species
-  managed_spp <- data |> dplyr::ungroup() |> dplyr::filter(END_DATE2 == dt) |>
-    dplyr::distinct(COMMON_NAME_USE) |>
-    pull(COMMON_NAME_USE)
+  managed_spp <- data |> dplyr::ungroup() |> dplyr::filter(END_DATE == dt) |>
+    dplyr::distinct(COMMON_NAME_CLEAN) |>
+    pull(COMMON_NAME_CLEAN)
 
   dat2 <- data |>
-    dplyr::filter(FMP == FMP_filter, COMMON_NAME_USE %in% managed_spp, MANAGEMENT_TYPE != 'DEFINITION') |>
-    dplyr::group_by(FMP, MANAGEMENT_CATEGORY, COMMON_NAME_USE) |>
+    dplyr::filter(FMP == FMP_filter, COMMON_NAME_CLEAN %in% managed_spp, MANAGEMENT_TYPECLEAN != 'DEFINITION') |>
+    dplyr::group_by(FMP, MANAGEMENTCATEGORY, COMMON_NAME_CLEAN) |>
     dplyr::summarise(nFRs = dplyr::n_distinct(FR_CITATION))
 
   plot <- ggplot2::ggplot(dat2,
-                          ggplot2::aes(x = nFRs, y = factor(COMMON_NAME_USE, levels = rev(sort(unique(COMMON_NAME_USE)))),
-                                       fill = MANAGEMENT_CATEGORY)) +
+                          ggplot2::aes(x = nFRs, y = factor(COMMON_NAME_CLEAN, levels = rev(sort(unique(COMMON_NAME_CLEAN)))),
+                                       fill = MANAGEMENTCATEGORY)) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_x_continuous(expand = c(0, 0))+
     ggplot2::scale_fill_manual(values = c("#999999", "#CC79A7", "#D55E00",  "#0072B2",  "#F0E442",  "#009E73", "#56B4E9",  "#E69F00")) +

@@ -11,27 +11,27 @@ process_closures <- function(data=fishhist, spp, region){
 
   # Filter data to species, region, and all management types related to closures
   mh_spp_closure <- data |>
-    dplyr::filter(COMMON_NAME_USE == spp,
+    dplyr::filter(COMMON_NAME_CLEAN == spp,
            REGION == region,
-           MANAGEMENT_TYPE_USE %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
+           MANAGEMENT_TYPECLEAN %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
                                       'PROHIBITED SPECIES')) |>
-    dplyr::mutate(VALUE = dplyr::case_when(MANAGEMENT_TYPE_USE %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
-                             MANAGEMENT_TYPE_USE == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'YES' ~ 'OPEN',
-                             MANAGEMENT_TYPE_USE == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'NO' ~ 'CLOSE',
-                             MANAGEMENT_TYPE_USE == 'PROHIBITED SPECIES' ~ 'CLOSE',
+    dplyr::mutate(VALUE = dplyr::case_when(MANAGEMENT_TYPECLEAN %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
+                             MANAGEMENT_TYPECLEAN == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'YES' ~ 'OPEN',
+                             MANAGEMENT_TYPECLEAN == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'NO' ~ 'CLOSE',
+                             MANAGEMENT_TYPECLEAN == 'PROHIBITED SPECIES' ~ 'CLOSE',
                              TRUE ~ VALUE)) |>
-    dplyr::arrange(SECTOR_USE, START_DATE2)
+    dplyr::arrange(SECTOR_CLEAN, START_DATE2)
 
-  unique_types <- unique(mh_spp_closure$MANAGEMENT_TYPE_USE)
+  unique_types <- unique(mh_spp_closure$MANAGEMENT_TYPECLEAN)
 
   # Process all types dynamically (long form)
   all_spp_closures <- purrr::map_dfr(unique_types, ~ expand_status(mh_spp_closure, .x))
 
   spp_closure_story <- all_spp_closures |>
-    dplyr::select(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, date_sequence,
-           MANAGEMENT_TYPE_USE, FR_CITATION, TIME, VALUE) |>
-    dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, date_sequence) |>
+    dplyr::select(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence,
+           MANAGEMENT_TYPECLEAN, FR_CITATION, TIME, VALUE) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence) |>
     # Keep ONLY the row with the most recent FR_CITATION within each group
     # IF there are two then take the CLOSE record because that overwrites OPEN
     dplyr::slice_max(order_by = tibble::tibble(FR_CITATION, is_close = VALUE == "CLOSE"),
@@ -41,26 +41,26 @@ process_closures <- function(data=fishhist, spp, region){
   # Summarize the open and closed periods for each year
   summ_spp_closures <- spp_closure_story |>
     dplyr::mutate(YEAR = lubridate::year(date_sequence)) |>
-    dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR) |>
-    dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, date_sequence) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR) |>
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence) |>
     dplyr::mutate(change = VALUE != dplyr::lag(VALUE, default = dplyr::first(VALUE)) |
              YEAR != dplyr::lag(YEAR, default = dplyr::first(YEAR))) |>
     dplyr::mutate(group = cumsum(change)) |>
-    dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR, VALUE, group) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR, VALUE, group) |>
     dplyr::summarize(ndays = dplyr::n(),
               start = min(date_sequence),
               end = max(date_sequence),
               .groups = 'drop') |>
     dplyr::mutate(VALUE = dplyr::case_when(is.na(VALUE) ~ "OPEN",
                              TRUE ~ VALUE)) |>
-    dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR, start)
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR, start)
 
   # Summarize the number of days open per year
   summ_days_open <- summ_spp_closures |>
     dplyr::filter(VALUE == "OPEN") |>
-    dplyr::group_by(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR) |>
     dplyr::summarize(Days_Open = sum(ndays), .groups = "drop") |>
-    dplyr::arrange(FMP, COMMON_NAME_USE, REGION, ZONE_USE, SECTOR_USE, SUBSECTOR_USE, YEAR)
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR)
 
   # Plot number of Days Open
   plot_days_open <- ggplot2::ggplot(summ_days_open, aes(x=YEAR, y=Days_Open)) +
@@ -69,27 +69,27 @@ process_closures <- function(data=fishhist, spp, region){
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
     ggplot2::scale_x_continuous(n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR))/3) +
     ggplot2::labs(x="", y= "Number of Days Open") +
-    ggplot2::facet_wrap(~SECTOR_USE, ncol=1) + ggplot2::theme_bw()
+    ggplot2::facet_wrap(~SECTOR_CLEAN, ncol=1) + ggplot2::theme_bw()
 
   # Summarize table for start-end dates by management type and values
   mtype_fr_tab <- spp_closure_story |>
-    dplyr::group_by(SECTOR_USE, COMMON_NAME_USE, REGION, ZONE_USE, SUBSECTOR_USE, FR_CITATION, MANAGEMENT_TYPE_USE, VALUE) |>
+    dplyr::group_by(SECTOR_CLEAN, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE) |>
     dplyr::summarise(START = min(date_sequence),
                      END = max(date_sequence)) |>
-    dplyr::arrange(SECTOR_USE, ZONE_USE, START) |>
+    dplyr::arrange(SECTOR_CLEAN, ZONE_CLEAN, START) |>
     # For this summary table change closures - value (open) to REOPENING
-    dplyr::mutate(MANAGEMENT_TYPE_USE = dplyr::case_when(VALUE == 'OPEN' & MANAGEMENT_TYPE_USE == 'CLOSURE' ~ 'REOPENING',
-                                                         TRUE ~ MANAGEMENT_TYPE_USE)) |> dplyr::select(-VALUE)
+    dplyr::mutate(MANAGEMENT_TYPECLEAN = dplyr::case_when(VALUE == 'OPEN' & MANAGEMENT_TYPECLEAN == 'CLOSURE' ~ 'REOPENING',
+                                                         TRUE ~ MANAGEMENT_TYPECLEAN)) |> dplyr::select(-VALUE)
 
 
   # Heatmap of Days Open (ZONE ALL)
-  heatmap_o <- spp_closure_story |> dplyr::filter(VALUE=='OPEN', ZONE_USE == 'ALL') |>
+  heatmap_o <- spp_closure_story |> dplyr::filter(VALUE=='OPEN', ZONE_CLEAN == 'ALL') |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
+    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
     dplyr::mutate(month = factor(month, levels = month.abb),
-                  SECT_SUBSECT = paste0(SECTOR_USE, " - ", SUBSECTOR_USE))
+                  SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
   plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
@@ -105,17 +105,17 @@ process_closures <- function(data=fishhist, spp, region){
                    legend.position = "bottom" )
 
   # Heatmap of Days Closed (ZONE ALL)
-  heatmap_c <- spp_closure_story |> dplyr::filter(VALUE=='CLOSE', ZONE_USE == 'ALL') |>
+  heatmap_c <- spp_closure_story |> dplyr::filter(VALUE=='CLOSE', ZONE_CLEAN == 'ALL') |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_USE, SUBSECTOR_USE, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
+    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
     dplyr::mutate(month = factor(month, levels = month.abb)) |>
-    tidyr::complete(tidyr::nesting(SECTOR_USE, SUBSECTOR_USE), # return only combos that exist
+    tidyr::complete(tidyr::nesting(SECTOR_CLEAN, SUBSECTOR_CLEAN), # return only combos that exist
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
                     month,
                     fill = list(n = 0)) |>
-    dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_USE, " - ", SUBSECTOR_USE))
+    dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
   plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
