@@ -8,7 +8,7 @@
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
 plot_mcats_spp <- function(data=fishhist, FMP_filter){
 
-  dt <- data |> dplyr::group_by(END_DATE) |> dplyr::summarize(n= n()) |>
+  dt <- data |> dplyr::group_by(END_DATE) |> dplyr::summarize(n= dplyr::n()) |>
     dplyr::filter(n == max(n)) |> dplyr::pull(END_DATE)
 
   # Get currently managed species
