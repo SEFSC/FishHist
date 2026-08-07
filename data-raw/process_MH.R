@@ -7,7 +7,7 @@ library(here) # here
 library(purrr) # map, reduce
 library(tibble) #add_column
 
-mh_raw <- read.csv("data-raw/MH_DOWNLOAD_JUL_30_2026.csv",
+mh_raw <- read.csv("data-raw/MH_DOWNLOAD_AUG_07_2026.csv",
                    stringsAsFactors = FALSE,
                    colClasses=c("REGULATION_ID" = "numeric",
                                 "START_DAY" = "numeric",
@@ -1253,7 +1253,47 @@ mh_data_log_final <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, t
   dplyr::arrange(CLUSTER) |>
   dplyr::select(-zone_specific_use, -zone_general_use, -ZONE_CLASS, -interest_cluster)
 
-fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct()
+
+fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
+  # Rename to match the processed MH dataset from ODM
+  dplyr::rename(CLUSTER_ID = "CLUSTER",
+                REG_ID = "REGULATION_ID",
+                ACTIONTYPE = "ACTION_TYPE",
+                AMENDMENTNUMBER = "AMENDMENT_NUMBER",
+                ACCOUNTABILITYMEASURE = "ACCOUNTABILITY_MEASURE",
+                MANAGEMENTCATEGORY = "MANAGEMENT_CATEGORY",
+                MANAGEMENT_TYPECLEAN = "MANAGEMENT_TYPE_USE",
+                MANAGEMENT_STATUSCLEAN = "MANAGEMENT_STATUS_USE",
+                SECTOR_CLEAN = "SECTOR_USE",
+                SUBSECTOR_CLEAN = "SUBSECTOR_USE",
+                ZONE_CLEAN = "ZONE_USE",
+                JURISDICTIONALWATERS = "JURISDICTIONAL_WATERS",
+                COMMON_NAME_CLEAN = "COMMON_NAME_USE",
+                SPECIES_ITIS_CLEAN = "SPECIES_ITIS_USE",
+                STARTDATE_CLEAN = "START_DATE2",
+                END_DATE = "END_DATE2",
+                STARTMONTH = "START_MONTH",
+                STARTDAY_CLEAN = "START_DAY_USE",
+                STARTYEAR = "START_YEAR",
+                STARTTIME_CLEAN = "START_TIME_USE",
+                START_DAYOF_WEEK_CLEAN = "START_DAY_OF_WEEK_USE",
+                ENDDAY_CLEAN = "END_DAY_USE",
+                END_DAYOF_WEEK_CLEAN = "END_DAY_OF_WEEK_USE",
+                ENDMONTH_CLEAN = "END_MONTH_USE",
+                ENDTIME_CLEAN = "END_TIME_USE",
+                ENDYEAR_CLEAN = "END_YEAR_USE",
+                NEVERIMPLEMENTED = "NEVER_IMPLEMENTED",
+                REGREMOVED = "REG_REMOVED",
+                VALUEUNITS = "VALUE_UNITS",
+                VALUETYPE = "VALUE_TYPE",
+                VALUERATE = "VALUE_RATE") |>
+  # Select order and only variables in MH ODM processed dataset
+  dplyr::select(CLUSTER_ID,REG_ID,FR_CITATION,FR_SECTION,FR_URL,FMP,ACTION,ACTIONTYPE,AMENDMENTNUMBER,
+                ACCOUNTABILITYMEASURE,MANAGEMENTCATEGORY,MANAGEMENT_TYPECLEAN,MANAGEMENT_STATUSCLEAN,JURISDICTION,
+                SUBSECTOR_CLEAN,REGION,ZONE_CLEAN,JURISDICTIONALWATERS,COMMON_NAME_CLEAN,SPECIES_ITIS_CLEAN,SPP_TYPE,
+                ADJUSTMENT,REVERSION,EFFECTIVE_DATE,INEFFECTIVE_DATE,STARTDATE_CLEAN,END_DATE,STARTMONTH,STARTDAY_CLEAN,
+                STARTYEAR,STARTTIME_CLEAN,START_DAYOF_WEEK_CLEAN,ENDDAY_CLEAN,END_DAYOF_WEEK_CLEAN,ENDMONTH_CLEAN,
+                ENDTIME_CLEAN,ENDYEAR_CLEAN,NEVERIMPLEMENTED,REGREMOVED,VALUE,VALUEUNITS,VALUETYPE,VALUERATE,FLAG)
 
 # Check that the number of starting FRs matches the number of FRs after processing
 length(unique(mh_raw$FR_CITATION))
