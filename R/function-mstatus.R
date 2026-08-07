@@ -13,7 +13,7 @@ expand_status <- function(x, y) {
   # y = management type
   df = dplyr::filter(x, MANAGEMENT_TYPECLEAN == y,
               # only retain records that were in effect
-              NEVER_IMPLEMENTED == 0, REG_REMOVED == 0) |>
+              NEVERIMPLEMENTED == 0, REGREMOVED == 0) |>
     dplyr::group_by(CLUSTER_ID, FR_CITATION, ZONE_CLEAN) |>
     # Create variable to indicate when there are multiple records per cluster per FR_CITATION active at the same time with different VALUE_TYPE or VALUE_RATE (MULTI_REG_VALUE)
     dplyr::mutate(MULTI_REG_VALUE = as.numeric(dplyr::n() > 1 & (dplyr::n_distinct(VALUE) | dplyr::n_distinct(VALUETYPE) > 1 | dplyr::n_distinct(VALUERATE) > 1)))
@@ -76,7 +76,7 @@ expand_status <- function(x, y) {
       dplyr::ungroup() |>
       dplyr::mutate(STARTYEAR_expand = lubridate::year(date_sequence),
              END_YEAR_expand = lubridate::year(date_sequence)) |>
-      dplyr::mutate(START_DATE_EXPAND = as.Date(paste(STARTYEAR_expand, START_MONTH, START_DAY, sep = "-")),
+      dplyr::mutate(START_DATE_EXPAND = as.Date(paste(STARTYEAR_expand, STARTMONTH, STARTDAY_CLEAN, sep = "-")),
              END_DATE_EXPAND = as.Date(paste(END_YEAR_expand, ENDMONTH_CLEAN, ENDDAY_CLEAN, sep = "-"))) |>
       # Create START_DATE_EXPAND2 & END_DATE_EXPAND2 for cases where the duration of the closure goes from the end of the year to the beginning of the enxt year
       # Create START_DATE_EXPAND_FINAL & END_DATE_EXPAND_FINAL to choose the correct START_DATE_EXPAND and END_DATE_EXPAND for each set of circumstances
@@ -121,21 +121,21 @@ expand_status <- function(x, y) {
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, CLUSTER_ID) |>
       dplyr::mutate(TIME = dplyr::case_when(date_sequence == STARTDATE_CLEAN & !is.na(STARTTIME_CLEAN) ~ STARTTIME_CLEAN,
                               date_sequence == END_DATE & !is.na(ENDTIME_CLEAN) ~ ENDTIME_CLEAN,
-                              day(date_sequence) == START_DAY ~ STARTTIME_CLEAN,
+                              day(date_sequence) == STARTDAY_CLEAN ~ STARTTIME_CLEAN,
                               day(date_sequence) == ENDDAY_CLEAN ~ ENDTIME_CLEAN,
                               TRUE ~ NA_character_)) |>
       dplyr::ungroup() |>
       # Extract year from date_sequence
       dplyr::mutate(STARTYEAR_expand = lubridate::year(date_sequence),
              END_YEAR_expand = lubridate::year(date_sequence),
-             # Create START_MONTH_expand and ENDMONTH_CLEAN_expand to eventually create the dates that are the bounds of which expansion dates should still be included
+             # Create STARTMONTH_expand and ENDMONTH_CLEAN_expand to eventually create the dates that are the bounds of which expansion dates should still be included
              # The conditions address cases where the monthly recurring goes from the middle of one month to the start of next and eventually crosses year boundaries (Gulf red snapper - 15th to the 1st of the following month or 10th to the 1st of the following month)
              # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is a smaller value than the STARTDAY_CLEAN and the month of the date_sequence is not January,
-             # then the START_MONTH_expand should be one month less than the month of the date_sequence
+             # then the STARTMONTH_expand should be one month less than the month of the date_sequence
              # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is a smaller value than the STARTDAY_CLEAN but the month of the date_sequence is January,
-             # then the START_MONTH_expand should be December
-             # Otherwise, the START_MONTH_EXPAND should reflect the month of the date_sequence
-             START_MONTH_expand = dplyr::case_when(ENDDAY_CLEAN < STARTDAY_CLEAN & day(date_sequence) < STARTDAY_CLEAN & month(date_sequence) != 1 ~ month(date_sequence) - 1,
+             # then the STARTMONTH_expand should be December
+             # Otherwise, the STARTMONTH_EXPAND should reflect the month of the date_sequence
+             STARTMONTH_expand = dplyr::case_when(ENDDAY_CLEAN < STARTDAY_CLEAN & day(date_sequence) < STARTDAY_CLEAN & month(date_sequence) != 1 ~ month(date_sequence) - 1,
                                             ENDDAY_CLEAN < STARTDAY_CLEAN & day(date_sequence) < STARTDAY_CLEAN & month(date_sequence) == 1 ~ 12,
                                             TRUE ~ month(date_sequence)),
              # The conditions address cases where the monthly recurring goes from the middle of one month to the start of the next and eventually crosses year boundaries (Gulf red snapper - 15th to the 1st of the following month or 10th to the 1st of the following month)
@@ -162,9 +162,9 @@ expand_status <- function(x, y) {
       # i.e. start month = 2 and end month = 11
       # mean recurring closures start in Feb and end in Nov
       # can't use ENDMONTH_CLEAN_expand in filter for cases when the recurring closures spans 2 months (i.e. 15th -1st)
-      #filter(START_MONTH_expand >= START_MONTH &
-      #        START_MONTH_expand <= ENDMONTH_CLEAN) |>
-      dplyr::mutate(START_DATE_EXPAND = as.Date(paste(STARTYEAR_expand, START_MONTH_expand, STARTDAY_CLEAN, sep = "-")),
+      #filter(STARTMONTH_expand >= STARTMONTH &
+      #        STARTMONTH_expand <= ENDMONTH_CLEAN) |>
+      dplyr::mutate(START_DATE_EXPAND = as.Date(paste(STARTYEAR_expand, STARTMONTH_expand, STARTDAY_CLEAN, sep = "-")),
              END_DATE_EXPAND = as.Date(paste(END_YEAR_expand, ENDMONTH_CLEAN_expand, ENDDAY_CLEAN, sep = "-"))) |>
       # Remove date_sequence records outside expand range
       dplyr::filter(date_sequence == START_DATE_EXPAND |
@@ -199,15 +199,15 @@ expand_status <- function(x, y) {
       tidyr::unnest(date_sequence) |>
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, CLUSTER_ID) |>
       # need to get expanded days of the week to match
-      dplyr::mutate(START_DAY_OF_WEEK_EXPAND = dplyr::case_when(
-        START_DAY_OF_WEEK_USE == "MONDAY" ~ "Mon",
-        START_DAY_OF_WEEK_USE == "TUESDAY" ~ "Tue",
-        START_DAY_OF_WEEK_USE == "WEDNESDAY" ~ "Wed",
-        START_DAY_OF_WEEK_USE == "THURSDAY" ~ "Thu",
-        START_DAY_OF_WEEK_USE == "FRIDAY" ~ "Fri",
-        START_DAY_OF_WEEK_USE == "SATURDAY" ~ "Sat",
-        START_DAY_OF_WEEK_USE == "SUNDAY" ~ "Sun",
-        TRUE ~ START_DAY_OF_WEEK_USE),
+      dplyr::mutate(STARTDAY_CLEAN_OF_WEEK_EXPAND = dplyr::case_when(
+        STARTDAY_CLEAN_OF_WEEK_USE == "MONDAY" ~ "Mon",
+        STARTDAY_CLEAN_OF_WEEK_USE == "TUESDAY" ~ "Tue",
+        STARTDAY_CLEAN_OF_WEEK_USE == "WEDNESDAY" ~ "Wed",
+        STARTDAY_CLEAN_OF_WEEK_USE == "THURSDAY" ~ "Thu",
+        STARTDAY_CLEAN_OF_WEEK_USE == "FRIDAY" ~ "Fri",
+        STARTDAY_CLEAN_OF_WEEK_USE == "SATURDAY" ~ "Sat",
+        STARTDAY_CLEAN_OF_WEEK_USE == "SUNDAY" ~ "Sun",
+        TRUE ~ STARTDAY_CLEAN_OF_WEEK_USE),
         ENDDAY_CLEAN_OF_WEEK_EXPAND = dplyr::case_when(
           ENDDAY_CLEAN_OF_WEEK_USE == "MONDAY" ~ "Mon",
           ENDDAY_CLEAN_OF_WEEK_USE == "TUESDAY" ~ "Tue",
@@ -219,7 +219,7 @@ expand_status <- function(x, y) {
           TRUE ~ ENDDAY_CLEAN_OF_WEEK_USE)) |>
       dplyr::mutate(TIME = dplyr::case_when(date_sequence == STARTDATE_CLEAN & !is.na(STARTTIME_CLEAN) ~ STARTTIME_CLEAN,
                               date_sequence == END_DATE & !is.na(ENDTIME_CLEAN) ~ ENDTIME_CLEAN,
-                              lubridate::wday(date_sequence) == START_DAY_OF_WEEK_EXPAND ~ STARTTIME_CLEAN,
+                              lubridate::wday(date_sequence) == STARTDAY_CLEAN_OF_WEEK_EXPAND ~ STARTTIME_CLEAN,
                               lubridate::wday(date_sequence) == ENDDAY_CLEAN_OF_WEEK_EXPAND ~ ENDTIME_CLEAN,
                               TRUE ~ NA_character_)) |>
       dplyr::ungroup() |>
@@ -228,7 +228,7 @@ expand_status <- function(x, y) {
       # function wday formats at Mon, Tue, etc.
       dplyr::mutate(Expand_day_of_week = lubridate::wday(date_sequence, label = TRUE)) |>
       # Retain on records within expand range
-      dplyr::filter(Expand_day_of_week >= START_DAY_OF_WEEK_EXPAND |
+      dplyr::filter(Expand_day_of_week >= STARTDAY_CLEAN_OF_WEEK_EXPAND |
                Expand_day_of_week <= ENDDAY_CLEAN_OF_WEEK_EXPAND) |>
       dplyr::select(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence, TIME,
              CLUSTER_ID, REG_ID, FR_CITATION, VALUE, VALUEUNITS, VALUETYPE, VALUERATE) |>
