@@ -10,9 +10,9 @@
 process_closures <- function(data=fishhist, spp, region){
 
   # Filter data to species, region, and all management types related to closures
-  mh_spp_closure <- data |>
-    dplyr::filter(COMMON_NAME_CLEAN == spp,
-           REGION == region,
+  mh_spp_closure <- fishhist |>
+    dplyr::filter(COMMON_NAME_CLEAN == 'SNAPPER, RED',
+           REGION == "SOUTH ATLANTIC",
            MANAGEMENT_TYPECLEAN %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
                                       'PROHIBITED SPECIES')) |>
@@ -34,8 +34,18 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence) |>
     # Keep ONLY the row with the most recent FR_CITATION within each group
     # IF there are two then take the CLOSE record because that overwrites OPEN
-    dplyr::slice_max(order_by = tibble::tibble(FR_CITATION, is_close = VALUE == "CLOSE"),
-                     n = 1, with_ties = FALSE) |>
+    dplyr::slice_max(order_by = tibble::tibble(
+        # Primary sort: Always pick the most recent citation first
+        FR_CITATION,
+        # Secondary sort: Conditional tie-breaker
+        is_close = dplyr::case_when(
+          # For 'fishing year', prioritize CLOSE over OPEN (CLOSE = TRUE, which ranks higher than FALSE)
+          MANAGEMENT_TYPECLEAN == "FISHING YEAR" ~ (VALUE == "CLOSE"),
+          # For closures / other types, prioritize OPEN over CLOSE if applicable
+          MANAGEMENT_TYPECLEAN == "CLOSURE" ~ (VALUE == "OPEN"),
+          # Default fallback for any other management types
+          TRUE ~ (VALUE == "CLOSE"))),
+        n = 1,with_ties = FALSE) |>
     dplyr::ungroup()
 
   # Summarize the open and closed periods for each year
@@ -74,13 +84,20 @@ process_closures <- function(data=fishhist, spp, region){
 
   # Summarize table for start-end dates by management type and values
   mtype_fr_tab <- spp_closure_story |>
-    dplyr::group_by(SECTOR_CLEAN, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE) |>
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE) |>
+    # Create a gap identifier column (increments when dates are not consecutive)
+    dplyr::mutate(date_gap = date_sequence > (dplyr::lag(date_sequence) + 1),
+                  date_gap = ifelse(is.na(date_gap), FALSE, date_gap),
+                  # cumsum() creates a running ID (e.g., 77 FR 51939 episode 1 for 9/14-9/16, episode 2 for 9/21-9/23)
+                  episode_id = cumsum(date_gap)) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE, episode_id) |>
     dplyr::summarise(START = min(date_sequence),
-                     END = max(date_sequence)) |>
+                     END = max(date_sequence), .groups = "drop") |>
     dplyr::arrange(SECTOR_CLEAN, ZONE_CLEAN, START) |>
     # For this summary table change closures - value (open) to REOPENING
     dplyr::mutate(MANAGEMENT_TYPECLEAN = dplyr::case_when(VALUE == 'OPEN' & MANAGEMENT_TYPECLEAN == 'CLOSURE' ~ 'REOPENING',
-                                                         TRUE ~ MANAGEMENT_TYPECLEAN)) |> dplyr::select(-VALUE)
+                                                          TRUE ~ MANAGEMENT_TYPECLEAN)) |> dplyr::select(-VALUE)
 
 
   # Heatmap of Days Open (ZONE ALL)
