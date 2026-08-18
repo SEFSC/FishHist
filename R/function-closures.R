@@ -1,4 +1,4 @@
-#' Number of FRs published by management type and species
+#' Process closures to expand and incorporate all related mtypes for closures to know for a single day whether the fishery is open or closed
 #'
 #' @param data default=fishhist
 #' @param species Filter to species of interest (common name).
