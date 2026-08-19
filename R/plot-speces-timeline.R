@@ -9,9 +9,9 @@
 
 plot_species_timeline <- function(data=fishhist, spp, region){
 
-  spp_dat <- fishhist |>
-    dplyr::filter(COMMON_NAME_CLEAN == 'SNAPPER, RED',
-                  REGION == 'GULF OF AMERICA',
+  spp_dat <- data |>
+    dplyr::filter(COMMON_NAME_CLEAN == spp,
+                  REGION == region,
                   !MANAGEMENT_TYPECLEAN %in% c('DEFINITION', 'IGNORABLE')) |>
     dplyr::mutate(date = lubridate::ymd(EFFECTIVE_DATE), start_year = lubridate::year(EFFECTIVE_DATE),
                   MANAGEMENT_USE = stringr::str_to_title(dplyr::case_when(MANAGEMENT_TYPECLEAN %in% c("BAG LIMIT", "CREW BAG LIMIT") ~ 'BAG LIMITS',
