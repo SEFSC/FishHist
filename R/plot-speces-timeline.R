@@ -46,8 +46,7 @@ plot_species_timeline <- function(data=fishhist, spp, region){
     dplyr::group_by(MANAGEMENT_USE) |>
     dplyr::mutate(position = dplyr::cur_group_id(),
                   ymin = position - 0.5,
-                  ymax = position + 0.5,
-                  y_jittered = position + runif(dplyr::n(), min = -0.2, max = 0.2)) |>
+                  ymax = position + 0.5) |>
     dplyr::arrange(MANAGEMENTCATEGORY, MANAGEMENT_USE)
 
   # Define the color palette for MANAGEMENT_USE
@@ -71,7 +70,7 @@ plot_species_timeline <- function(data=fishhist, spp, region){
                         color = "gray", linetype = "dotted", linewidth = 0.25) +
     # Add lines from points to the x-axis
     ggplot2::geom_segment(ggplot2::aes(x = date_label, xend = date_label,
-                                       y = y_jittered, yend = 0),
+                                       y = position + jitter(0.2), yend = 0),
                           color = "black", linewidth = 0.5) +
     # Add points for MANAGEMENT_USE
     ggplot2::geom_point(ggplot2::aes(x = date_label + jitter(0.3), y = position + jitter(0.2), color = MANAGEMENT_USE), size = 4,
