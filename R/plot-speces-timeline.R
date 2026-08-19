@@ -49,6 +49,8 @@ plot_species_timeline <- function(data=fishhist, spp, region){
                   ymax = position + 0.5) |>
     dplyr::arrange(MANAGEMENTCATEGORY, MANAGEMENT_USE)
 
+  if(nrow(spp_dat) == 0 {stop("Check filters")})
+
   # Define the color palette for MANAGEMENT_USE
   management_colors <- c("#88CCEE", "#999933", "#117733", "#332288", "#882255",
                          "#AA4499", "#CC6677", "#DDCC77", "#44AA99", "#117766",

@@ -23,6 +23,8 @@ process_closures <- function(data=fishhist, spp, region){
                              TRUE ~ VALUE)) |>
     dplyr::arrange(SECTOR_CLEAN, STARTDATE_CLEAN)
 
+  if(nrow(mh_spp_closure) == 0 {stop("Check filters")})
+
   unique_types <- unique(mh_spp_closure$MANAGEMENT_TYPECLEAN)
 
   # Process all types dynamically (long form)
