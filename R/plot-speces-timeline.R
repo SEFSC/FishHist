@@ -5,7 +5,7 @@
 #' @param region Filter to region of interest
 #' @return A plot
 #'
-#' @examples process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+#' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
 
 plot_species_timeline <- function(data=fishhist, spp, region){
 
