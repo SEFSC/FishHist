@@ -22,7 +22,7 @@ plot_mcats_spp <- function(data=fishhist, FMP_filter){
     dplyr::group_by(FMP, MANAGEMENTCATEGORY, COMMON_NAME_CLEAN) |>
     dplyr::summarise(nFRs = dplyr::n_distinct(FR_CITATION))
 
-  if(nrow(dat2) == 0 {stop("Check filters")})
+  if(nrow(dat2) == 0) {stop("Check filters")}
 
   plot <- ggplot2::ggplot(dat2,
                           ggplot2::aes(x = nFRs, y = factor(COMMON_NAME_CLEAN, levels = rev(sort(unique(COMMON_NAME_CLEAN)))),
