@@ -15,7 +15,7 @@ plot_mcats_sector <- function(data=fishhist, FMP_filter){
       dplyr::group_by(FMP, SECTOR_CLEAN) |>
       dplyr::mutate(tot = sum(nrecs), perc = nrecs/tot, labels = paste0(round(perc * 100,1), "%"))
 
-    if(nrow(dat2) == 0 {stop("Check filters")})
+    if(nrow(dat2) == 0) {stop("Check filters")}
 
     plot <- ggplot2::ggplot(dat2,
                             ggplot2::aes(x = "" , y = perc, fill = MANAGEMENTCATEGORY)) +
