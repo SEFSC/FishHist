@@ -28,7 +28,10 @@ process_closures <- function(data=fishhist, spp, region){
   unique_types <- unique(mh_spp_closure$MANAGEMENT_TYPECLEAN)
 
   # Process all types dynamically (long form)
+  start = Sys.time()
   all_spp_closures <- purrr::map_dfr(unique_types, ~ expand_status(mh_spp_closure, .x))
+  runtime = Sys.time() - start
+  runtime
 
   spp_closure_story <- all_spp_closures |>
     dplyr::select(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence,
