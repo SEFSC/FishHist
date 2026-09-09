@@ -487,12 +487,12 @@ expand_status <- function(x, y) {
   # combine <- merge(combine, df_seasonal, by = by_cols, all = TRUE)
   # combine <- merge(combine, df_monthly, by = by_cols, all = TRUE)
 
-  combine <- df_one |>
-      dplyr::full_join(df_weekly,
+  combine <- df_one |> dplyr::ungroup() |>
+      dplyr::full_join(df_weekly |> dplyr::ungroup(),
                 by = dplyr::join_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence)) |>
-      dplyr::full_join(df_seasonal,
+      dplyr::full_join(df_seasonal |> dplyr::ungroup(),
                 by = dplyr::join_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence)) |>
-      dplyr::full_join(df_monthly,
+      dplyr::full_join(df_monthly |> dplyr::ungroup(),
                 by = dplyr::join_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence))
 
   # Filter records with missing FMP (Replaces filter(!is.na(FMP)))
