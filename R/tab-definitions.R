@@ -7,9 +7,9 @@
 #'
 #' @examples tab_definitions(fishhist)
 
-tab_definitions <- function(data=fishhist, spp, region){
+tab_definitions <- function(data=fishhist){
 
-  # Format acronyms to stay all CAPS in the talbe
+  # Format acronyms to stay all CAPS in the table
   acronyms <- c("U.S.", "ABC", "TAC", "IFQ", "TED", "NMFS", "NOAA", "EEZ", "FMP", "FMFC", "MPA", "SSBR")
 
   replacements <- setNames(acronyms,
@@ -19,10 +19,45 @@ tab_definitions <- function(data=fishhist, spp, region){
     title_text <- stringr::str_to_title(text)
     stringr::str_replace_all(title_text, replace_map)}
 
-  dat <- fishhist |> dplyr::filter(MANAGEMENT_TYPECLEAN == 'DEFINITION') |>
+  custom_title_case <- function(text) {
+    # 1. Convert everything to title case first using stringr::str_to_title
+    title_text <- stringr::str_to_title(text)
+
+    # 2. Words to force to LOWERCASE (unless they appear at the very start)
+    lower_words <- c("of", "the", "and", "in", "on", "at", "for", "to", "a", "an")
+    lower_pattern <- base::paste0(
+      "(?<!^)\\b(",
+      base::paste(stringr::str_to_title(lower_words), collapse = "|"),
+      ")\\b"
+    )
+
+    title_text <- stringr::str_replace_all(
+      title_text,
+      stringr::regex(lower_pattern),
+      function(m) stringr::str_to_lower(m)
+    )
+
+    # 3. Acronyms to force to UPPERCASE
+    upper_acronyms <- c("FMP", "EEZ", "U.S.")
+    upper_pattern <- base::paste0(
+      "\\b(",
+      base::paste(stringr::str_to_title(upper_acronyms), collapse = "|"),
+      ")\\b"
+    )
+
+    title_text <- stringr::str_replace_all(
+      title_text,
+      stringr::regex(upper_pattern, ignore_case = TRUE),
+      function(m) stringr::str_to_upper(m)
+    )
+
+    return(title_text)
+  }
+
+  dat <- data |> dplyr::filter(MANAGEMENT_TYPECLEAN == 'DEFINITION') |>
     dplyr::select(FMP, VALUE, FR_CITATION, FR_URL) |> dplyr::distinct() |>
     dplyr::arrange(VALUE) |>
-    dplyr::mutate(FMP = stringr::str_to_title(FMP),
+    dplyr::mutate(FMP = custom_title_case(FMP),
                   VALUE = str_to_title_acronyms(VALUE, replacements))
 
   tabs <- dat |>
