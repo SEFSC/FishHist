@@ -4,8 +4,7 @@ Title: Processing for Southeast Fisheries Management History data
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <sarina.atkinson@noaa.gov>
-Description: 
-    
+Description: need to fill in
 Imports: ggplot2, dplyr
 License: What license is it under?
 Encoding: UTF-8
