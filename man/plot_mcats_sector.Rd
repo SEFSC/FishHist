@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-mcats-sector.R
 \name{plot_mcats_sector}
 \alias{plot_mcats_sector}
-\title{Percent of regulations by management type and sector}
+\title{FMP plot by sector}
 \usage{
 plot_mcats_sector(data = fishhist, FMP_filter)
 }
@@ -15,7 +15,7 @@ plot_mcats_sector(data = fishhist, FMP_filter)
 A plot
 }
 \description{
-Percent of regulations by management type and sector
+Percent of regulations by management type and sector (recreational vs. commerical)
 }
 \examples{
 plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")

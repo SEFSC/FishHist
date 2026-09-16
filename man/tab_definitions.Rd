@@ -2,7 +2,7 @@
 % Please edit documentation in R/tab-definitions.R
 \name{tab_definitions}
 \alias{tab_definitions}
-\title{List containing separate tables of Definitions for each FMP with associated FR notice for reference}
+\title{Definitions Table}
 \usage{
 tab_definitions(data = fishhist, spp, region)
 }

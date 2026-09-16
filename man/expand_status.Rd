@@ -2,7 +2,7 @@
 % Please edit documentation in R/function-mstatus.R
 \name{expand_status}
 \alias{expand_status}
-\title{Function to expand dates based on management status}
+\title{Expand management status}
 \usage{
 expand_status(x, y)
 }
@@ -15,7 +15,7 @@ expand_status(x, y)
 A dataframe
 }
 \description{
-Function to expand dates based on management status
+Function to expand the dates based on management status (e.g. monthly recurring, seasonal, etc.)
 }
 \examples{
 expand_status(fishhist, "FISHING YEAR")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-mcats-species.R
 \name{plot_mcats_spp}
 \alias{plot_mcats_spp}
-\title{Number of FRs published by management type and species}
+\title{FMP plot for managed species}
 \usage{
 plot_mcats_spp(data = fishhist, FMP_filter)
 }
