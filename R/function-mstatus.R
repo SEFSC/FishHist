@@ -1,4 +1,6 @@
-#' Function to expand dates based on management status
+#' Expand management status
+#'
+#' Function to expand the dates based on management status (e.g. monthly recurring, seasonal, etc.)
 #'
 #' @param x data default=fishhist
 #' @param y Management Type Use

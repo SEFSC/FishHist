@@ -1,4 +1,6 @@
-#' Percent of regulations by management type and sector
+#' FMP plot by sector
+#'
+#' Percent of regulations by management type and sector (recreational vs. commerical)
 #'
 #' @param data default=fishhist
 #' @param FMP Filter to plot only a single FMP of interest.

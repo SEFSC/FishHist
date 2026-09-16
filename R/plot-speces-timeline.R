@@ -1,3 +1,5 @@
+#' Timeline visual
+#'
 #' Timeline of management actions publised for a species within a FMP
 #'
 #' @param data default=fishhist

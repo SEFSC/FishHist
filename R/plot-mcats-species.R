@@ -1,3 +1,5 @@
+#' FMP plot for managed species
+#'
 #' Number of FRs published by management type and species
 #'
 #' @param data default=fishhist

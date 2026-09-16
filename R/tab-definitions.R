@@ -1,3 +1,5 @@
+#' Definitions Table
+#'
 #' List containing separate tables of Definitions for each FMP with associated FR notice for reference
 #'
 #' @param data default=fishhist
