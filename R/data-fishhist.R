@@ -1,9 +1,11 @@
-#' @title The Southeast Fisheries Management History dataset
+#' The Southeast Fisheries Management History dataset
 #'
-#' @description A processed and cleaned management history dataframe
+#' A processed and cleaned management history dataframe.
 #'
-#' @docType data
-#' @usage data(fishhist)
-#' @format A data frame
-#' @keywords datasets
+#' @format A data frame with [NUMBER] rows and [NUMBER] variables:
+#' \describe{
+#'   \item{column_1}{Description of column 1}
+#'   \item{column_2}{Description of column 2}
+#' }
+#' @source Optional source or URL reference for where the data came from
 "fishhist"
