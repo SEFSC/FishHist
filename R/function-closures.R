@@ -117,10 +117,10 @@ process_closures <- function(data=fishhist, spp, region){
     dplyr::mutate(month = factor(month, levels = month.abb),
                   SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
-  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
+  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Open", na.value = "white") +
-    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year))/3) +
+    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year))/3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
     ggplot2::labs(x = "",y = "") +
     ggplot2::theme_classic() +
@@ -143,10 +143,10 @@ process_closures <- function(data=fishhist, spp, region){
                     fill = list(n = 0)) |>
     dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
-  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = year, y = factor(month, levels = rev(month.abb)), fill = n)) +
+  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = n)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Closed", na.value = "white", direction=-1) +
-    ggplot2::scale_x_continuous(expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year))/3) +
+    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year))/3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
     ggplot2::labs(x = "",y = "") +
     ggplot2::theme_classic() +
