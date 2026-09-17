@@ -21,7 +21,7 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_AUG_14_2026.csv",
                    fileEncoding = 'Windows-1252') |>
   # Reformat data frame for date formats and NAs
   # Format dates to be mm/dd/yyyy to match added data (this may not be an issue in the future when pull directly from the database)
-  dplyr::mutate(end_timeseries = as.Date("2025-12-31", "%Y-%m-%d"),
+  dplyr::mutate(end_timeseries = as.Date(Sys.Date(), "%Y-%m-%d"),
                 EFFECTIVE_DATE = as.Date(EFFECTIVE_DATE, "%m/%d/%Y"),
                 INEFFECTIVE_DATE = as.Date(INEFFECTIVE_DATE, "%m/%d/%Y"),
                 #Remove ="..." characters in species ITIS codes
@@ -1238,10 +1238,10 @@ triplimits_281 <- mh_zone_triplimits |>
 
 tripllimits_1101 <- mh_zone_triplimits |>
   dplyr::filter(CLUSTER == "1101") |>
-  dplyr::mutate(END_DATE2 = dplyr::case_when(REGULATION_ID == "5037" ~ as.Date("2025-12-31"),
-                               REGULATION_ID == "5036" ~ as.Date("2025-12-31"),
-                               REGULATION_ID == "5035" ~ as.Date("2025-12-31"),
-                               REGULATION_ID == "5034" ~ as.Date("2025-12-31"),
+  dplyr::mutate(END_DATE2 = dplyr::case_when(REGULATION_ID == "5037" ~ as.Date(Sys.Date()),
+                               REGULATION_ID == "5036" ~ as.Date(Sys.Date()),
+                               REGULATION_ID == "5035" ~ as.Date(Sys.Date()),
+                               REGULATION_ID == "5034" ~ as.Date(Sys.Date()),
                                TRUE ~ END_DATE2))
 #join
 trip <- dplyr::bind_rows(triplimits_108, triplimits_275, triplimits_276, triplimits_281, tripllimits_1101)
@@ -1249,10 +1249,17 @@ trip <- dplyr::bind_rows(triplimits_108, triplimits_275, triplimits_276, triplim
 zone_remove_flags_filter <- zone_remove_flags |>
   dplyr::filter(!(CLUSTER %in% c(108, 275, 276, 281, 1101, 166)))
 
-mh_data_log_final <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, trip) |>
+mh_data_log2 <- dplyr::bind_rows(zone_interest_filter, zone_remove_flags, trip) |>
   dplyr::arrange(CLUSTER) |>
-  dplyr::select(-zone_specific_use, -zone_general_use, -ZONE_CLASS, -interest_cluster)
+  dplyr::select(-zone_specific_use, -zone_general_use, -ZONE_CLASS, -interest_cluster) |> dplyr::ungroup()
 
+# Force old Caribbean FMPs to end a day before the effective date of the new Caribbean FMPs
+# old FMPs = "SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS"
+# new FMPs = "FMP FOR THE EEZ AROUND PUERTO RICO", "FMP FOR THE EEZ AROUND ST. THOMAS AND ST. JOHN", "FMP FOR THE EEZ AROUND ST. CROIX"
+mh_data_log_final <- mh_data_log2 |>
+  dplyr::mutate(END_DATE2 = dplyr::case_when(FMP %in% c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
+                                               END_DATE2 > "2022-10-12" ~ as.Date("2022-10-12"),
+                                             TRUE ~ END_DATE2))
 
 fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
   # Rename to match the processed MH dataset from ODM
