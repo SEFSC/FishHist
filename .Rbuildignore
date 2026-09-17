@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+
+usethis::use_build_ignore("data-raw")
+^data-raw$

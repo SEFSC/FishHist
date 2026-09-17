@@ -4,8 +4,8 @@ Title: Processing for Southeast Fisheries Management History data
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <sarina.atkinson@noaa.gov>
-Description: need to fill in
-Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr
+Description: Federal Register (FR) notices offer vital snapshots of individual fisheries management actions, however, they remain fragmented on their own. To build a continuous regulatory timeline, the Southeast Fisheries Management History dataset was processed to bridge the gaps between notices. This processed dataset is called fishhist. Additional functions take the processed dataset and produce standard tables, plots, or analysis-ready data frames.
+Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr, stats
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

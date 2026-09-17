@@ -9,7 +9,6 @@
 #' @examples expand_status(fishhist, "FISHING YEAR")
 #'
 #' @export
-
 expand_status <- function(x, y) {
 
   # x = data frame
@@ -341,7 +340,7 @@ expand_status <- function(x, y) {
                date_sequence > START_DATE_EXPAND & date_sequence < END_DATE_EXPAND) |>
       dplyr::select(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence, TIME,
              CLUSTER_ID, REG_ID, FR_CITATION, VALUE, VALUEUNITS, VALUETYPE, VALUERATE) |>
-      dplyr::arrange(date_sequence, desc(FR_CITATION)) |>
+      dplyr::arrange(date_sequence, dplyr::desc(FR_CITATION)) |>
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
       # Retain only most recent FR if there are 2 records with the same date_sequence
       dplyr::slice(1) |>
@@ -404,7 +403,7 @@ expand_status <- function(x, y) {
                Expand_day_of_week <= ENDDAY_CLEAN_OF_WEEK_EXPAND) |>
       dplyr::select(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence, TIME,
              CLUSTER_ID, REG_ID, FR_CITATION, VALUE, VALUEUNITS, VALUETYPE, VALUERATE) |>
-      dplyr::arrange(date_sequence, desc(FR_CITATION)) |>
+      dplyr::arrange(date_sequence, dplyr::desc(FR_CITATION)) |>
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
       # Retain only most recent FR if there are 2 records with the same date_sequence
       dplyr::slice(1) |>

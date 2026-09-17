@@ -8,14 +8,12 @@
 #' @examples tab_definitions(fishhist)
 #'
 #' @export
-
-
 tab_definitions <- function(data=fishhist){
 
   # Format acronyms to stay all CAPS in the table
   acronyms <- c("U.S.", "ABC", "TAC", "IFQ", "TED", "NMFS", "NOAA", "EEZ", "FMP", "FMFC", "MPA", "SSBR")
 
-  replacements <- setNames(acronyms,
+  replacements <- stats::setNames(acronyms,
                            paste0("\\b", stringr::str_to_title(acronyms), "\\b"))
 
   str_to_title_acronyms <- function(text, replace_map) {

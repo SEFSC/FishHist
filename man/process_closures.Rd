@@ -9,9 +9,9 @@ process_closures(data = fishhist, spp, region)
 \arguments{
 \item{data}{default=fishhist}
 
-\item{region}{Filter to region of interest}
+\item{spp}{Filter to species of interest (common name).}
 
-\item{species}{Filter to species of interest (common name).}
+\item{region}{Filter to region of interest}
 }
 \value{
 A list
@@ -21,4 +21,5 @@ Process closures to expand and incorporate all related mtypes for closures to kn
 }
 \examples{
 process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+
 }

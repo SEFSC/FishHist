@@ -17,4 +17,5 @@ List containing separate tables of Definitions for each FMP with associated FR n
 }
 \examples{
 tab_definitions(fishhist)
+
 }

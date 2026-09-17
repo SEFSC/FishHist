@@ -9,9 +9,9 @@ plot_species_timeline(data = fishhist, spp, region)
 \arguments{
 \item{data}{default=fishhist}
 
-\item{region}{Filter to region of interest}
+\item{spp}{Filter to species of interest (common name).}
 
-\item{species}{Filter to species of interest (common name).}
+\item{region}{Filter to region of interest}
 }
 \value{
 A plot
@@ -21,4 +21,5 @@ Timeline of management actions publised for a species within a FMP
 }
 \examples{
 plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+
 }

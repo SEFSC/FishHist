@@ -3,14 +3,13 @@
 #' Number of FRs published by management type and species
 #'
 #' @param data default=fishhist
-#' @param FMP Filter to plot only a single FMP of interest.
+#' @param FMP_filter Filter to plot only a single FMP of interest.
 #'
 #' @return A plot
 #'
-#' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
+#' @examples plot_mcats_spp(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
 #'
 #' @export
-
 plot_mcats_spp <- function(data=fishhist, FMP_filter){
 
   dt <- data |> dplyr::filter(!is.na(END_DATE)) |>

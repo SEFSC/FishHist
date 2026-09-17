@@ -8,7 +8,6 @@
 #' @examples gantt_FMP(fishhist)
 #'
 #' @export
-
 gantt_FMP <- function(data=fishhist){
 
   custom_title_case <- function(text) {

@@ -3,15 +3,13 @@
 #' Timeline of management actions publised for a species within a FMP
 #'
 #' @param data default=fishhist
-#' @param species Filter to species of interest (common name).
+#' @param spp Filter to species of interest (common name).
 #' @param region Filter to region of interest
 #' @return A plot
 #'
 #' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
 #'
 #' @export
-
-
 plot_species_timeline <- function(data=fishhist, spp, region){
 
   spp_dat <- data |>

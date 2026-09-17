@@ -17,4 +17,5 @@ Gantt chart of the first and last Federal Register (FR) published within a Fishe
 }
 \examples{
 gantt_FMP(fishhist)
+
 }
