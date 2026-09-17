@@ -8,6 +8,7 @@
 #'
 #' @examples expand_status(fishhist, "FISHING YEAR")
 #'
+#' @export
 
 expand_status <- function(x, y) {
 

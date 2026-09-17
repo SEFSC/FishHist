@@ -8,6 +8,9 @@
 #' @return A plot
 #'
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
+#'
+#' @export
+
 plot_mcats_spp <- function(data=fishhist, FMP_filter){
 
   dt <- data |> dplyr::filter(!is.na(END_DATE)) |>

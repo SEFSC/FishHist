@@ -6,6 +6,9 @@
 #' @return A list of tables
 #'
 #' @examples tab_definitions(fishhist)
+#'
+#' @export
+
 
 tab_definitions <- function(data=fishhist){
 

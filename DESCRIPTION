@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <sarina.atkinson@noaa.gov>
 Description: need to fill in
-Imports: ggplot2, dplyr
+Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

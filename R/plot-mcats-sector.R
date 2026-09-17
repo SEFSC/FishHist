@@ -8,6 +8,9 @@
 #' @return A plot
 #'
 #' @examples plot_mtypes(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
+#'
+#' @export
+
 plot_mcats_sector <- function(data=fishhist, FMP_filter){
 
     dat2 <- data |>

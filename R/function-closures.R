@@ -8,6 +8,8 @@
 #' @return A list
 #'
 #' @examples process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+#'
+#' @export
 
 process_closures <- function(data=fishhist, spp, region){
 

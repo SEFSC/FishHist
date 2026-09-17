@@ -4,7 +4,7 @@
 \alias{tab_definitions}
 \title{Definitions Table}
 \usage{
-tab_definitions(data = fishhist, spp, region)
+tab_definitions(data = fishhist)
 }
 \arguments{
 \item{data}{default=fishhist}

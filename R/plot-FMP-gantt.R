@@ -6,7 +6,8 @@
 #' @return A plot
 #'
 #' @examples gantt_FMP(fishhist)
-
+#'
+#' @export
 
 gantt_FMP <- function(data=fishhist){
 

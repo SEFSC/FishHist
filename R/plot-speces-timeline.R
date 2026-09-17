@@ -8,6 +8,9 @@
 #' @return A plot
 #'
 #' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+#'
+#' @export
+
 
 plot_species_timeline <- function(data=fishhist, spp, region){
 
