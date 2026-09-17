@@ -190,12 +190,38 @@ mh_setup <- mh_raw |>
                                                     `1` = "MONDAY", `2` = "TUESDAY", `3` = "WEDNESDAY",
                                                     `4` = "THURSDAY", `5` = "FRIDAY", `6` = "SATURDAY", `7` = "SUNDAY"))
 
+# Read in sp_info_use
+sp_info_use <- readRDS("data-raw/MH_clean_spp_tables.RDS") |>
+  dplyr::mutate(SPP_NAME = str_replace_all(SPP_NAME, fixed("?"), "—"))
+
+# CHECK: species tables -- 5 duplicates still exist because they are species that were a part of an SPECIES_AGGREGATE, were removed from the SPECIES_AGGREGATE, and were later reinstated
+count_sp_info_use <- sp_info_use |>
+  dplyr::group_by(FMP, SPP_TYPE, SPP_NAME, COMMON_NAME_USE) |>
+  dplyr::summarize(N = dplyr::n())
+
+# Species ALL expansion for FISHING YEAR and FISHING SEASON
+mh_expanded_fy_fs <- mh_setup |> dplyr::filter(MANAGEMENT_TYPE_USE %in% c('FISHING YEAR', 'FISHING SEASON'), SPP_NAME == 'ALL') |>
+  left_join(sp_info_use |>
+              dplyr::filter(SPP_NAME == "ALL") |> dplyr::rename(SPECIES = "COMMON_NAME_USE") |>
+              dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SPP_NAME, SCIENTIFIC_NAME)), by = dplyr::join_by(FMP, SPP_TYPE), relationship = "many-to-many") |>
+  # Adjust end dates based on species added and removed dates
+  dplyr::mutate(END_DATE = case_when(is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE, TRUE ~ END_DATE),
+                REMOVE = case_when(START_DATE > REMOVED_SP_DATE ~ 1, TRUE ~ 0)) |>
+  dplyr::filter(REMOVE == 0) |>
+  dplyr::select(-c(REMOVE, ADDED_SP_DATE, REMOVED_SP_DATE, SPECIES_ITIS)) |> rename(SPECIES_ITIS = "SPECIES_ITIS_USE")
+
+mh_setup2 <- mh_setup |>
+  dplyr::filter(!(MANAGEMENT_TYPE_USE %in% c('FISHING YEAR', 'FISHING SEASON') & SPP_NAME == 'ALL')) |>
+  bind_rows(mh_expanded_fy_fs) |>
+  # Fill in SPECIES for aggregates, groups, and species
+  dplyr::mutate(SPECIES = case_when(is.na(SPECIES) ~ SPP_NAME, TRUE ~ SPECIES))
+
 # Define matching variables for sector groupings to create unique SECTOR_IDs
 sector.match <- c("MANAGEMENT_TYPE_USE",
                   "JURISDICTION", "JURISDICTIONAL_WATERS", "FMP",
                   "SECTOR_USE",
                   "REGION",
-                  "SPP_NAME")
+                  "SPECIES")
 
 # Suppress summarize info
 options(dplyr.summarise.inform = FALSE)
@@ -209,7 +235,7 @@ if(length(sector_id_files) > 0) {
     purrr::map(read.csv) |>
     purrr::reduce(rbind)
 } else {
-  existing_sector_clusters <- mh_setup |>
+  existing_sector_clusters <- mh_setup2 |>
     dplyr::select(dplyr::one_of(sector.match)) |>
     dplyr::filter(FMP == "") |>
     tibble::add_column(SECTOR_ID = NA)
@@ -219,7 +245,7 @@ if(length(sector_id_files) > 0) {
 sector_max = max(c(existing_sector_clusters$SECTOR_ID, 0))
 
 # Create new SECTOR_IDs for new files
-new_sector_clusters <- mh_setup |>
+new_sector_clusters <- mh_setup2 |>
   dplyr::select(dplyr::one_of(sector.match)) |>
   dplyr::distinct() |>
   dplyr::anti_join(existing_sector_clusters, by = sector.match) |>
@@ -236,17 +262,15 @@ if(length(new_sector_clusters$SECTOR_ID) > 0) {
 unique_sector_clusters <- rbind(existing_sector_clusters, new_sector_clusters)
 
 # Join the unique_sector_clusters data frame to the mh_setup data frame to incorporate sector information in the data set
-mh_sector_id <- mh_setup |>
-  dplyr::left_join(unique_sector_clusters,
-            by = c("JURISDICTION", "REGION", "JURISDICTIONAL_WATERS", "FMP",
-                   "SECTOR_USE", "SPP_NAME", "MANAGEMENT_TYPE_USE")) |>
+mh_sector_id <- mh_setup2 |>
+  dplyr::left_join(unique_sector_clusters, by = sector.match) |>
   dplyr::mutate(SUBSECTOR_USE = SUBSECTOR)
 
 # Define matching variables for CLUSTER groupings
 cluster.match <- c("MANAGEMENT_TYPE_USE",
                    "JURISDICTION", "JURISDICTIONAL_WATERS", "FMP",
                    "SECTOR_USE", "SUBSECTOR_USE", "REGION",
-                   "SPP_NAME")
+                   "SPECIES")
 
 # Read in files with existing CLUSTER IDs
 cluster_files <- dir(here::here('data-raw/clusters'), full.names = TRUE)
@@ -481,7 +505,7 @@ mh_fs <- mh_dates1 |>
   dplyr::filter(MANAGEMENT_TYPE_USE == 'FISHING SEASON', REG_REMOVED == 0)
 
 mh_fs_split <- mh_fs |>
-  dplyr::group_by(FR_CITATION, FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, EFFECTIVE_DATE) |>
+  dplyr::group_by(FR_CITATION, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, EFFECTIVE_DATE) |>
   dplyr::summarise(N_seasons = dplyr::n())
 
 # Identify cases that have a split fishing season
@@ -766,14 +790,7 @@ mh_dates <- mh_dates1 |>
   dplyr::mutate(START_DATE_USE = dplyr::case_when(!is.na(START_DATE_USE) ~ START_DATE_USE,
                                     TRUE ~ START_DATE))
 
-# Read in sp_info_use
-sp_info_use <- readRDS("data-raw/MH_clean_spp_tables.RDS") |>
-  dplyr::mutate(SPP_NAME = str_replace_all(SPP_NAME, fixed("?"), "—"))
-
-# CHECK: species tables -- 5 duplicates still exist because they are species that were a part of an SPECIES_AGGREGATE, were removed from the SPECIES_AGGREGATE, and were later reinstated
-count_sp_info_use <- sp_info_use |>
-  dplyr::group_by(FMP, SPP_TYPE, SPP_NAME, COMMON_NAME_USE) |>
-  dplyr::summarize(N = dplyr::n())
+#### Species expansion for everything
 
 # Prepare species related information for expansion based on SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME == ALL selections
 # Adjust dates based on the dates that species were added and/or removed
