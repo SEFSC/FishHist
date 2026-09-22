@@ -37,14 +37,16 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_AUG_14_2026.csv",
 # Replace all "blank" fields with NA for consistency
 mh_raw[mh_raw==""]<-NA
 
-# Add "DETAILED" YES/NO field (from Google Sheets) based on MANAGEMENT_TYPE ####
+##################### Data Prep ###################
+
+# Add "DETAILED" YES/NO field (from Google Sheets) based on MANAGEMENT_TYPE
 # Read in file outlining whether a MANAGEMENT_TYPE is detailed (Y/N)
 detailed_xref <- read.csv("data-raw/mtype_detailed_xref.csv",
                           stringsAsFactors = FALSE,
                           fileEncoding = 'Windows-1252') |>
   dplyr::select(-MANAGEMENT_CATEGORY)
 
-# Translate from old ZONE names to new ZONE names ####
+# Translate from old ZONE names to new ZONE names
 # Read in file that outlines new ZONE names for all FMPs
 # These ZONEs were cleaned up for consistency
 area_xref <- read.csv("data-raw/zone_name_xref.csv",
@@ -190,6 +192,8 @@ mh_setup <- mh_raw |>
                                                     `1` = "MONDAY", `2` = "TUESDAY", `3` = "WEDNESDAY",
                                                     `4` = "THURSDAY", `5` = "FRIDAY", `6` = "SATURDAY", `7` = "SUNDAY"))
 
+##################### Species Expansion Fishing Year and Fishing Season ###################
+
 # Read in sp_info_use
 sp_info_use <- readRDS("data-raw/MH_clean_spp_tables.RDS") |>
   dplyr::mutate(SPP_NAME = str_replace_all(SPP_NAME, fixed("?"), "—"))
@@ -215,6 +219,8 @@ mh_setup2 <- mh_setup |>
   bind_rows(mh_expanded_fy_fs) |>
   # Fill in SPECIES for aggregates, groups, and species
   dplyr::mutate(SPECIES = case_when(is.na(SPECIES) ~ SPP_NAME, TRUE ~ SPECIES))
+
+##################### Sector ID ###################
 
 # Define matching variables for sector groupings to create unique SECTOR_IDs
 sector.match <- c("MANAGEMENT_TYPE_USE",
@@ -266,6 +272,8 @@ mh_sector_id <- mh_setup2 |>
   dplyr::left_join(unique_sector_clusters, by = sector.match) |>
   dplyr::mutate(SUBSECTOR_USE = SUBSECTOR)
 
+##################### Cluster ID ###################
+
 # Define matching variables for CLUSTER groupings
 cluster.match <- c("MANAGEMENT_TYPE_USE",
                    "JURISDICTION", "JURISDICTIONAL_WATERS", "FMP",
@@ -290,7 +298,7 @@ if(length(cluster_files) > 0) {
 # Create clusters_max variable
 clusters_max = max(as.numeric(existing_clusters$CLUSTER), na.rm = TRUE, 0)
 
-# Create new CLUSTER IDs for new files ####
+# Create new CLUSTER IDs for new files
 # CREATE: Assign new CLUSTER_ID to any new CLUSTER groupings
 new_clusters <- mh_sector_id |>
   dplyr::select(dplyr::one_of(cluster.match)) |>
@@ -305,7 +313,7 @@ if(length(new_clusters$CLUSTER) > 0) {
             row.names = FALSE)
 }
 
-# Join old CLUSTER groupings with new CLUSTER groupings ####
+# Join old CLUSTER groupings with new CLUSTER groupings
 # Merge old and new CLUSTERS into unique_clusters data frame
 unique_clusters <- rbind(existing_clusters, new_clusters)
 
@@ -329,6 +337,8 @@ mh_cluster_ids <- mh_prep |>
   dplyr::ungroup() |>
   # Create flag to indicate cases where a CLUSTER has a multi_reg related flag
   dplyr::mutate(MULTI_REG_CLUSTER = as.numeric(MULTI_REG_VALUE == 1 | MULTI_REG_FORECAST == 1 | MULTI_REG_SEASONAL == 1))
+
+##################### Reversions ###################
 
 # Create logic to adjust regulation start and end dates
 # Create REVERSION records (records that occur before and after an ADJUSTMENT)
@@ -419,9 +429,9 @@ mh_reversions <- mh_dates_detailed |> dplyr::ungroup() |>
 # Create END_DATE variable dependent on INEFFECTIVE_DATE of current record, START_DATE of next record, and CHANGE_DATE of current record
 # Define a helper function to safely handle max() on empty vectors or all-NA groups
 safe_max <- function(x) {
-  if (length(x) == 0 || all(is.na(x))) return(NA)
-  max(x, na.rm = TRUE)
-}
+  if (length(x) == 0 || all(is.na(x))) return(NA) max(x, na.rm = TRUE)}
+
+##################### Fill in End Date - Detailed Only (not Catch Limits) ###################
 
 mh_dates1 <- mh_reversions |>
   dplyr::arrange(CLUSTER, dplyr::desc(SORT_DATE_USE), dplyr::desc(vol), dplyr::desc(page)) |>
@@ -498,6 +508,9 @@ mh_dates1 <- mh_reversions |>
   # Added 2/2/24 - do not include records that were added because of an adjustment, but not actually implemented
   dplyr::filter(!(NEVER_IMPLEMENTED == 1 & REVERSION == TRUE))
 
+
+##################### Catch Limits Adjust Start Date using Fishing Year ###################
+
 # Adjust start date information for CATCH LIMIT MANAGEMENT_TYPEs
 # First reclassify regulations entered as FISHING SEASON to FISHING YEAR
 # Only include REG_REMOVED == 0 since we do not want to keep records that "turn off" the previous regulations
@@ -548,7 +561,7 @@ mh_fs_numdays <- mh_fs2 |>
 # Prepare to reclassify FISHING SEASON records as FISHING YEAR that are 364/365 days
 fs_to_fy <- mh_fs_numdays |>
   dplyr::ungroup() |>
-  dplyr::filter(DIFF == 364 | DIFF == 365) |>
+  dplyr::filter(DIFF %in% c(364, 365, 366)) |>
   dplyr::select(REGULATION_ID) |>
   dplyr::pull()
 
@@ -562,22 +575,21 @@ mh_fy <- mh_dates1 |>
   dplyr::filter(MANAGEMENT_TYPE_USE == 'FISHING YEAR', REG_REMOVED == 0) |>
   # Recode CLUSTER ID of recoded MANAGEMENT_TYPEs so the CLUSTERs match
   # These are clusters that were entered as FISHING SEASON but are actually a FISHING_YEAR
-  dplyr::mutate(NEW_CLUSTER = dplyr::case_when(!REGULATION_ID %in% fs_to_fy & SPP_NAME != 'ALL' ~ CLUSTER)) |>
+  dplyr::mutate(NEW_CLUSTER = dplyr::case_when(!REGULATION_ID %in% fs_to_fy & SPECIES != 'ALL' ~ CLUSTER)) |>
   dplyr::arrange(START_DATE_USE) |>
-  dplyr::group_by(MANAGEMENT_TYPE_USE, JURISDICTION, JURISDICTIONAL_WATERS, FMP, SECTOR_USE, SUBSECTOR_USE, REGION, SPP_NAME) |>
+  dplyr::group_by(MANAGEMENT_TYPE_USE, JURISDICTION, JURISDICTIONAL_WATERS, FMP, SECTOR_USE, SUBSECTOR_USE, REGION, SPECIES) |>
   # first down and then up - this satisfies cases where first date needs a new cluster
   tidyr::fill(NEW_CLUSTER, .direction = "downup") |>
   dplyr::ungroup()
 
 # Identify clusters that have a split fishing year
 mh_fy_split <- mh_fy |>
-  dplyr::group_by(FR_CITATION, FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, EFFECTIVE_DATE) |>
+  dplyr::group_by(FR_CITATION, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, EFFECTIVE_DATE) |>
   dplyr::summarise(N = dplyr::n()) |>
   dplyr::filter(N > 1)
 
 # STOP code if we have a split fishing year because the code needs to account for this
-if((nrow(mh_fy_split) != 0)) {
-  stop("Fishing year split, please investigate")}
+if((nrow(mh_fy_split) != 0)) {  stop("Fishing year split, please investigate")}
 
 # Identify clusters that have a fishing year < 365 days
 mh_fy_less365 <- mh_fy |>
@@ -593,7 +605,7 @@ if(nrow(mh_fy_less365) != 0) { stop("Fishing year not 365 days")}
 # CREATE: START_MONTH2 to use for determining the start month and day of the FISHING YEAR
 mh_fy2 <- mh_fy |>
   dplyr::ungroup() |>
-  dplyr::select(NEW_CLUSTER, FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH, START_DAY_USE) |>
+  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH, START_DAY_USE) |>
   # Format start month and day as FY_MONTH and FY_DAY
   # Get month from number to month name abbreviation
   dplyr::mutate(START_MONTH2 = format(as.Date(paste0("2021-", START_MONTH, "-01"), "%Y-%m-%d"), "%b"),
@@ -604,10 +616,13 @@ mh_fy3 <- mh_fy2 |>
   dplyr::ungroup() |>
   dplyr::group_by(NEW_CLUSTER, ZONE_USE, FY) |>
   dplyr::mutate(EFFECTIVE_DATE_FY = min(START_DATE_USE)) |>
-  dplyr::select(NEW_CLUSTER, FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
+  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
          EFFECTIVE_DATE_FY, FY) |>
   dplyr::distinct() |>
-  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPP_NAME) |>
+  # Remove error with royal red -- TEMP
+  dplyr::mutate(RM = case_when(REGION == 'GULF OF AMERICA' & SPECIES == 'SHRIMP, ROYAL RED' & FY == '1-Jan' ~ 1, TRUE ~ 0)) %>%
+  dplyr::filter(RM ==0) %>% dplyr::select(-RM) |>
+  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPECIES) |>
   dplyr::arrange(EFFECTIVE_DATE_FY) |>
   dplyr::mutate(reg_order = rank(EFFECTIVE_DATE_FY))
 
@@ -616,72 +631,65 @@ mh_fy3_w <- mh_fy3 |>
   tidyr::pivot_wider(names_from = reg_order, values_from = c(EFFECTIVE_DATE_FY, FY)) |>
   dplyr::ungroup()
 
-# Subset FISHING YEAR expansion for the join
-# FISHING YEAR for specific subsector, zone, and species
-mh_fy_sz <- mh_fy3_w |>
-  dplyr::filter(SUBSECTOR_USE != 'ALL', ZONE_USE != 'ALL') |>
-  dplyr::rename(EFFECTIVE_DATE_FY_1_sz = "EFFECTIVE_DATE_FY_1",
-         EFFECTIVE_DATE_FY_2_sz = "EFFECTIVE_DATE_FY_2",
-         FY_1_sz = "FY_1",
-         FY_2_sz = "FY_2") |>
-  dplyr::select(-c(NEW_CLUSTER))
-
-# Fishing year for specific zone and species
-mh_fy_z <- mh_fy3_w |>
-  dplyr::filter(ZONE_USE != 'ALL', SUBSECTOR_USE == 'ALL') |>
-  dplyr::rename(EFFECTIVE_DATE_FY_1_z = "EFFECTIVE_DATE_FY_1",
-         EFFECTIVE_DATE_FY_2_z = "EFFECTIVE_DATE_FY_2",
-         FY_1_z = "FY_1",
-         FY_2_z = "FY_2") |>
-  dplyr::select(-c(NEW_CLUSTER, SUBSECTOR_USE))
-
-# FISHING YEAR for specific species (all zones and subsectors)
-mh_fy_s <- mh_fy3_w |>
-  dplyr::filter(SPP_NAME != "ALL", ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') |>
-  dplyr::rename(EFFECTIVE_DATE_FY_1_s = "EFFECTIVE_DATE_FY_1",
-         EFFECTIVE_DATE_FY_2_s = "EFFECTIVE_DATE_FY_2",
-         FY_1_s = "FY_1",
-         FY_2_s = "FY_2") |>
-  dplyr::select(-c(NEW_CLUSTER, SUBSECTOR_USE, ZONE_USE))
-
-# FISHING YEAR for all zones, subsectors, and species for management types where species expanded
-mh_fy_a <- mh_fy3_w |>
-  dplyr::filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL', SPP_NAME == 'ALL') |>
-  dplyr::rename(EFFECTIVE_DATE_FY_1_a = "EFFECTIVE_DATE_FY_1",
-         EFFECTIVE_DATE_FY_2_a = "EFFECTIVE_DATE_FY_2",
-         FY_1_a = "FY_1",
-         FY_2_a = "FY_2") |>
-  dplyr::select(-c(NEW_CLUSTER, SUBSECTOR_USE, ZONE_USE, SPP_NAME))
+# Check that fishing year for a FMP/region/species is the same by sector - this is for when sector is ALL
+# We will use the FMP/region/species FY to join to these records
+if(nrow(mh_fy3_w %>% filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') %>%
+  select(-c(NEW_CLUSTER, ZONE_USE, SUBSECTOR_USE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3)) %>%
+  pivot_wider(names_from = SECTOR_USE, values_from = c(FY_1, FY_2, FY_3)) %>%
+  filter(FY_1_COMMERCIAL != FY_1_RECREATIONAL)) > 0) {  stop("Fishing year is different by sector") }
 
 # Filter the mh_cluster_ids data frame to obtain all CATCH LIMITS records
 Catchlim <- mh_cluster_ids |>
-  dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS") |>
-  dplyr::filter(REG_REMOVED == 0)
+  dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS" & REG_REMOVED == 0)
 
 # Add FISHING YEAR information to MANAGEMENT_CATEGORY == CATCH LIMITS records
 mh_combine <- Catchlim |>
   dplyr::ungroup() |>
-  # When specific to a subsector and zone
-  dplyr::left_join(mh_fy_sz, by = dplyr::join_by("REGION", "FMP", "SECTOR_USE", "ZONE_USE", "SUBSECTOR_USE",
-                                   "SPP_NAME")) |>
-  # When specific to a zone only
-  dplyr::left_join(mh_fy_z, by = dplyr::join_by("REGION", "FMP", "SECTOR_USE", "ZONE_USE",
-                                  "SPP_NAME")) |>
-  # When specific to a species only
-  dplyr::left_join(mh_fy_s, by = dplyr::join_by("REGION", "FMP", "SECTOR_USE",
-                                  "SPP_NAME")) |>
-  # When general to all zones and subsectors for expanded mtypes
-  dplyr::left_join(mh_fy_a, by = dplyr::join_by("REGION", "FMP", "SECTOR_USE")) |>
+  # Join by all columns
+  dplyr::left_join(mh_fy3_w %>% dplyr::select(-NEW_CLUSTER) %>%
+                     dplyr::rename(EFFECTIVE_DATE_FY_1_all = "EFFECTIVE_DATE_FY_1",
+                                   EFFECTIVE_DATE_FY_2_all = "EFFECTIVE_DATE_FY_2",
+                                   EFFECTIVE_DATE_FY_3_all = "EFFECTIVE_DATE_FY_3",
+                                   FY_1_all = "FY_1",
+                                   FY_2_all = "FY_2",
+                                   FY_3_all = "FY_3"),
+                   by = join_by(FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE)) |>
+  # Join by only species and region
+  dplyr::left_join(mh_fy3_w %>% filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') %>%
+                     select(-c(NEW_CLUSTER, SECTOR_USE, ZONE_USE, SUBSECTOR_USE)) %>%
+                     group_by(FMP, REGION, SPECIES) %>% slice(1) |>
+                     dplyr::rename(EFFECTIVE_DATE_FY_1_s = "EFFECTIVE_DATE_FY_1",
+                                   EFFECTIVE_DATE_FY_2_s = "EFFECTIVE_DATE_FY_2",
+                                   EFFECTIVE_DATE_FY_3_s = "EFFECTIVE_DATE_FY_3",
+                                   FY_1_s = "FY_1",
+                                   FY_2_s = "FY_2",
+                                   FY_3_s = "FY_3"),,
+                   by = join_by(FMP, REGION, SPECIES)) |>
   # Take the first non-null value
-  dplyr::mutate(EFFECTIVE_DATE_FY_1 = dplyr::coalesce(EFFECTIVE_DATE_FY_1_sz, EFFECTIVE_DATE_FY_1_z, EFFECTIVE_DATE_FY_1_s, EFFECTIVE_DATE_FY_1_a),
-         EFFECTIVE_DATE_FY_2 = dplyr::coalesce(EFFECTIVE_DATE_FY_2_sz, EFFECTIVE_DATE_FY_2_z, EFFECTIVE_DATE_FY_2_s, EFFECTIVE_DATE_FY_2_a),
-         FY_1 = dplyr::coalesce(FY_1_sz, FY_1_z, FY_1_s, FY_1_a),
-         FY_2 = dplyr::coalesce(FY_2_sz, FY_2_z, FY_2_s, FY_2_a)) |>
+  dplyr::mutate(EFFECTIVE_DATE_FY_1 = dplyr::coalesce(EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s),
+         EFFECTIVE_DATE_FY_2 = dplyr::coalesce(EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s),
+         EFFECTIVE_DATE_FY_3 = dplyr::coalesce(EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s),
+         FY_1 = dplyr::coalesce(FY_1_all, FY_1_s),
+         FY_2 = dplyr::coalesce(FY_2_all, FY_2_s),
+         FY_3 = dplyr::coalesce(FY_3_all, FY_3_s)) |>
   # Remove unnecessary columns from join
-  dplyr::select(-c(EFFECTIVE_DATE_FY_1_sz, EFFECTIVE_DATE_FY_1_z, EFFECTIVE_DATE_FY_1_s, EFFECTIVE_DATE_FY_1_a,
-            EFFECTIVE_DATE_FY_2_sz, EFFECTIVE_DATE_FY_2_z, EFFECTIVE_DATE_FY_2_s, EFFECTIVE_DATE_FY_2_a,
-            FY_1_sz, FY_1_z, FY_1_s, FY_1_a,
-            FY_2_sz, FY_2_z, FY_2_s, FY_2_a))
+  dplyr::select(-c(EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s,EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s,EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s,
+                   FY_1_all, FY_1_s,FY_2_all, FY_2_s, FY_3_all, FY_3_s))
+
+# Apply logic to adjust start date based on fishing year (month/day)
+mh_dates_adjust <- mh_combine %>%
+  # select(CLUSTER, FMP, REGION, REGULATION_ID, FR_CITATION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, MANAGEMENT_TYPE_USE, EFFECTIVE_DATE, INEFFECTIVE_DATE,
+  #                                        START_YEAR, START_DATE, END_DATE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3,
+  #                                        FY_1, FY_2, FY_3) %>%
+  # First adjust to 3rd FY, then 2nd, then 1st, default original start date if no FY
+  mutate(# Take start year of start date if missing
+         START_YEAR = case_when(is.na(START_YEAR) ~ lubridate::year(START_DATE), TRUE ~ START_YEAR),
+         START_DATE_ADJ = case_when(!is.na(FY_3) & START_DATE >= EFFECTIVE_DATE_FY_3 ~ as.Date(paste0(START_YEAR, "-", FY_3), format = "%Y-%d-%b"),
+                                    !is.na(FY_3) & START_DATE < EFFECTIVE_DATE_FY_3 ~ as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
+                                    is.na(FY_3) & !is.na(FY_2) & START_DATE >= EFFECTIVE_DATE_FY_2 ~ as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
+                                    is.na(FY_3) & !is.na(FY_2) & START_DATE < EFFECTIVE_DATE_FY_2 ~ as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
+                                    is.na(FY_3) & is.na(FY_2) & !is.na(FY_1) & START_DATE >= EFFECTIVE_DATE_FY_1 ~ as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
+                                    TRUE ~ START_DATE))
 
 # Create logic on how to adjust START_DATE for MANAGEMENT_CATEGORY == CATCH LIMITS with one FISHING YEAR or two FISHING YEAR regulations
 mh_dates_logic <- mh_combine |>
@@ -720,77 +728,78 @@ mh_dates_logic <- mh_combine |>
                                       adjustment_number == "13" ~ "Regulation starts at same time as fishing year 1 and ends before second fishing year",
                                       TRUE ~ "check"))
 
-# Create logic to adjust START_DATE for each set of conditions
-mh_dates_adjust <- mh_dates_logic |>
-  # Duplicate records for the following adjustment_numbers to accurately capture the start of each FISHING YEAR
-  dplyr::bind_rows(mh_dates_logic |> dplyr::filter(adjustment_number == 3),
-            mh_dates_logic |> dplyr::filter(adjustment_number == 7),
-            mh_dates_logic |> dplyr::filter(adjustment_number == 9),
-            mh_dates_logic |> dplyr::filter(adjustment_number == 10),
-            mh_dates_logic |> dplyr::filter(adjustment_number == 10),
-            mh_dates_logic |> dplyr::filter(adjustment_number == 12)) |>
-  dplyr::arrange(REGULATION_ID, adjustment_number) |>
-  dplyr::group_by(REGULATION_ID, adjustment_number) |>
-  # CREATE: variables needed to adjust START_DATE_final
-  dplyr::mutate(reg_order = dplyr::row_number(),
-         current_year = format(Sys.Date(), "%Y"),
-         FY_1_date = as.Date(paste0(current_year, "-", FY_1), format = "%Y-%d-%b"),
-         FY_2_date = as.Date(paste0(current_year, "-", FY_2), format = "%Y-%d-%b"),
-         MONTH_FY1 = lubridate::month(FY_1_date),
-         DAY_FY1 = lubridate::day(FY_1_date),
-         YEAR_FY1 = lubridate::year(EFFECTIVE_DATE_FY_1),
-         MONTH_FY2 = lubridate::month(FY_2_date),
-         DAY_FY2 = lubridate::day(FY_2_date),
-         YEAR_FY2 = lubridate::year(EFFECTIVE_DATE_FY_2),
-         # CREATE: START_DATE_final to adjust START_DATE based on the FISHING YEAR conditions
-         START_DATE_final = dplyr::case_when(adjustment_number == 1 ~ START_DATE,
-                                      adjustment_number == 2 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 3 & reg_order == 1 ~ START_DATE,
-                                      adjustment_number == 3 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 4 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 5 ~ START_DATE,
-                                      adjustment_number == 6 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
-                                      adjustment_number == 7 & reg_order == 1 ~ as.Date(paste0(START_YEAR,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 7 & reg_order == 2 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
-                                      adjustment_number == 8 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 9 & reg_order == 1 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 9 & reg_order == 2 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
-                                      adjustment_number == 10 & reg_order == 1 ~ START_DATE,
-                                      adjustment_number == 10 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 10 & reg_order == 3 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
-                                      adjustment_number == 11 & reg_order == 1 ~ START_DATE,
-                                      adjustment_number == 12 & reg_order == 1 ~ START_DATE,
-                                      adjustment_number == 12 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      adjustment_number == 13 & reg_order == 1 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
-                                      TRUE ~ NA))
+if('check' %in% mh_dates_logic$adjustment_logic) {  stop("Check adjustment logic for Catch Limits fishing year")}
 
-# For MANAGEMENT_CATEGORY == CATCH LIMITS, use the created START_DATE_final field to update the START_DATE
-# For all other records, keep using START_DATE
+chk <- mh_dates_logic %>% group_by(adjustment_number, adjustment_logic) %>% summarize(n = n())
+chk <- mh_dates_logic %>% filter(adjustment_logic == 'check')
+
+# # Create logic to adjust START_DATE for each set of conditions
+# mh_dates_adjust <- mh_dates_logic |>
+#   # Duplicate records for the following adjustment_numbers to accurately capture the start of each FISHING YEAR
+#   dplyr::bind_rows(mh_dates_logic |> dplyr::filter(adjustment_number == 3),
+#             mh_dates_logic |> dplyr::filter(adjustment_number == 7),
+#             mh_dates_logic |> dplyr::filter(adjustment_number == 9),
+#             mh_dates_logic |> dplyr::filter(adjustment_number == 10),
+#             mh_dates_logic |> dplyr::filter(adjustment_number == 10),
+#             mh_dates_logic |> dplyr::filter(adjustment_number == 12)) |>
+#   dplyr::arrange(REGULATION_ID, adjustment_number) |>
+#   dplyr::group_by(REGULATION_ID, adjustment_number) |>
+#   # CREATE: variables needed to adjust START_DATE_final
+#   dplyr::mutate(reg_order = dplyr::row_number(),
+#          current_year = format(Sys.Date(), "%Y"),
+#          FY_1_date = as.Date(paste0(current_year, "-", FY_1), format = "%Y-%d-%b"),
+#          FY_2_date = as.Date(paste0(current_year, "-", FY_2), format = "%Y-%d-%b"),
+#          MONTH_FY1 = lubridate::month(FY_1_date),
+#          DAY_FY1 = lubridate::day(FY_1_date),
+#          YEAR_FY1 = lubridate::year(EFFECTIVE_DATE_FY_1),
+#          MONTH_FY2 = lubridate::month(FY_2_date),
+#          DAY_FY2 = lubridate::day(FY_2_date),
+#          YEAR_FY2 = lubridate::year(EFFECTIVE_DATE_FY_2),
+#          # CREATE: START_DATE_final to adjust START_DATE based on the FISHING YEAR conditions
+#          START_DATE_final = dplyr::case_when(adjustment_number == 1 ~ START_DATE,
+#                                       adjustment_number == 2 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 3 & reg_order == 1 ~ START_DATE,
+#                                       adjustment_number == 3 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 4 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 5 ~ START_DATE,
+#                                       adjustment_number == 6 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
+#                                       adjustment_number == 7 & reg_order == 1 ~ as.Date(paste0(START_YEAR,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 7 & reg_order == 2 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
+#                                       adjustment_number == 8 ~ as.Date(paste0(START_YEAR, "-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 9 & reg_order == 1 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 9 & reg_order == 2 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
+#                                       adjustment_number == 10 & reg_order == 1 ~ START_DATE,
+#                                       adjustment_number == 10 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 10 & reg_order == 3 ~ as.Date(paste0(YEAR_FY2,"-", MONTH_FY2, "-", DAY_FY2), "%Y-%m-%d"),
+#                                       adjustment_number == 11 & reg_order == 1 ~ START_DATE,
+#                                       adjustment_number == 12 & reg_order == 1 ~ START_DATE,
+#                                       adjustment_number == 12 & reg_order == 2 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       adjustment_number == 13 & reg_order == 1 ~ as.Date(paste0(YEAR_FY1,"-", MONTH_FY1, "-", DAY_FY1), "%Y-%m-%d"),
+#                                       TRUE ~ NA))
+
+# Prep to join to the rest of the MH data
 mh_catchlim_prep <- mh_dates_adjust |>
-  dplyr::mutate(START_DATE_USE = dplyr::case_when(!is.na(START_DATE_final) ~ START_DATE_final,
-                                    TRUE ~ START_DATE)) |>
-  dplyr::select(-START_DATE_final, -EFFECTIVE_DATE_FY_1, -EFFECTIVE_DATE_FY_2, -FY_1, -FY_2, -year_number, -adjustment_number, -adjustment_logic, -reg_order, -current_year,
-         -FY_1_date, -FY_2_date, -MONTH_FY1, -MONTH_FY2, -DAY_FY1, -DAY_FY2, -YEAR_FY1, -YEAR_FY2, -FY_1_date, -FY_2_date)
+  dplyr::select(-c(START_DATE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3, FY_1, FY_2, FY_3)) |>
+  dplyr::rename(START_DATE_USE = "START_DATE_ADJ")
 
 # Separate CATCH LIMITS regulations where REG_REMOVED == 1
 mh_removed_catchlim <- mh_cluster_ids |>
   dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS") |>
-  dplyr::filter(REG_REMOVED == 1)
+  dplyr::filter(REG_REMOVED == 1) |>
+  dplyr::rename(START_DATE_USE = "START_DATE")
 
 # Separate DETAILED == NO regulations
 mh_nondetailed <- mh_cluster_ids |>
-  dplyr::filter(DETAILED == "NO")
+  dplyr::filter(DETAILED == "NO") |>
+  dplyr::rename(START_DATE_USE = "START_DATE")
 
 # Compile all data frames
 mh_dates <- mh_dates1 |>
   dplyr::bind_rows(mh_catchlim_prep) |>
   dplyr::bind_rows(mh_removed_catchlim) |>
-  dplyr::bind_rows(mh_nondetailed) |>
-  dplyr::select(-adjustment_number) |>
-  dplyr::mutate(START_DATE_USE = dplyr::case_when(!is.na(START_DATE_USE) ~ START_DATE_USE,
-                                    TRUE ~ START_DATE))
+  dplyr::bind_rows(mh_nondetailed)
 
-#### Species expansion for everything
+##################### Species Expansion ###################
 
 # Prepare species related information for expansion based on SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME == ALL selections
 # Adjust dates based on the dates that species were added and/or removed
@@ -812,59 +821,85 @@ sp_info_use_a <- sp_info_use |>
   dplyr::filter(SPP_NAME == "ALL") |>
   dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SPP_NAME))
 
-# Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for single records ####
-# Results in the mh_sp_expanded_y1 data frame
-# Expansion is performed for cases where there is a single record for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
-mh_sp_expanded_y1 <- mh_dates |>
-  dplyr::filter(!(SPP_TYPE == "COMMON_NAME" & SPP_NAME != "ALL")) |>
-  # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-  dplyr::full_join(sp_info_use_s, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
+############# WHY NOT JOIN ALL AT ONCE????? ############
+mh_sp_expanded <- mh_dates |>
+  dplyr::full_join(sp_info_use |> dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME)),
+                   by = dplyr::join_by(FMP, SPP_TYPE, SPP_NAME),
                    relationship = "many-to-many") |>
   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
-  dplyr::filter(!is.na(REGULATION_ID)) |>
-  dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPP_NAME,
-                                     TRUE ~ COMMON_NAME_USE),
-         SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
-                                      TRUE ~ SPECIES_ITIS_USE)) |>
+  dplyr::filter(!is.na(REGULATION_ID)) %>%
+  dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPECIES,
+                                                   TRUE ~ COMMON_NAME_USE),
+                SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
+                                                    TRUE ~ SPECIES_ITIS_USE)) |>
   # Remove species expansion date variables
-  dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
+  dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME)) |>
+  # Get Added and Removed Dates for regulations that are species specific to make sure dates are accurate
+  dplyr::left_join(sp_info_use |> dplyr::filter(SPP_NAME == "ALL") |> dplyr::select(FMP, COMMON_NAME_USE, ADDED_SP_DATE, REMOVED_SP_DATE) |>
+                     rename(ADDED_DT = "ADDED_SP_DATE", REMOVED_DT = "REMOVED_SP_DATE"),
+                   by = dplyr::join_by(FMP, COMMON_NAME_USE)) |>
+  dplyr::mutate(ADDED_SP_DATE = dplyr::coalesce(ADDED_SP_DATE, ADDED_DT),
+                REMOVED_SP_DATE = dplyr::coalesce(REMOVED_SP_DATE, REMOVED_DT)) |> dplyr::select(-c(ADDED_DT, REMOVED_DT))
 
-# Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for multiple records ####
-# Results in the mh_sp_expanded_y2 data frame
-# Expansion is performed for cases where there are multiple records for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
-mh_sp_expanded_y2 <- mh_dates |>
-  # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-  dplyr::full_join(sp_info_use_m, by = dplyr::join_by("FMP", "SPP_TYPE", "SPP_NAME"),
-                   relationship = "many-to-many") |>
-  # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the dataset or are regulated by FMPs that are not in the dataset (i.e. HMS)
-  dplyr::filter(!is.na(REGULATION_ID), !is.na(ADDED_SP_DATE)) |>
-  dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPP_NAME,
-                                     TRUE ~ COMMON_NAME_USE),
-         SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
-                                      TRUE ~ SPECIES_ITIS_USE)) |>
-  # Remove species expansion date variables
-  dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
+############# CHECK THESE!!!!!!! ###############
+chk <- filter(mh_sp_expanded, is.na(ADDED_SP_DATE)) %>% ungroup() %>% select(FMP, SPP_TYPE, SPP_NAME, SPECIES_ITIS_USE, COMMON_NAME_USE) %>% distinct()
 
-# Incorporate ADDED_SP_DATE and REMOVED_SP_DATE for records that are not aggregates, groups, or COMMON_NAME = ALL (individual species records)
-# Results in the mh_sp_expanded_y3 data frame
-# Records are only adjusted for DETAILED MANAGEMENT_TYPEs
-mh_sp_expanded_y3 <- mh_dates |>
-  # Filter to cases where SPP_TYPE == "COMMON_NAME"
-  # Filter to remove cases where SPP_NAME == "ALL"
-  dplyr::filter(SPP_TYPE == "COMMON_NAME") |>
-  dplyr::filter(SPP_NAME != "ALL") |>
-  # Create SPP_ITIS_USE for join
-  # Create COMMON_NAME_USE for join
-  dplyr::mutate(SPECIES_ITIS_USE = SPECIES_ITIS) |>
-  dplyr::mutate(COMMON_NAME_USE = SPP_NAME) |>
-  # Join to species list table by FMP, SPP_TYPE, SPECIES_ITIS_USE, COMMON_NAME_USE
-  dplyr::left_join(sp_info_use_a, by = c("FMP", "SPP_TYPE", "SPECIES_ITIS_USE", "COMMON_NAME_USE")) |>
-  # Remove species expansion variable
-  dplyr::select(-c(SCIENTIFIC_NAME))
+chk_sp <- filter(sp_info_use, SPECIES_ITIS_USE == '168546')
 
-# Join expanded data frames with data frame of non-DETAILED records
-mh_sp_expanded <- mh_sp_expanded_y1 |>
-  dplyr::bind_rows(mh_sp_expanded_y2, mh_sp_expanded_y3)
+
+# # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for single records
+# # Results in the mh_sp_expanded_y1 data frame
+# # Expansion is performed for cases where there is a single record for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
+# mh_sp_expanded_y1 <- mh_dates |>
+#   dplyr::filter(!(SPP_TYPE == "COMMON_NAME" & SPECIES != "ALL")) |>
+#   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
+#   dplyr::full_join(sp_info_use_s, by = dplyr::join_by(FMP, SPP_TYPE, SPP_NAME),
+#                    relationship = "many-to-many") |>
+#   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
+#   dplyr::filter(!is.na(REGULATION_ID)) |>
+#   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPECIES,
+#                                      TRUE ~ COMMON_NAME_USE),
+#          SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
+#                                       TRUE ~ SPECIES_ITIS_USE)) |>
+#   # Remove species expansion date variables
+#   dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
+#
+# # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for multiple records
+# # Results in the mh_sp_expanded_y2 data frame
+# # Expansion is performed for cases where there are multiple records for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
+# mh_sp_expanded_y2 <- mh_dates |>
+#   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
+#   dplyr::full_join(sp_info_use_m, by = dplyr::join_by(FMP, SPP_TYPE, SPECIES == SPP_NAME),
+#                    relationship = "many-to-many") |>
+#   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the dataset or are regulated by FMPs that are not in the dataset (i.e. HMS)
+#   dplyr::filter(!is.na(REGULATION_ID), !is.na(ADDED_SP_DATE)) |>
+#   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPECIES,
+#                                      TRUE ~ COMMON_NAME_USE),
+#          SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
+#                                       TRUE ~ SPECIES_ITIS_USE)) |>
+#   # Remove species expansion date variables
+#   dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
+
+# # Incorporate ADDED_SP_DATE and REMOVED_SP_DATE for records that are not aggregates, groups, or COMMON_NAME = ALL (individual species records)
+# # Results in the mh_sp_expanded_y3 data frame
+# # Records are only adjusted for DETAILED MANAGEMENT_TYPEs
+# mh_sp_expanded_y3 <- mh_dates |>
+#   # Filter to cases where SPP_TYPE == "COMMON_NAME"
+#   # Filter to remove cases where SPP_NAME == "ALL"
+#   dplyr::filter(SPP_TYPE == "COMMON_NAME") |>
+#   dplyr::filter(SPECIES != "ALL") |>
+#   # Create SPP_ITIS_USE for join
+#   # Create COMMON_NAME_USE for join
+#   dplyr::mutate(SPECIES_ITIS_USE = SPECIES_ITIS) |>
+#   dplyr::mutate(COMMON_NAME_USE = SPECIES) |>
+#   # Join to species list table by FMP, SPP_TYPE, SPECIES_ITIS_USE, COMMON_NAME_USE
+#   dplyr::left_join(sp_info_use_a, by = join_by(FMP, SPP_TYPE, SPECIES == SPP_NAME)) |>
+#   # Remove species expansion variable
+#   dplyr::select(-c(SCIENTIFIC_NAME))
+#
+# # Join expanded data frames with data frame of non-DETAILED records
+# mh_sp_expanded <- mh_sp_expanded_y1 |>
+#   dplyr::bind_rows(mh_sp_expanded_y2, mh_sp_expanded_y3)
 
 # REMOVE expanded species that are no longer a part of that group
 # ADJUST START or END DATES using SPECIES ADDED and REMOVED dates
@@ -924,6 +959,8 @@ mh_data_log <- mh_expanded |>
          VALUE, VALUE_UNITS,VALUE_TYPE,VALUE_RATE,
          MULTI_REG_VALUE, MULTI_REG_FORECAST, MULTI_REG_SEASONAL, MULTI_REG_CLUSTER, REG_REMOVED, NEVER_IMPLEMENTED, FLAG)
 
+##################### Turn off Old Caribbean FMPs ###################
+
 # Force old Caribbean FMPs to end a day before the effective date of the new Caribbean FMPs
 # old FMPs = "SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS"
 # new FMPs = "FMP FOR THE EEZ AROUND PUERTO RICO", "FMP FOR THE EEZ AROUND ST. THOMAS AND ST. JOHN", "FMP FOR THE EEZ AROUND ST. CROIX"
@@ -931,6 +968,8 @@ mh_data_log_final <- mh_data_log |>
   dplyr::mutate(END_DATE2 = dplyr::case_when(FMP %in% c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
                                                END_DATE2 > "2022-10-12" ~ as.Date("2022-10-12"),
                                              TRUE ~ END_DATE2))
+
+##################### Final Dataset ###################
 
 fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
   # Rename to match the processed MH dataset from ODM
