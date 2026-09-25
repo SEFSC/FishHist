@@ -721,63 +721,6 @@ mh_sp_expanded <- mh_dates |>
   dplyr::mutate(ADDED_SP_DATE = dplyr::coalesce(ADDED_SP_DATE, ADDED_DT),
                 REMOVED_SP_DATE = dplyr::coalesce(REMOVED_SP_DATE, REMOVED_DT)) |> dplyr::select(-c(ADDED_DT, REMOVED_DT))
 
-# # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for single records
-# # Results in the mh_sp_expanded_y1 data frame
-# # Expansion is performed for cases where there is a single record for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
-# mh_sp_expanded_y1 <- mh_dates |>
-#   dplyr::filter(!(SPP_TYPE == "COMMON_NAME" & SPECIES != "ALL")) |>
-#   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-#   dplyr::full_join(sp_info_use_s, by = dplyr::join_by(FMP, SPP_TYPE, SPP_NAME),
-#                    relationship = "many-to-many") |>
-#   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
-#   dplyr::filter(!is.na(REGULATION_ID)) |>
-#   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPECIES,
-#                                      TRUE ~ COMMON_NAME_USE),
-#          SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
-#                                       TRUE ~ SPECIES_ITIS_USE)) |>
-#   # Remove species expansion date variables
-#   dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
-#
-# # Perform expansion of species information for SPECIES_GROUP, SPECIES_AGGREGATE, and COMMON_NAME ALL selections for multiple records
-# # Results in the mh_sp_expanded_y2 data frame
-# # Expansion is performed for cases where there are multiple records for a species in a SPECIES_AGGREGATE or SPECIES_GROUP
-# mh_sp_expanded_y2 <- mh_dates |>
-#   # Join to species list table by SPP_NAME, SPP_TYPE, and FMP
-#   dplyr::full_join(sp_info_use_m, by = dplyr::join_by(FMP, SPP_TYPE, SPECIES == SPP_NAME),
-#                    relationship = "many-to-many") |>
-#   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the dataset or are regulated by FMPs that are not in the dataset (i.e. HMS)
-#   dplyr::filter(!is.na(REGULATION_ID), !is.na(ADDED_SP_DATE)) |>
-#   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(is.na(COMMON_NAME_USE) ~ SPECIES,
-#                                      TRUE ~ COMMON_NAME_USE),
-#          SPECIES_ITIS_USE = dplyr::case_when(is.na(SPECIES_ITIS_USE) ~ as.character(SPECIES_ITIS),
-#                                       TRUE ~ SPECIES_ITIS_USE)) |>
-#   # Remove species expansion date variables
-#   dplyr::select(-c(SPECIES_ITIS, SCIENTIFIC_NAME))
-
-# # Incorporate ADDED_SP_DATE and REMOVED_SP_DATE for records that are not aggregates, groups, or COMMON_NAME = ALL (individual species records)
-# # Results in the mh_sp_expanded_y3 data frame
-# # Records are only adjusted for DETAILED MANAGEMENT_TYPEs
-# mh_sp_expanded_y3 <- mh_dates |>
-#   # Filter to cases where SPP_TYPE == "COMMON_NAME"
-#   # Filter to remove cases where SPP_NAME == "ALL"
-#   dplyr::filter(SPP_TYPE == "COMMON_NAME") |>
-#   dplyr::filter(SPECIES != "ALL") |>
-#   # Create SPP_ITIS_USE for join
-#   # Create COMMON_NAME_USE for join
-#   dplyr::mutate(SPECIES_ITIS_USE = SPECIES_ITIS) |>
-#   dplyr::mutate(COMMON_NAME_USE = SPECIES) |>
-#   # Join to species list table by FMP, SPP_TYPE, SPECIES_ITIS_USE, COMMON_NAME_USE
-#   dplyr::left_join(sp_info_use_a, by = join_by(FMP, SPP_TYPE, SPECIES == SPP_NAME)) |>
-#   # Remove species expansion variable
-#   dplyr::select(-c(SCIENTIFIC_NAME))
-#
-# # Join expanded data frames with data frame of non-DETAILED records
-# mh_sp_expanded <- mh_sp_expanded_y1 |>
-#   dplyr::bind_rows(mh_sp_expanded_y2, mh_sp_expanded_y3)
-
-# REMOVE expanded species that are no longer a part of that group
-# ADJUST START or END DATES using SPECIES ADDED and REMOVED dates
-
 # Adjust START_DATE_USE and END_DATE information based on the ADDED_SP_DATE and REMOVED_SP_DATE
 # Results in the mh_expanded data frame
 mh_expanded <- mh_sp_expanded |>
