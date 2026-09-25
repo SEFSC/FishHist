@@ -594,7 +594,7 @@ if(nrow(mh_fy_less365) != 0) { stop("Fishing year not 365 days")}
 # CREATE: START_MONTH2 to use for determining the start month and day of the FISHING YEAR
 mh_fy2 <- mh_fy |>
   dplyr::ungroup() |>
-  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH, START_DAY_USE) |>
+  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH, START_DAY_USE) |>
   # Format start month and day as FY_MONTH and FY_DAY
   # Get month from number to month name abbreviation
   dplyr::mutate(START_MONTH2 = format(as.Date(paste0("2021-", START_MONTH, "-01"), "%Y-%m-%d"), "%b"),
@@ -605,13 +605,13 @@ mh_fy3 <- mh_fy2 |>
   dplyr::ungroup() |>
   dplyr::group_by(NEW_CLUSTER, ZONE_USE, FY) |>
   dplyr::mutate(EFFECTIVE_DATE_FY = min(START_DATE_USE)) |>
-  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
+  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
          EFFECTIVE_DATE_FY, FY) |>
   dplyr::distinct() |>
   # Remove error with royal red -- TEMP
   dplyr::mutate(RM = dplyr::case_when(REGION == 'GULF OF AMERICA' & SPECIES == 'SHRIMP, ROYAL RED' & FY == '1-Jan' ~ 1, TRUE ~ 0)) |>
   dplyr::filter(RM ==0) |> dplyr::select(-RM) |>
-  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPECIES) |>
+  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPECIES_ITIS) |>
   dplyr::arrange(EFFECTIVE_DATE_FY) |>
   dplyr::mutate(reg_order = rank(EFFECTIVE_DATE_FY))
 
@@ -632,31 +632,30 @@ if(nrow(mh_fy3_w |> dplyr::filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') |>
 Catchlim <- mh_cluster_ids |>
   dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS" & REG_REMOVED == 0)
 
-############# DOUBLE CHECK THIS JOIN????? ############
 # Add FISHING YEAR information to MANAGEMENT_CATEGORY == CATCH LIMITS records
 mh_combine <- Catchlim |>
   dplyr::ungroup() |>
   # Join by all columns
-  dplyr::left_join(mh_fy3_w |> dplyr::select(-NEW_CLUSTER) |>
+  dplyr::left_join(mh_fy3_w |> dplyr::select(-NEW_CLUSTER, SPECIES) |>
                      dplyr::rename(EFFECTIVE_DATE_FY_1_all = "EFFECTIVE_DATE_FY_1",
                                    EFFECTIVE_DATE_FY_2_all = "EFFECTIVE_DATE_FY_2",
                                    EFFECTIVE_DATE_FY_3_all = "EFFECTIVE_DATE_FY_3",
                                    FY_1_all = "FY_1",
                                    FY_2_all = "FY_2",
                                    FY_3_all = "FY_3"),
-                   by = dplyr::join_by(FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE)) |>
+                   by = dplyr::join_by(FMP, REGION, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE)) |>
   # Join by only species and region
   dplyr::left_join(mh_fy3_w |> dplyr::filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') |>
-                     dplyr::select(-c(NEW_CLUSTER, SECTOR_USE, ZONE_USE, SUBSECTOR_USE)) |>
+                     dplyr::select(-c(NEW_CLUSTER, SPECIES, SECTOR_USE, ZONE_USE, SUBSECTOR_USE)) |>
                      # Take first row - this won't matter because both sectors have the same FY - check line 635
-                     dplyr::group_by(FMP, REGION, SPECIES) |> dplyr::slice(1) |>
+                     dplyr::group_by(FMP, REGION, SPECIES_ITIS) |> dplyr::slice(1) |>
                      dplyr::rename(EFFECTIVE_DATE_FY_1_s = "EFFECTIVE_DATE_FY_1",
                                    EFFECTIVE_DATE_FY_2_s = "EFFECTIVE_DATE_FY_2",
                                    EFFECTIVE_DATE_FY_3_s = "EFFECTIVE_DATE_FY_3",
                                    FY_1_s = "FY_1",
                                    FY_2_s = "FY_2",
                                    FY_3_s = "FY_3"),
-                   by = dplyr::join_by(FMP, REGION, SPECIES)) |>
+                   by = dplyr::join_by(FMP, REGION, SPECIES_ITIS)) |>
   # Take the first non-null value
   dplyr::mutate(EFFECTIVE_DATE_FY_1 = dplyr::coalesce(EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s),
          EFFECTIVE_DATE_FY_2 = dplyr::coalesce(EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s),
