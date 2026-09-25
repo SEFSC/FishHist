@@ -464,28 +464,35 @@ mh_dates1 <- mh_reversions |>
                 # Therefore, the CHANGE_DATE is lagged by one day to indicate that the regulation is not implemented
                 # and allow the information from the prior regulation to link with the subsequent regulation that is implemented.
                 # Lagging the change date is different than subtracting one day from the duration (since the diff_days variable is equal to -1)
-                CHANGE_DATE = dplyr::case_when(diff_days == -1 ~ dplyr::lag(CHANGE_DATE), TRUE ~ CHANGE_DATE),
+                CHANGE_DATE = dplyr::case_when(diff_days == -1 ~ dplyr::lag(CHANGE_DATE),
+                                               TRUE ~ CHANGE_DATE),
                 CHANGE_DATE = dplyr::case_when(CHANGE_DATE > dplyr::lag(CHANGE_DATE) ~ dplyr::lag(CHANGE_DATE),
-                                              TRUE ~ CHANGE_DATE),
+                                               TRUE ~ CHANGE_DATE),
                 # When an END_DATE is provided it should be used to signify the END_DATE
                 # Otherwise, the CHANGE_DATE should be used for the END_DATE information
                 END_DATE = dplyr::case_when(EFFECTIVE_DATE == INEFFECTIVE_DATE ~ START_DATE,
                                             !is.na(END_DATE) ~ END_DATE,
-                                            # is.na(END_YEAR) & !is.na(INEFFECTIVE_DATE) ~ INEFFECTIVE_DATE,
                                             TRUE ~ CHANGE_DATE),
                 # If the CHANGE_DATE is after the END_DATE and there is an END_DATE provided, then the END_DATE should be used
                 # If the CHANGE_DATE is after the INEFFECTIVE_DATE and an INEFFECTIVE_DATE is provided, then the END_DATE should be used
                 # Otherwise, the CHANGE_DATE should be used as the END_DATE
                 END_DATE = dplyr::case_when(CHANGE_DATE > END_DATE & !is.na(END_DATE) ~ END_DATE,
                                             CHANGE_DATE > INEFFECTIVE_DATE & !is.na(INEFFECTIVE_DATE) ~ END_DATE,
-                                            TRUE ~ CHANGE_DATE),
-                # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were created but never went into effect
-                # When the MULTI_REG_VALUE variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
-                # When the MULTI_REG_SEASONAL variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
-                # When the diff_days variable is less than or equal to -1, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-                # When the START_DATE_USE is after the END_DATE, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-                # When MULTI_REG_FORECAST is flagged (1) and the START_DATE_USE is equal to the START_DATE_USE of a later FR_CITATION, then NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
-                NEVER_IMPLEMENTED = dplyr::case_when(MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & START_DATE_USE == dplyr::lag(START_DATE_USE) & END_DATE != dplyr::lag(END_DATE) & VALUE != dplyr::lag(VALUE) ~ 0,
+                                            TRUE ~ CHANGE_DATE)) |>
+  # Added 9/25/26 - fix error with end date for case where its MULTI_REG_VALUE
+  dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE, FR_CITATION, REVERSION) |>
+  dplyr::mutate(END_DATE = dplyr::case_when(MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
+                                            MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") | REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~ END_DATE,
+                                            (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) & !is.na(INEFFECTIVE_DATE) ~ min(END_DATE, na.rm = TRUE),
+                                            (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) & is.na(INEFFECTIVE_DATE) ~ max(END_DATE, na.rm = TRUE),
+                                            TRUE ~ END_DATE)) |>
+  # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were created but never went into effect
+  # When the MULTI_REG_VALUE variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
+  # When the MULTI_REG_SEASONAL variable is flagged (1), NEVER_IMPLEMENTED should not be flagged (0) meaning the regulation did go into effect
+  # When the diff_days variable is less than or equal to -1, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+  # When the START_DATE_USE is after the END_DATE, NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+  # When MULTI_REG_FORECAST is flagged (1) and the START_DATE_USE is equal to the START_DATE_USE of a later FR_CITATION, then NEVER_IMPLEMENTED should be flagged (1) meaning the regulation did not go into effect
+  dplyr::mutate(NEVER_IMPLEMENTED = dplyr::case_when(MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & START_DATE_USE == dplyr::lag(START_DATE_USE) & END_DATE != dplyr::lag(END_DATE) & VALUE != dplyr::lag(VALUE) ~ 0,
                                                      MULTI_REG_SEASONAL == 1 ~ 0,
                                                      START_DATE_USE > END_DATE ~ 1,
                                                      MULTI_REG_VALUE == 1 ~ 0,
@@ -501,9 +508,6 @@ mh_dates1 <- mh_reversions |>
                                                   TRUE ~ START_TIME_USE),
                 START_DATE_USE = dplyr::case_when(dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == 'SIMPLE' & VALUE == 'OPEN') & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ dplyr::lead(END_DATE),
                                                   TRUE ~ START_DATE_USE)) |>
-  dplyr::group_by(CLUSTER, FR_CITATION) |>
-  dplyr::mutate(END_DATE = dplyr::case_when(MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
-                                            TRUE ~ END_DATE)) |>
   # Added 2/2/24 - do not include records that were added because of an adjustment, but not actually implemented
   dplyr::filter(!(NEVER_IMPLEMENTED == 1 & REVERSION == TRUE))
 
