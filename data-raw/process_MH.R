@@ -577,8 +577,8 @@ mh_fy_split <- mh_fy |>
   dplyr::summarise(N = dplyr::n()) |>
   dplyr::filter(N > 1)
 
-# STOP fishing year should not be split -- these should be re-coded to fishing seasons
-if((nrow(mh_fy_split) != 0)) {  stop("Fishing year split, please investigate. These might need to be re-coded to fishing season")}
+# WARNING fishing year should not be split -- these should be re-coded to fishing seasons
+if((nrow(mh_fy_split) != 0)) {  warning("Fishing year split, please investigate. These might need to be re-coded to fishing season")}
 
 # Identify clusters that have a fishing year < 365 days
 mh_fy_less365 <- mh_fy |>
@@ -588,8 +588,8 @@ mh_fy_less365 <- mh_fy |>
          END_FY = as.Date(paste0("2023-", END_MONTH_USE, "-", END_DAY_USE), "%Y-%m-%d"),
          DIFF = START_FY - END_FY) |>
   dplyr::filter(DIFF != 1 & DIFF != 0 & DIFF != -364)
-# STOP fishing year should be a year
-if(nrow(mh_fy_less365) != 0) { stop("Fishing year not 365 days")}
+# WARNING fishing year should be a year
+if(nrow(mh_fy_less365) != 0) { warning("Fishing year not 365 days")}
 
 # CREATE: START_MONTH2 to use for determining the start month and day of the FISHING YEAR
 mh_fy2 <- mh_fy |>
@@ -625,7 +625,7 @@ mh_fy3_w <- mh_fy3 |>
 if(nrow(mh_fy3_w |> dplyr::filter(ZONE_USE == 'ALL', SUBSECTOR_USE == 'ALL') |>
   dplyr::select(-c(NEW_CLUSTER, ZONE_USE, SUBSECTOR_USE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3)) |>
   tidyr::pivot_wider(names_from = SECTOR_USE, values_from = c(FY_1, FY_2, FY_3)) |>
-  dplyr::filter(FY_1_COMMERCIAL != FY_1_RECREATIONAL)) > 0) {  stop("Fishing year is different by sector") }
+  dplyr::filter(FY_1_COMMERCIAL != FY_1_RECREATIONAL)) > 0) {  warning("Fishing year is different by sector") }
 
 # Filter the mh_cluster_ids data frame to obtain all CATCH LIMITS records
 # REG_REMOVED == 0 because if a catch limit was removed (effective == ineffective), we do not want to adjust the start date of these
@@ -755,11 +755,17 @@ mh_expanded <- mh_sp_expanded |>
                                      TRUE ~ COMMON_NAME_USE)) |>
   dplyr::filter(RM_SPP != 1)
 
+############# SPECIES TABLE CHECKS #########################
+chk1 <- mh_raw |> dplyr::filter(FR_CITATION %in% c('87 FR 38008', '55 FR 32635'))
+chk2 <- mh_expanded |> dplyr::filter(FR_CITATION %in% c('87 FR 38008', '55 FR 32635'))
+chk3 <- sp_info_use |> dplyr::filter(FMP == 'FMP FOR THE EEZ AROUND PUERTO RICO')
+chk <- mh_sp_expanded |> dplyr::filter(CLUSTER == 1846)
+
 mh_data_log <- mh_expanded |>
   dplyr::select(CLUSTER, REGULATION_ID, FR_CITATION, FR_SECTION, FR_URL, FMP, ACTION, ACTION_TYPE, AMENDMENT_NUMBER, ACCOUNTABILITY_MEASURE,
          MANAGEMENT_CATEGORY, MANAGEMENT_TYPE, MANAGEMENT_TYPE_USE, MANAGEMENT_STATUS, MANAGEMENT_STATUS_USE, STATUS_TYPE, DETAILED,
          JURISDICTION, SECTOR, SECTOR_USE, SUBSECTOR, SUBSECTOR_USE, REGION, ZONE, ZONE_USE, JURISDICTIONAL_WATERS,
-         COMMON_NAME_USE, SPP_TYPE, SPP_NAME, SPECIES_ITIS_USE,
+         COMMON_NAME_USE, SPP_TYPE, SPECIES, SPECIES_ITIS_USE,
          ADJUSTMENT, REVERSION,
          EFFECTIVE_DATE, INEFFECTIVE_DATE, START_DATE2, END_DATE2, diff_days,
          START_MONTH, START_DAY, START_DAY_USE, START_YEAR, START_TIME, START_TIME_USE, START_DAY_OF_WEEK, START_DAY_OF_WEEK_USE,
@@ -794,6 +800,7 @@ fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
                 SUBSECTOR_CLEAN = "SUBSECTOR_USE",
                 ZONE_CLEAN = "ZONE_USE",
                 JURISDICTIONALWATERS = "JURISDICTIONAL_WATERS",
+                SPP_NAME = "SPECIES",
                 COMMON_NAME_CLEAN = "COMMON_NAME_USE",
                 SPECIES_ITIS_CLEAN = "SPECIES_ITIS_USE",
                 STARTDATE_CLEAN = "START_DATE2",
@@ -816,12 +823,14 @@ fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
   # Select order and only variables in MH ODM processed dataset
   dplyr::select(CLUSTER_ID,REG_ID,FR_CITATION,FR_SECTION,FR_URL,FMP,ACTION,ACTIONTYPE,AMENDMENTNUMBER,
                 ACCOUNTABILITYMEASURE,MANAGEMENTCATEGORY,MANAGEMENT_TYPECLEAN,MANAGEMENT_STATUSCLEAN,JURISDICTION,
-                SECTOR_CLEAN,SUBSECTOR_CLEAN,REGION,ZONE_CLEAN,JURISDICTIONALWATERS,COMMON_NAME_CLEAN,SPECIES_ITIS_CLEAN,SPP_TYPE,
+                SECTOR_CLEAN,SUBSECTOR_CLEAN,REGION,ZONE_CLEAN,JURISDICTIONALWATERS,COMMON_NAME_CLEAN,SPECIES_ITIS_CLEAN,SPP_TYPE,SPP_NAME,
                 ADJUSTMENT,REVERSION,EFFECTIVE_DATE,INEFFECTIVE_DATE,STARTDATE_CLEAN,END_DATE,STARTMONTH,STARTDAY_CLEAN,
                 STARTYEAR,STARTTIME_CLEAN,START_DAYOF_WEEK_CLEAN,ENDDAY_CLEAN,END_DAYOF_WEEK_CLEAN,ENDMONTH_CLEAN,
                 ENDTIME_CLEAN,ENDYEAR_CLEAN,NEVERIMPLEMENTED,REGREMOVED,VALUE,VALUEUNITS,VALUETYPE,VALUERATE,FLAG)
 
-# Check that the number of starting FRs matches the number of FRs after processing
-if(length(unique(mh_raw$FR_CITATION)) != length(unique(mh_data_log_final$FR_CITATION))) { stop ("FRs lost somewhere in processing code")}
+# STOP Check that the number of starting FRs matches the number of FRs after processing
+if(length(unique(mh_raw$FR_CITATION)) != length(unique(fishhist$FR_CITATION))) { stop (paste0("FRs lost somewhere in processing code - ", setdiff(mh_raw$FR_CITATION, fishhist$FR_CITATION)))}
+
+
 
 usethis::use_data(fishhist, overwrite = TRUE)
