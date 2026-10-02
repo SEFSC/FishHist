@@ -10,7 +10,7 @@
 #' @examples process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
 #'
 #' @export
-process_closures <- function(data=fishhist, spp, region){
+process_closures <- function(data=fishhist, spp, region, start, end) {
 
   # Filter data to species, region, and all management types related to closures
   mh_spp_closure <- data |>
@@ -18,8 +18,12 @@ process_closures <- function(data=fishhist, spp, region){
            REGION == region,
            MANAGEMENT_TYPECLEAN %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
-                                      'PROHIBITED SPECIES')) |>
-    dplyr::mutate(VALUE = dplyr::case_when(MANAGEMENT_TYPECLEAN %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
+                                      'PROHIBITED SPECIES'),
+           STARTDATE_CLEAN <= end,
+           END_DATE >= start) |>
+    dplyr::mutate(STARTDATE_CLEAN = pmax(STARTDATE_CLEAN, start),
+                  END_DATE   = pmin(END_DATE, end),
+                  VALUE = dplyr::case_when(MANAGEMENT_TYPECLEAN %in% c('FISHING SEASON', 'FISHING YEAR') ~ 'OPEN',
                              MANAGEMENT_TYPECLEAN == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'YES' ~ 'OPEN',
                              MANAGEMENT_TYPECLEAN == 'PROHIBITED SALE AND PURCHASE' & FLAG == 'NO' ~ 'CLOSE',
                              MANAGEMENT_TYPECLEAN == 'PROHIBITED SPECIES' ~ 'CLOSE',
