@@ -109,52 +109,73 @@ process_closures <- function(data=fishhist, spp, region){
 
 
   # Heatmap of Days Open (ZONE ALL)
-  heatmap_o <- spp_closure_story |> dplyr::filter(VALUE=='OPEN', ZONE_CLEAN == 'ALL') |>
+  heatmap_o <- spp_closure_story |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
-                  month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
-    dplyr::mutate(month = factor(month, levels = month.abb),
-                  SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
+                  month = lubridate::month(date_clean, label = TRUE, abbr = TRUE),
+                  # Calculate days in that specific month (handles leap years automatically)
+                  days_in_m = lubridate::days_in_month(date_clean)) |>
+    dplyr::filter(ZONE_CLEAN == 'ALL') |>
+    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |>
+    dplyr::summarise(n_open = sum(VALUE == 'OPEN', na.rm = TRUE), # Count open days
+                     total_days = max(days_in_m), # Get total days in month
+                     .groups = "drop") |>
+    # Ensure all year x month grid combinations exist for every sector
+    tidyr::complete(tidyr::nesting(SECTOR_CLEAN, SUBSECTOR_CLEAN), year,
+                    month = factor(month.abb, levels = month.abb, ordered = TRUE),
+                    fill = list(n_open = 0)) |>
+    dplyr::mutate(# Recalculate total_days for filled rows if needed
+      total_days = ifelse(is.na(total_days), lubridate::days_in_month(as.Date(paste(year, month, "01", sep = "-"), "%Y-%b-%d")), total_days),
+      # Calculate proportion of open days (0.0 to 1.0)
+      prop_open = n_open / total_days,
+      SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
-  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = n)) +
+  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = prop_open)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Open", na.value = "white") +
-    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year))/3) +
+    ggplot2::scale_fill_viridis_c(option = "magma", name = "% Days Open", labels = scales::percent, limits = c(0, 1)) +
+    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year)) / 3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
-    ggplot2::labs(x = "",y = "") +
+    ggplot2::labs(x = "", y = "") +
     ggplot2::theme_classic() +
     ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
                    strip.text = ggplot2::element_text(face = "bold", size = 11),
                    legend.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
                    legend.box.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
-                   legend.position = "bottom" )
+                   legend.position = "bottom")
 
   # Heatmap of Days Closed (ZONE ALL)
-  heatmap_c <- spp_closure_story |> dplyr::filter(VALUE=='CLOSE', ZONE_CLEAN == 'ALL') |>
+  heatmap_c <- spp_closure_story |>
+    dplyr::filter(VALUE == 'CLOSE', ZONE_CLEAN == 'ALL') |>
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE)) |>
-    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |> dplyr::summarise(n = dplyr::n()) |> dplyr::ungroup() |>
-    dplyr::mutate(month = factor(month, levels = month.abb)) |>
-    tidyr::complete(tidyr::nesting(SECTOR_CLEAN, SUBSECTOR_CLEAN), # return only combos that exist
+    dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |>
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
+    # Complete all year/month combinations
+    tidyr::complete(tidyr::nesting(SECTOR_CLEAN, SUBSECTOR_CLEAN),
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
-                    month,
+                    month = factor(month.abb, levels = month.abb, ordered = TRUE), # Keeps factor ordering consistent
                     fill = list(n = 0)) |>
-    dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
+    dplyr::mutate(# Construct a dummy first-of-month date to compute total days per month/year accurately
+                  month_date = as.Date(paste(year, match(month, month.abb), "01", sep = "-")),
+                  days_in_m = lubridate::days_in_month(month_date),
+                  # Calculate proportion of closed days (0.0 to 1.0)
+                  prop_closed = n / days_in_m,
+                  SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
 
-  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = n)) +
+  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = prop_closed)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "magma", name = "Days Closed", na.value = "white", direction=-1) +
-    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year))/3) +
+    ggplot2::scale_fill_viridis_c(option = "magma", name = "% Days Closed", labels = scales::percent,
+                                  limits = c(0, 1), na.value = "white", direction = -1) +
+    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year)) / 3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
-    ggplot2::labs(x = "",y = "") +
+    ggplot2::labs(x = "", y = "") +
     ggplot2::theme_classic() +
     ggplot2::theme(panel.grid = ggplot2::element_line(color = "grey92", linewidth = 0.2),
                    strip.text = ggplot2::element_text(face = "bold", size = 11),
                    legend.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
                    legend.box.margin = ggplot2::margin(t = -10, r = 0, b = 0, l = 0),
-                   legend.position = "bottom" )
+                   legend.position = "bottom")
 
   # Save everything as a list
   out <- list(spp_closure_story, summ_days_open, plot_days_open, mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
