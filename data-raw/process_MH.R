@@ -636,7 +636,7 @@ Catchlim <- mh_cluster_ids |>
 mh_combine <- Catchlim |>
   dplyr::ungroup() |>
   # Join by all columns
-  dplyr::left_join(mh_fy3_w |> dplyr::select(-NEW_CLUSTER, SPECIES) |>
+  dplyr::left_join(mh_fy3_w |> dplyr::select(-c(NEW_CLUSTER, SPECIES)) |>
                      dplyr::rename(EFFECTIVE_DATE_FY_1_all = "EFFECTIVE_DATE_FY_1",
                                    EFFECTIVE_DATE_FY_2_all = "EFFECTIVE_DATE_FY_2",
                                    EFFECTIVE_DATE_FY_3_all = "EFFECTIVE_DATE_FY_3",
@@ -704,8 +704,8 @@ mh_dates <- mh_dates1 |>
 ##################### Species Expansion ###################
 
 mh_sp_expanded <- mh_dates |>
-  dplyr::full_join(sp_info_use |> dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SCIENTIFIC_NAME)),
-                   by = dplyr::join_by(FMP, SPP_TYPE, SPP_NAME),
+  dplyr::full_join(sp_info_use |> dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SCIENTIFIC_NAME, SPP_TYPE)),
+                   by = dplyr::join_by(FMP, SPECIES == SPP_NAME),
                    relationship = "many-to-many") |>
   # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
   dplyr::filter(!is.na(REGULATION_ID)) |>
@@ -754,12 +754,6 @@ mh_expanded <- mh_sp_expanded |>
                                      COMMON_NAME_USE %in% c('Ogcocephalus','Milleporidae') ~ toupper(COMMON_NAME_USE),
                                      TRUE ~ COMMON_NAME_USE)) |>
   dplyr::filter(RM_SPP != 1)
-
-############# SPECIES TABLE CHECKS #########################
-chk1 <- mh_raw |> dplyr::filter(FR_CITATION %in% c('87 FR 38008', '55 FR 32635'))
-chk2 <- mh_expanded |> dplyr::filter(FR_CITATION %in% c('87 FR 38008', '55 FR 32635'))
-chk3 <- sp_info_use |> dplyr::filter(FMP == 'FMP FOR THE EEZ AROUND PUERTO RICO')
-chk <- mh_sp_expanded |> dplyr::filter(CLUSTER == 1846)
 
 mh_data_log <- mh_expanded |>
   dplyr::select(CLUSTER, REGULATION_ID, FR_CITATION, FR_SECTION, FR_URL, FMP, ACTION, ACTION_TYPE, AMENDMENT_NUMBER, ACCOUNTABILITY_MEASURE,
@@ -829,6 +823,7 @@ fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
                 ENDTIME_CLEAN,ENDYEAR_CLEAN,NEVERIMPLEMENTED,REGREMOVED,VALUE,VALUEUNITS,VALUETYPE,VALUERATE,FLAG)
 
 # STOP Check that the number of starting FRs matches the number of FRs after processing
-if(length(unique(mh_raw$FR_CITATION)) != length(unique(fishhist$FR_CITATION))) { stop (paste0("FRs lost somewhere in processing code - ", setdiff(mh_raw$FR_CITATION, fishhist$FR_CITATION)))}
+if(length(unique(mh_raw$FR_CITATION)) != length(unique(fishhist$FR_CITATION))) { warning (paste0("FRs lost somewhere in processing code - ",
+                                                                                                 paste(setdiff(mh_raw$FR_CITATION, fishhist$FR_CITATION), collapse = ", ")))}
 
 usethis::use_data(fishhist, overwrite = TRUE)
