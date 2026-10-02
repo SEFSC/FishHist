@@ -831,6 +831,4 @@ fishhist <- mh_data_log_final |> dplyr::ungroup() |> dplyr::distinct() |>
 # STOP Check that the number of starting FRs matches the number of FRs after processing
 if(length(unique(mh_raw$FR_CITATION)) != length(unique(fishhist$FR_CITATION))) { stop (paste0("FRs lost somewhere in processing code - ", setdiff(mh_raw$FR_CITATION, fishhist$FR_CITATION)))}
 
-
-
 usethis::use_data(fishhist, overwrite = TRUE)
