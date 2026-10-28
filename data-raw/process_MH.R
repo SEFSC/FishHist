@@ -7,7 +7,7 @@ library(here) # here
 library(purrr) # map, reduce
 library(tibble) #add_column
 
-mh_raw <- read.csv("data-raw/MH_DOWNLOAD_SEP_23_2026.csv",
+mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
                    stringsAsFactors = FALSE,
                    colClasses=c("REGULATION_ID" = "numeric",
                                 "START_DAY" = "numeric",
@@ -195,7 +195,7 @@ mh_setup <- mh_raw |>
 ##################### Species Expansion Fishing Year and Fishing Season ###################
 
 # Read in sp_info_use
-sp_info_use <- readRDS("data-raw/MH_spp_table_20260922.RDS") |>
+sp_info_use <- readRDS("data-raw/MH_spp_table_20261028.RDS") |>
   dplyr::mutate(SPP_NAME = stringr::str_replace_all(SPP_NAME, stringr::fixed("?"), "—"))
 
 # Species ALL expansion for FISHING YEAR and FISHING SEASON
