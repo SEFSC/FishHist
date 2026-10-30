@@ -1,4 +1,22 @@
-url: https://supreme-broccoli-2mkenmw.pages.github.io/
+url: ~
 template:
   bootstrap: 5
 
+reference:
+- title: Functions
+  desc: >
+   The functions built within this package to visualize and format fisheries management data
+  contents:
+  - expand_status
+  - gantt_FMP
+  - plot_mcats_sector
+  - plot_mcats_spp
+  - plot_species_timeline
+  - process_closures
+  - tab_definitions
+
+- title: Datasets
+  desc: >
+   Example processed analysis-ready Southeast Fisheries Management Dataset that can be used for practicing use of the package's functions
+  contents:
+  - fishhist

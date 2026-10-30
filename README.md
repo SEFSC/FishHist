@@ -1,4 +1,4 @@
-# FishHist: Southeast Fisheries Management History Data Package <img src="man/figures/logo.png" align="right" style="padding: 10px"/>
+# FishHist: Southeast Fisheries Management History Data Package <img src="man/figures/logo.png" align="right" height="138" style="padding: 10px"/></a>
 
 <!-- badges: start -->
 
