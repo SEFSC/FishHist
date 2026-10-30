@@ -2,7 +2,7 @@ Package: FishHist
 Type: Package
 Title: Southeast Fisheries Management History Data
 Version: 0.1.0
-Authors@R: c(person("Sarina", "Atkinson", role = c("aut", "cre")), person("Gaitlyn", "Malone", role="aut"))
+Authors@R: c(person("Sarina", "Atkinson", , "sarina.atkinson@noaa.gov" role = c("aut", "cre")), person("Gaitlyn", "Malone", role="aut"))
 Maintainer: The package maintainer <sarina.atkinson@noaa.gov>
 Description: Processing and Analyzing Southeast Fisheries Management History data
 Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr, stats
