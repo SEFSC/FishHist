@@ -721,6 +721,9 @@ mh_sp_expanded <- mh_dates |>
   dplyr::mutate(ADDED_SP_DATE = dplyr::coalesce(ADDED_SP_DATE, ADDED_DT),
                 REMOVED_SP_DATE = dplyr::coalesce(REMOVED_SP_DATE, REMOVED_DT)) |> dplyr::select(-c(ADDED_DT, REMOVED_DT))
 
+################# CHECK SPECIES #################
+chk <- mh_sp_expanded |> dplyr::filter(is.na(ADDED_SP_DATE))
+
 # Adjust START_DATE_USE and END_DATE information based on the ADDED_SP_DATE and REMOVED_SP_DATE
 # Results in the mh_expanded data frame
 mh_expanded <- mh_sp_expanded |>
@@ -739,7 +742,8 @@ mh_expanded <- mh_sp_expanded |>
                                  TRUE ~ START_DATE_USE),
          # CREATE: the variable of END_DATE2 to adjust the END_DATE accordingly
          # Adjust when the REMOVED_SP_DATE is prior to the END_DATE of the regulation and the REMOVED_SP_DATE is after the START_DATE_USE of the regulation
-         END_DATE2 = dplyr::case_when(is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE,
+         END_DATE2 = dplyr::case_when(MANAGEMENT_CATEGORY == 'CATCH LIMITS' ~ END_DATE,
+                                      is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE,
                                       REMOVED_SP_DATE < END_DATE & REMOVED_SP_DATE > START_DATE_USE ~ REMOVED_SP_DATE,
                                       is.na(END_DATE) ~ end_timeseries,
                                TRUE ~ END_DATE)) |>
