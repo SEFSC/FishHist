@@ -1,0 +1,60 @@
+# FishHist: Southeast Fisheries Management History Data Package
+
+## Overview
+
+FishHist provides a method for generating an analysis-ready version of
+the Management History Database. In their original format, the records
+in this database represent Federal Register (FR) changes in management
+actions affecting federally managed species throughout the Gulf of
+America, South Atlantic, and U.S. Caribbean regions. The data files and
+code contained in this repository define and execute logic for grouping
+and creating streamlined time series of related management events.
+
+------------------------------------------------------------------------
+
+## Disclaimer
+
+The United States Department of Commerce (DOC) GitHub project code is
+provided on an ‘as is’ basis and the user assumes responsibility for its
+use. DOC has relinquished control of the information and no longer has
+responsibility to protect the integrity, confidentiality, or
+availability of the information. Any claims against the Department of
+Commerce stemming from the use of its GitHub project will be governed by
+all applicable Federal law. Any reference to specific commercial
+products, processes, or services by service mark, trademark,
+manufacturer, or otherwise, does not constitute or imply their
+endorsement, recommendation or favoring by the Department of Commerce.
+The Department of Commerce seal and logo, or the seal and logo of a DOC
+bureau, shall not be used in any manner to imply endorsement of any
+commercial product or activity by DOC or the United States Government.”
+
+------------------------------------------------------------------------
+
+![NOAA
+Fisheries](https://raw.githubusercontent.com/nmfs-general-modeling-tools/nmfspalette/main/man/figures/noaa-fisheries-rgb-2line-horizontal-small.png)
+
+[U.S. Department of Commerce](https://www.commerce.gov/) \| [National
+Oceanographic and Atmospheric Administration](https://www.noaa.gov) \|
+[NOAA Fisheries](https://www.fisheries.noaa.gov/)
+
+# Package index
+
+## All functions
+
+- [`expand_status()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/expand_status.md)
+  : Expand management status
+- [`fishhist`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/fishhist.md)
+  : The Southeast Fisheries Management History dataset
+- [`gantt_FMP()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/gantt_FMP.md)
+  : Gantt chart of FMPs
+- [`plot_mcats_sector()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_mcats_sector.md)
+  : FMP plot by sector
+- [`plot_mcats_spp()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_mcats_spp.md)
+  : FMP plot for managed species
+- [`plot_species_timeline()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_species_timeline.md)
+  : Timeline visual
+- [`process_closures()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/process_closures.md)
+  : Process Closure-related management types
+- [`tab_definitions()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/tab_definitions.md)
+  : Definitions Table
+
