@@ -3,3 +3,7 @@
 
 usethis::use_build_ignore("data-raw")
 ^data-raw$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

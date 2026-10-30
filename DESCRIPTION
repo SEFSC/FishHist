@@ -11,6 +11,6 @@ Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 3.5)
-URL: https://github.com/SEFSC/FishHist
+URL: https://github.com/SEFSC/FishHist, https://supreme-broccoli-2mkenmw.pages.github.io/
 BugReports: https://github.com/SEFSC/FishHist/issues
 Config/roxygen2/version: 8.1.0
