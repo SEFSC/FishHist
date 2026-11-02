@@ -1,4 +1,4 @@
-# The Southeast Fisheries Management History dataset
+# Management History data through 2025
 
 A processed and cleaned management history dataframe.
 
