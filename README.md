@@ -6,13 +6,19 @@
 
 ## Overview
 
-FishHist provides a method for generating an analysis-ready version of
-the Management History Database. In their original format, the records
-in this database represent Federal Register (FR) changes in management
-actions affecting federally managed species throughout the Gulf of
-America, South Atlantic, and U.S. Caribbean regions. The data files and
-code contained in this repository define and execute logic for grouping
-and creating streamlined time series of related management events.
+FishHist contains a Management History analysis-ready dataset as well as
+functions to help visualize the data available. In their original
+format, each record represent Federal Register (FR) changes in
+management actions affecting federally managed species throughout the
+Gulf of America, South Atlantic, and U.S. Caribbean regions. The example
+dataset links and reconciles overlapping actions that modify or replace
+prior rules over time.
+
+## Publications
+
+## Use in Stock Assessments
+
+\[cite working papers?\]
 
 <!-- Do not edit below. This adds the Disclaimer and NMFS footer. -->
 
