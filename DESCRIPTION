@@ -2,15 +2,14 @@ Package: FishHist
 Type: Package
 Title: Southeast Fisheries Management History Data
 Version: 0.1.0
-Authors@R: c(person("Sarina", "Atkinson", "sarina.atkinson@noaa.gov", role = c("aut", "cre")), person("Gaitlyn", "Malone", role="aut"))
-Maintainer: The package maintainer <sarina.atkinson@noaa.gov>
+Authors@R: c(person("Sarina", "Atkinson", , "sarina.atkinson@noaa.gov", role = c("aut", "cre")), person("Gaitlyn", "Malone", role="aut"))
+BugReports: https://github.com/SEFSC/FishHist/issues
 Description: Processing and Analyzing Southeast Fisheries Management History data
 Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr, stats
-License: GPL3 
+License: GPL-3 + file LICENSE 
 Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 3.5)
 URL: https://github.com/SEFSC/FishHist, https://supreme-broccoli-2mkenmw.pages.github.io/
-BugReports: https://github.com/SEFSC/FishHist/issues
 Config/roxygen2/version: 8.1.0
