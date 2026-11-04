@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-speces-timeline.R
 \name{plot_species_timeline}
 \alias{plot_species_timeline}
-\title{Timeline visual}
+\title{Timeline of management types recorded for a species within a region}
 \usage{
 plot_species_timeline(data = fishhist, spp, region)
 }
@@ -17,7 +17,7 @@ plot_species_timeline(data = fishhist, spp, region)
 A plot
 }
 \description{
-Timeline of management actions publised for a species within a FMP
+Timeline of management actions published for a species within a FMP (filter set to region)
 }
 \examples{
 plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")

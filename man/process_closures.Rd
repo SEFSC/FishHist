@@ -2,9 +2,9 @@
 % Please edit documentation in R/function-closures.R
 \name{process_closures}
 \alias{process_closures}
-\title{Process Closure-related management types}
+\title{Process ad connect all closure-related management types for a species within a region}
 \usage{
-process_closures(data = fishhist, spp, region)
+process_closures(data = fishhist, spp, region, start, end)
 }
 \arguments{
 \item{data}{default=fishhist}

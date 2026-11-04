@@ -2,7 +2,7 @@
 % Please edit documentation in R/tab-definitions.R
 \name{tab_definitions}
 \alias{tab_definitions}
-\title{Definitions Table}
+\title{Table of definitions provided under each Federal Registrar (FR) notice}
 \usage{
 tab_definitions(data = fishhist)
 }

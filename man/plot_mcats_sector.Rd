@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-mcats-sector.R
 \name{plot_mcats_sector}
 \alias{plot_mcats_sector}
-\title{FMP plot by sector}
+\title{Plot of management categories recorded under an FMP by sector}
 \usage{
 plot_mcats_sector(data = fishhist, FMP_filter)
 }
