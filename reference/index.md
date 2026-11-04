@@ -6,19 +6,23 @@ The functions built within this package to visualize and format
 fisheries management data
 
 - [`expand_status()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/expand_status.md)
-  : Expand management status
+  : Expand regulations based on the management status field (e.g.
+  seasonal, monthly recurring, etc.)
 - [`gantt_FMP()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/gantt_FMP.md)
   : Gantt chart of FMPs
 - [`plot_mcats_sector()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_mcats_sector.md)
-  : FMP plot by sector
+  : Plot of management categories recorded under an FMP by sector
 - [`plot_mcats_spp()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_mcats_spp.md)
-  : FMP plot for managed species
+  : Plot of management categories recorded under an FMP for all managed
+  species
 - [`plot_species_timeline()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_species_timeline.md)
-  : Timeline visual
+  : Timeline of management types recorded for a species within a region
 - [`process_closures()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/process_closures.md)
-  : Process Closure-related management types
+  : Process ad connect all closure-related management types for a
+  species within a region
 - [`tab_definitions()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/tab_definitions.md)
-  : Definitions Table
+  : Table of definitions provided under each Federal Registrar (FR)
+  notice
 
 ## Datasets
 

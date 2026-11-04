@@ -1,6 +1,7 @@
-# Timeline visual
+# Timeline of management types recorded for a species within a region
 
-Timeline of management actions publised for a species within a FMP
+Timeline of management actions published for a species within a FMP
+(filter set to region)
 
 ## Usage
 

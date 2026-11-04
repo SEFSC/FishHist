@@ -1,7 +1,9 @@
-# Expand management status
+# Expand regulations based on the management status field (e.g. seasonal, monthly recurring, etc.)
 
-Function to expand the dates based on management status (e.g. monthly
-recurring, seasonal, etc.)
+Function to create multiple rows of a regulation with distinct date
+ranges that coincide with a recurring action (based on the management
+status field). In this function, the management type needs to be
+specified.
 
 ## Usage
 

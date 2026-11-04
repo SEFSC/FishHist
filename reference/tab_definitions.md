@@ -1,4 +1,4 @@
-# Definitions Table
+# Table of definitions provided under each Federal Registrar (FR) notice
 
 List containing separate tables of Definitions for each FMP with
 associated FR notice for reference
