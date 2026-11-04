@@ -1,4 +1,4 @@
-#' Process Closure-related management types
+#' Process ad connect all closure-related management types for a species within a region
 #'
 #' Process closures to expand and incorporate all related mtypes for closures to know for a single day whether the fishery is open or closed
 #'

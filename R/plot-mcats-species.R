@@ -1,4 +1,4 @@
-#' FMP plot for managed species
+#' Plot of management categories recorded under an FMP for all managed species
 #'
 #' Number of FRs published by management type and species
 #'

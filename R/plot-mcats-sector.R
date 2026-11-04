@@ -1,4 +1,4 @@
-#' FMP plot by sector
+#' Plot of management categories recorded under an FMP by sector
 #'
 #' Percent of regulations by management type and sector (recreational vs. commerical)
 #'
