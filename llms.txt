@@ -35,7 +35,7 @@ analyzing fisheries management history data for science and management.
 Sagarese, S.R., Atkinson, S., Malone, G., Rios, A.B., McCarthy, K.J.,
 Matter, V.M. 2025. Synthesis of Management Histories for Gulf of America
 Reef Fishes through 2024. NOAA Tech. Memo. NMFS-SEFSC-793 DOI:
-10.25923/h0jt-xe51
+[10.25923/h0jt-xe51](https://repository.library.noaa.gov/view/noaa/72380)
 
 ## Use in Stock Assessments
 
