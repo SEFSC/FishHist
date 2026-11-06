@@ -30,6 +30,24 @@ reconciles overlapping actions that modify or replace prior rules over
 time. Functions built within this package assist in visualizing and
 analyzing fisheries management history data for science and management.
 
+## Installation
+
+You can install the development version of FishHist from
+[GitHub](https://github.com/) with:
+
+``` r
+
+# install.packages("pak")
+pak::pak("sefsc/FishHist")
+```
+
+To load the package, use:
+
+``` r
+
+library(FishHist)
+```
+
 ## Publications
 
 Sagarese, S.R., Atkinson, S., Malone, G., Rios, A.B., McCarthy, K.J.,
