@@ -27,7 +27,9 @@ plot_mcats_spp <- function(data = fishhist, FMP_filter) {
     dplyr::pull(COMMON_NAME_CLEAN)
 
   dat2 <- data |>
-    dplyr::filter(FMP == FMP_filter, COMMON_NAME_CLEAN %in% managed_spp, MANAGEMENT_TYPECLEAN != "DEFINITION") |>
+    dplyr::filter(FMP == FMP_filter,
+                  COMMON_NAME_CLEAN %in% managed_spp,
+                  MANAGEMENT_TYPECLEAN != "DEFINITION") |>
     dplyr::group_by(FMP, MANAGEMENTCATEGORY, COMMON_NAME_CLEAN) |>
     dplyr::summarise(nFRs = dplyr::n_distinct(FR_CITATION))
 
@@ -38,14 +40,19 @@ plot_mcats_spp <- function(data = fishhist, FMP_filter) {
   plot <- ggplot2::ggplot(
     dat2,
     ggplot2::aes(
-      x = nFRs, y = factor(COMMON_NAME_CLEAN, levels = rev(sort(unique(COMMON_NAME_CLEAN)))),
+      x = nFRs, y = factor(COMMON_NAME_CLEAN,
+                           levels = rev(sort(unique(COMMON_NAME_CLEAN)))),
       fill = MANAGEMENTCATEGORY
     )
   ) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_fill_manual(values = c("#999999", "#CC79A7", "#D55E00", "#0072B2", "#F0E442", "#009E73", "#56B4E9", "#E69F00")) +
-    ggplot2::labs(fill = "Management Category", x = "Number of Federal Register Notices Published", y = "") +
+    ggplot2::scale_fill_manual(
+      values = c("#999999", "#CC79A7", "#D55E00", "#0072B2",
+                 "#F0E442", "#009E73", "#56B4E9", "#E69F00")) +
+    ggplot2::labs(fill = "Management Category",
+                  x = "Number of Federal Register Notices Published",
+                  y = "") +
     ggplot2::theme_classic() +
     ggplot2::theme(
       axis.text.y = ggplot2::element_text(size = 5),

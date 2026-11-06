@@ -12,10 +12,14 @@
 tab_definitions <- function(data=fishhist){
 
   # Format acronyms to stay all CAPS in the table
-  acronyms <- c("U.S.", "ABC", "TAC", "IFQ", "TED", "NMFS", "NOAA", "EEZ", "FMP", "FMFC", "MPA", "SSBR")
+  acronyms <- c("U.S.", "ABC", "TAC", "IFQ", "TED", "NMFS",
+                "NOAA", "EEZ", "FMP", "FMFC", "MPA", "SSBR")
 
   replacements <- stats::setNames(acronyms,
-                           paste0("\\b", stringr::str_to_title(acronyms), "\\b"))
+                           paste0("\\b",
+                                  stringr::str_to_title(acronyms),
+                                  "\\b")
+                           )
 
   str_to_title_acronyms <- function(text, replace_map) {
     title_text <- stringr::str_to_title(text)
@@ -26,7 +30,8 @@ tab_definitions <- function(data=fishhist){
     title_text <- stringr::str_to_title(text)
 
     # 2. Words to force to LOWERCASE (unless they appear at the very start)
-    lower_words <- c("of", "the", "and", "in", "on", "at", "for", "to", "a", "an")
+    lower_words <- c("of", "the", "and", "in", "on", "at",
+                     "for", "to", "a", "an")
     lower_pattern <- base::paste0(
       "(?<!^)\\b(",
       base::paste(stringr::str_to_title(lower_words), collapse = "|"),
@@ -68,8 +73,15 @@ tab_definitions <- function(data=fishhist){
       fmp_name <- .x$FMP[1]
 
       flextable::flextable(.x, col_keys = c("VALUE", "FR_CITATION")) |>
-        flextable::compose(j = "FR_CITATION",
-                           value = flextable::as_paragraph(flextable::hyperlink_text(x = FR_CITATION, url = FR_URL, props = flextable::fp_text_default(color = "blue", underline = TRUE)))) |>
+        flextable::compose(
+          j = "FR_CITATION",
+          value =
+            flextable::as_paragraph(
+              flextable::hyperlink_text(
+                x = FR_CITATION, url = FR_URL,
+                props = flextable::fp_text_default(color = "blue",
+                                                   underline = TRUE)))
+          ) |>
         flextable::set_header_labels(VALUE = "Defintion",
                                      FR_CITATION = "FR Citation") |>
         flextable::add_header_lines(values = fmp_name) |>

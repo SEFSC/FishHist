@@ -1,6 +1,8 @@
 #' Gantt chart of FMPs
 #'
-#' Gantt chart of the first and last Federal Register (FR) published within a Fishery Management Plan (FMP) within the Southeast Fisheries Management History dataset.
+#' Gantt chart of the first and last Federal Register (FR)
+#' published within a Fishery Management Plan (FMP) within the
+#' Southeast Fisheries Management History dataset.
 #'
 #' @param data default=fishhist
 #' @return A plot
@@ -14,7 +16,8 @@ gantt_FMP <- function(data = fishhist) {
     title_text <- stringr::str_to_title(text)
 
     # 2. Words to force to LOWERCASE (unless they appear at the very start)
-    lower_words <- c("of", "the", "and", "in", "on", "at", "for", "to", "a", "an")
+    lower_words <- c("of", "the", "and", "in", "on",
+                     "at", "for", "to", "a", "an")
     lower_pattern <- base::paste0(
       "(?<!^)\\b(",
       base::paste(stringr::str_to_title(lower_words), collapse = "|"),
@@ -51,21 +54,26 @@ gantt_FMP <- function(data = fishhist) {
       end_year = max(lubridate::year(END_DATE))
     ) |>
     # Arrange by region (if FMP in multiple regions, take first row)
-    dplyr::left_join(data |> dplyr::select(FMP, REGION) |> dplyr::distinct(), by = dplyr::join_by(FMP)) |>
+    dplyr::left_join(data |> dplyr::select(FMP, REGION) |>
+                       dplyr::distinct(), by = dplyr::join_by(FMP)) |>
     dplyr::group_by(FMP) |>
     dplyr::slice(1) |>
     dplyr::ungroup() |>
     dplyr::arrange(REGION, start_year) |>
     dplyr::mutate(
-      FMP = stringr::str_wrap(custom_title_case(FMP), width = 40), # Optional: wraps long titles
+      # Wrap long titles
+      FMP = stringr::str_wrap(custom_title_case(FMP), width = 40),
       FMP = factor(FMP, levels = unique(FMP))
     )
 
   plot <- ggplot2::ggplot(data_summary, ggplot2::aes(y = FMP)) +
-    ggplot2::geom_segment(ggplot2::aes(x = start_year, xend = end_year, yend = FMP),
+    ggplot2::geom_segment(ggplot2::aes(x = start_year,
+                                       xend = end_year,
+                                       yend = FMP),
       color = "steelblue", linewidth = 6, lineend = "round"
     ) +
-    ggplot2::scale_x_continuous(breaks = seq(min(data_summary$start_year, na.rm = TRUE),
+    ggplot2::scale_x_continuous(
+      breaks = seq(min(data_summary$start_year, na.rm = TRUE),
       max(data_summary$end_year, na.rm = TRUE),
       by = 5
     )) +
