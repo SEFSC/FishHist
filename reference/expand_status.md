@@ -29,7 +29,7 @@ A dataframe
 
 ``` r
 expand_status(fishhist, "FISHING YEAR")
-#> # A tibble: 7,065,893 × 49
+#> # A tibble: 7,079,973 × 49
 #>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN
 #>    <chr>        <chr>             <chr>  <chr>      <chr>        <chr>          
 #>  1 SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        RECREATIONAL ALL            
@@ -42,9 +42,9 @@ expand_status(fishhist, "FISHING YEAR")
 #>  8 SHRIMP FISH… SHRIMP, ROCK      GULF … ALL        COMMERCIAL   ALL            
 #>  9 SHRIMP FISH… SHRIMP, ATLANIC … GULF … ALL        RECREATIONAL ALL            
 #> 10 SHRIMP FISH… SHRIMP, ATLANIC … GULF … ALL        COMMERCIAL   ALL            
-#> # ℹ 7,065,883 more rows
+#> # ℹ 7,079,963 more rows
 #> # ℹ 43 more variables: MANAGEMENT_TYPECLEAN <chr>, date_sequence <date>,
-#> #   TIME_one <chr>, CLUSTER_one <dbl>, REG_ID_one <dbl>, FR_CITATION_one <chr>,
+#> #   TIME_one <chr>, CLUSTER_one <int>, REG_ID_one <dbl>, FR_CITATION_one <chr>,
 #> #   VALUE_one <chr>, VALUEUNITS_one <chr>, VALUETYPE_one <chr>,
 #> #   VALUERATE_one <chr>, MULTI_REG_VALUE <dbl>, CLUSTER_weekly <dbl>,
 #> #   REG_ID_weekly <dbl>, FR_CITATION_weekly <chr>, TIME_weekly <chr>,
