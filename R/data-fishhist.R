@@ -1,4 +1,4 @@
-#' Management History data through 2025
+#' Management History data through 2026
 #'
 #' A processed and cleaned management history dataframe.
 #'
