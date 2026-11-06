@@ -1,13 +1,15 @@
 #' Timeline of management types recorded for a species within a region
 #'
-#' Timeline of management actions published for a species within a FMP (filter set to region)
+#' Timeline of management actions published for a species within a FMP
+#' (filter set to region)
 #'
-#' @param data default=fishhist
+#' @param data Management history dataset. default=fishhist
 #' @param spp Filter to species of interest (common name).
 #' @param region Filter to region of interest
 #' @return A plot
 #'
-#' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+#' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED", region =
+#'   "SOUTH ATLANTIC")
 #'
 #' @export
 plot_species_timeline <- function(data=fishhist, spp, region){

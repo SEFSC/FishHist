@@ -1,6 +1,7 @@
 #' Table of definitions provided under each Federal Registrar (FR) notice
 #'
-#' List containing separate tables of Definitions for each FMP with associated FR notice for reference
+#' List containing separate tables of Definitions for each FMP with associated
+#' FR notice for reference
 #'
 #' @param data default=fishhist
 #' @return A list of tables
@@ -72,7 +73,8 @@ tab_definitions <- function(data=fishhist){
         flextable::set_header_labels(VALUE = "Defintion",
                                      FR_CITATION = "FR Citation") |>
         flextable::add_header_lines(values = fmp_name) |>
-        flextable::merge_v(j = "VALUE") |> # Only merge visible columns in col_keys
+        # Only merge visible columns in col_keys
+        flextable::merge_v(j = "VALUE") |>
         flextable::valign(valign = "top") |>
         flextable::theme_box() |>
         flextable::fontsize(part = "all", size = 12) |>
