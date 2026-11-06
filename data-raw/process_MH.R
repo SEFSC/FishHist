@@ -7,6 +7,8 @@ library(here) # here
 library(purrr) # map, reduce
 library(tibble) # add_column
 
+set_end_timeseries <- "2026-12-31"
+
 mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
   stringsAsFactors = FALSE,
   colClasses = c(
@@ -28,7 +30,7 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
   # Format dates to be mm/dd/yyyy to match added data (this may not be an issue
   # in the future when pull directly from the database)
   dplyr::mutate(
-    end_timeseries = as.Date(Sys.Date(), "%Y-%m-%d"),
+    end_timeseries = as.Date(set_end_timeseries, "%Y-%m-%d"),
     EFFECTIVE_DATE = as.Date(EFFECTIVE_DATE, "%m/%d/%Y"),
     INEFFECTIVE_DATE = as.Date(INEFFECTIVE_DATE, "%m/%d/%Y"),
     # Remove ="..." characters in species ITIS codes
@@ -44,7 +46,9 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
     # getting fixed in the database
     # Sarina created data bugs to update the data, but the change
     # was not reflected
-    ZONE = dplyr::case_when(REGULATION_ID %in% c(11537, 11538, 11539) ~ "SMZ - PA - 04 RON MCMANUS MEMORIAL REEF", TRUE ~ ZONE)
+    ZONE = dplyr::case_when(REGULATION_ID %in% c(11537, 11538, 11539) ~
+                              "SMZ - PA - 04 RON MCMANUS MEMORIAL REEF",
+                            TRUE ~ ZONE)
   )
 # Replace all "blank" fields with NA for consistency
 mh_raw[mh_raw == ""] <- NA
@@ -67,12 +71,17 @@ area_xref <- read.csv("data-raw/zone_name_xref.csv",
   fileEncoding = "Windows-1252"
 ) |>
   # Create single variable for ZONE_USE
-  dplyr::mutate(ZONE_USE = dplyr::case_when(NEW_ZONE_NAME == "" ~ ZONE, TRUE ~ NEW_ZONE_NAME)) |>
+  dplyr::mutate(ZONE_USE = dplyr::case_when(NEW_ZONE_NAME == "" ~ ZONE,
+                                            TRUE ~ NEW_ZONE_NAME)) |>
   dplyr::select(ZONE, ZONE_USE)
 
 mh_setup <- mh_raw |>
   # Rename "ALL" records to 'RECREATIONAL,COMMERCIAL'
-  dplyr::mutate(SECTOR_USE = dplyr::case_when(MANAGEMENT_CATEGORY != "CATCH LIMITS" & SECTOR == "ALL" ~ "RECREATIONAL,COMMERCIAL", TRUE ~ SECTOR)) |>
+  dplyr::mutate(SECTOR_USE = dplyr::case_when(
+    MANAGEMENT_CATEGORY != "CATCH LIMITS" & SECTOR == "ALL" ~
+      "RECREATIONAL,COMMERCIAL",
+    TRUE ~ SECTOR)
+                ) |>
   # Expand SECTOR_USE at the commas
   tidyr::separate_rows(SECTOR_USE) |>
   dplyr::left_join(detailed_xref, by = "MANAGEMENT_TYPE") |>
@@ -91,7 +100,8 @@ mh_setup <- mh_raw |>
   # SPECIES_AGGREGATE, SPECIES_GROUP, or individual species (COMMON_NAME)
   # The SPP_NAME field indicates the specific aggregate, group, or species name
   # to which the record applies
-  tidyr::pivot_longer(cols = c(COMMON_NAME, SPECIES_AGGREGATE, SPECIES_GROUP), names_to = "SPP_TYPE", values_to = "SPP_NAME") |>
+  tidyr::pivot_longer(cols = c(COMMON_NAME, SPECIES_AGGREGATE, SPECIES_GROUP),
+                      names_to = "SPP_TYPE", values_to = "SPP_NAME") |>
   # Remove records where SPP_NAME is null
   dplyr::filter(!is.na(SPP_NAME)) |>
   # Standardize ZONE names
@@ -113,12 +123,16 @@ mh_setup <- mh_raw |>
     # adjustment instead of ceasing to exist.
     ADJUSTMENT = dplyr::case_when(
       stringr::str_detect(MANAGEMENT_TYPE, "ADJUSTMENT") ~ 1,
-      MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & lubridate::month(INEFFECTIVE_DATE) == 12 & lubridate::day(INEFFECTIVE_DATE) == 31 ~ 0,
+      MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" &
+        lubridate::month(INEFFECTIVE_DATE) == 12 &
+        lubridate::day(INEFFECTIVE_DATE) == 31 ~ 0,
       MANAGEMENT_TYPE == "REOPENING" & !is.na(INEFFECTIVE_DATE) ~ 1,
       TRUE ~ 0
     ),
     MANAGEMENT_TYPE_USE = dplyr::case_when(
-      stringr::str_detect(MANAGEMENT_TYPE, "ADJUSTMENT") ~ stringr::str_replace(MANAGEMENT_TYPE, " ADJUSTMENT", ""),
+      stringr::str_detect(
+        MANAGEMENT_TYPE, "ADJUSTMENT") ~
+        stringr::str_replace(MANAGEMENT_TYPE, " ADJUSTMENT", ""),
       TRUE ~ MANAGEMENT_TYPE
     ),
     # Rename records with the MANAGEMENT_TYPE of REOPENING to the
@@ -156,18 +170,21 @@ mh_setup <- mh_raw |>
     # RECURRING, DAILY)
     STATUS_TYPE = dplyr::case_when(
       MANAGEMENT_STATUS_USE == "ONCE" ~ "SIMPLE",
-      MANAGEMENT_STATUS_USE %in% c("SEASONAL", "WEEKLY RECURRING", "MONTHLY RECURRING", "DAILY") ~ "RECURRING",
+      MANAGEMENT_STATUS_USE %in% c("SEASONAL", "WEEKLY RECURRING",
+                                   "MONTHLY RECURRING", "DAILY") ~ "RECURRING",
       TRUE ~ "COMPLEX"
     ),
     # CREATE: the variable of REG_REMOVED to indicate when a
     # regulation is "turned off"
     # A regulation is "turned off when the EFFECTIVE_DATE is equal
     # to the INEFFECTIVE_DATE
-    REG_REMOVED = dplyr::case_when(EFFECTIVE_DATE == INEFFECTIVE_DATE ~ 1, TRUE ~ 0),
+    REG_REMOVED = dplyr::case_when(
+      EFFECTIVE_DATE == INEFFECTIVE_DATE ~ 1, TRUE ~ 0),
     # CREATE: the variables of GENERAL and COMPLEX to flag when a
     # regulation has a STAUS_TYPE of SIMPLE or COMPLEX,
     # respectively
-    GENERAL = dplyr::case_when(STATUS_TYPE == "SIMPLE" & is.na(VALUE) ~ 1, TRUE ~ 0),
+    GENERAL = dplyr::case_when(
+      STATUS_TYPE == "SIMPLE" & is.na(VALUE) ~ 1, TRUE ~ 0),
     COMPLEX = dplyr::case_when(STATUS_TYPE == "COMPLEX" ~ 1, TRUE ~ 0),
     # Format start and end day of week as ordered factors
     START_DAY_OF_WEEK = factor(START_DAY_OF_WEEK,
@@ -194,7 +211,8 @@ mh_setup <- mh_raw |>
       MANAGEMENT_STATUS_USE == "ONCE" &
         !is.na(START_DAY) &
         !is.na(START_MONTH) &
-        !is.na(START_YEAR) ~ as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
+        !is.na(START_YEAR) ~
+        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
       TRUE ~ EFFECTIVE_DATE
     ),
     # Adjust the start date if its after the effective date so the
@@ -221,7 +239,8 @@ mh_setup <- mh_raw |>
     # because a null assumes the full day
     START_TIME_USE = dplyr::case_when(START_TIME != "11:59:00 PM" ~ START_TIME),
     START_DAY_OF_WEEK_USE = dplyr::case_when(
-      START_TIME == "11:59:00 PM" & !is.na(START_DAY_OF_WEEK) ~ as.numeric(START_DAY_OF_WEEK) + 1,
+      START_TIME == "11:59:00 PM" & !is.na(START_DAY_OF_WEEK) ~
+        as.numeric(START_DAY_OF_WEEK) + 1,
       TRUE ~ as.numeric(START_DAY_OF_WEEK)
     ),
 
@@ -235,7 +254,8 @@ mh_setup <- mh_raw |>
       MANAGEMENT_STATUS_USE == "ONCE" &
         !is.na(END_DAY) &
         !is.na(END_MONTH) &
-        !is.na(END_YEAR) ~ as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
+        !is.na(END_YEAR) ~
+        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
       TRUE ~ INEFFECTIVE_DATE
     ),
     # Added condition on 2/2/24 because of REG_ID 762
@@ -244,7 +264,8 @@ mh_setup <- mh_raw |>
         !is.na(END_DAY) &
         !is.na(END_MONTH) &
         !is.na(END_YEAR) &
-        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y") > INEFFECTIVE_DATE ~ INEFFECTIVE_DATE,
+        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y") >
+        INEFFECTIVE_DATE ~ INEFFECTIVE_DATE,
       TRUE ~ END_DATE
     ),
     # For records with an END_TIME of "12:01:00 AM", the END_DATE
@@ -260,11 +281,13 @@ mh_setup <- mh_raw |>
     # year of February already factored in to determine if its the
     # 28th or 29th
     END_DAY_USE = dplyr::case_when(
-      END_TIME == "12:01:00 AM" & !is.na(END_DATE) ~ as.numeric(lubridate::day(END_DATE)),
+      END_TIME == "12:01:00 AM" & !is.na(END_DATE) ~
+        as.numeric(lubridate::day(END_DATE)),
       TRUE ~ END_DAY
     ),
     END_MONTH_USE = dplyr::case_when(
-      END_TIME == "12:01:00 AM" & !is.na(END_DATE) ~ as.numeric(lubridate::month(END_DATE)),
+      END_TIME == "12:01:00 AM" & !is.na(END_DATE) ~
+        as.numeric(lubridate::month(END_DATE)),
       TRUE ~ END_MONTH
     ),
     END_YEAR_USE = dplyr::case_when(
@@ -276,7 +299,8 @@ mh_setup <- mh_raw |>
     # Otherwise remove 12:01 from end time or use the reported end
     # time
     END_TIME_USE = dplyr::case_when(
-      END_TIME == "12:01:00 AM" & STATUS_TYPE == "RECURRING" & END_DAY == 1 ~ END_TIME,
+      END_TIME == "12:01:00 AM" & STATUS_TYPE == "RECURRING" &
+        END_DAY == 1 ~ END_TIME,
       # Single regulation (REG_ID = 80)
       # where end time is 11:59 PM
       END_TIME != "12:01:00 AM" & END_TIME != "11:59:00 PM" ~ END_TIME
@@ -287,7 +311,8 @@ mh_setup <- mh_raw |>
     # not equal 1, but as of 12/30/2022 there were no end day of
     # the weeks with an end day of 1
     END_DAY_OF_WEEK_USE = dplyr::case_when(
-      END_TIME == "12:01:00 AM" & END_DAY != 1 ~ as.numeric(END_DAY_OF_WEEK) - 1,
+      END_TIME == "12:01:00 AM" & END_DAY != 1 ~
+        as.numeric(END_DAY_OF_WEEK) - 1,
       TRUE ~ as.numeric(END_DAY_OF_WEEK)
     ),
     # Format start and end day of week use to deal with 0 and 8 of
@@ -315,20 +340,26 @@ mh_setup <- mh_raw |>
 
 # Read in sp_info_use
 sp_info_use <- readRDS("data-raw/MH_spp_table_20261028.RDS") |>
-  dplyr::mutate(SPP_NAME = stringr::str_replace_all(SPP_NAME, stringr::fixed("?"), "—"))
+  dplyr::mutate(
+    SPP_NAME = stringr::str_replace_all(SPP_NAME, stringr::fixed("?"), "—"))
 
 # Species ALL expansion for FISHING YEAR and FISHING SEASON
-a_spp_info_use <- sp_info_use |>
+a_sp_info_use <- sp_info_use |>
   dplyr::filter(SPP_NAME == "ALL") |>
   dplyr::rename(SPECIES = "COMMON_NAME_USE") |>
   dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SPP_NAME, SCIENTIFIC_NAME))
 mh_expanded_fy_fs <- mh_setup |>
-  dplyr::filter(MANAGEMENT_TYPE_USE %in% c("FISHING YEAR", "FISHING SEASON"), SPP_NAME == "ALL") |>
-  dplyr::left_join(a_sp_info_use, by = dplyr::join_by(FMP, SPP_TYPE), relationship = "many-to-many") |>
+  dplyr::filter(MANAGEMENT_TYPE_USE %in% c("FISHING YEAR", "FISHING SEASON"),
+                SPP_NAME == "ALL") |>
+  dplyr::left_join(a_sp_info_use, by = dplyr::join_by(FMP, SPP_TYPE),
+                   relationship = "many-to-many") |>
   # Adjust start and end dates based on species added and removed dates
   dplyr::mutate(
-    END_DATE = dplyr::case_when(is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE, TRUE ~ END_DATE),
-    START_DATE = dplyr::case_when(START_DATE < ADDED_SP_DATE ~ ADDED_SP_DATE, TRUE ~ START_DATE),
+    END_DATE = dplyr::case_when(
+      is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE,
+      TRUE ~ END_DATE),
+    START_DATE = dplyr::case_when(
+      START_DATE < ADDED_SP_DATE ~ ADDED_SP_DATE, TRUE ~ START_DATE),
     # Remove expanded records if the species was removed before the
     # regulation start date
     REMOVE = dplyr::case_when(START_DATE > REMOVED_SP_DATE ~ 1, TRUE ~ 0)
@@ -339,10 +370,12 @@ mh_expanded_fy_fs <- mh_setup |>
 
 mh_setup2 <- mh_setup |>
   # Remove Fishing year and Fishing season ALL because expanded tp species
-  dplyr::filter(!(MANAGEMENT_TYPE_USE %in% c("FISHING YEAR", "FISHING SEASON") & SPP_NAME == "ALL")) |>
+  dplyr::filter(!(MANAGEMENT_TYPE_USE %in% c("FISHING YEAR", "FISHING SEASON")
+                  & SPP_NAME == "ALL")) |>
   dplyr::bind_rows(mh_expanded_fy_fs) |>
   # Fill in SPECIES for aggregates, groups, and species
-  dplyr::mutate(SPECIES = dplyr::case_when(is.na(SPECIES) ~ SPP_NAME, TRUE ~ SPECIES))
+  dplyr::mutate(SPECIES = dplyr::case_when(is.na(SPECIES) ~ SPP_NAME,
+                                           TRUE ~ SPECIES))
 
 ##################### Sector ID ###################
 
@@ -359,7 +392,8 @@ sector.match <- c(
 options(dplyr.summarise.inform = FALSE)
 
 # Set directory for location of existing sector_cluster files
-sector_id_files <- dir(here::here("data-raw/sector_clusters"), full.names = TRUE)
+sector_id_files <- dir(here::here("data-raw/sector_clusters"),
+                       full.names = TRUE)
 
 # Check for existing sector_id files
 if (length(sector_id_files) > 0) {
@@ -386,7 +420,10 @@ new_sector_clusters <- mh_setup2 |>
 # Export new sector groupings into mh_sector_clusters_ CSV file
 if (length(new_sector_clusters$SECTOR_ID) > 0) {
   write.csv(new_sector_clusters,
-    here::here("data-raw/sector_clusters", paste0("mh_sector_clusters_", format(Sys.Date(), "%d%b%Y"), ".csv")),
+    here::here("data-raw/sector_clusters",
+               paste0("mh_sector_clusters_",
+                      format(Sys.Date(), "%d%b%Y"), ".csv")
+               ),
     row.names = FALSE
   )
 }
@@ -439,7 +476,10 @@ new_clusters <- mh_sector_id |>
 # Export new CLUSTERs
 if (length(new_clusters$CLUSTER) > 0) {
   write.csv(new_clusters,
-    here::here("data-raw/clusters", paste0("mh_unique_clusters_", format(Sys.Date(), "%d%b%Y"), ".csv")),
+    here::here("data-raw/clusters",
+               paste0("mh_unique_clusters_",
+                      format(Sys.Date(), "%d%b%Y"), ".csv")
+               ),
     row.names = FALSE
   )
 }
@@ -461,21 +501,30 @@ mh_cluster_ids <- mh_prep |>
   # per FR_CITATION active at the same time with different VALUE_TYPE or
   # VALUE_RATE (MULTI_REG_VALUE)
   dplyr::mutate(
-    MULTI_REG_VALUE = as.numeric(dplyr::n() > 1 & (dplyr::n_distinct(VALUE) | dplyr::n_distinct(VALUE_TYPE) > 1 | dplyr::n_distinct(VALUE_RATE) > 1)),
+    MULTI_REG_VALUE = as.numeric(dplyr::n() > 1 &
+                                   (dplyr::n_distinct(VALUE) |
+                                      dplyr::n_distinct(VALUE_TYPE) > 1 |
+                                      dplyr::n_distinct(VALUE_RATE) > 1)),
     # Create variable to indicate when there are multiple records
     # per cluster per FR_CITATION active at the same time but have
     # different START_YEARs (MULTI_REG_FORECAST)
     MULTI_REG_FORECAST = as.numeric(dplyr::n_distinct(START_YEAR) > 1)
   ) |>
   dplyr::ungroup() |>
-  dplyr::group_by(CLUSTER, FR_CITATION, MANAGEMENT_TYPE_USE, MANAGEMENT_STATUS_USE) |>
+  dplyr::group_by(CLUSTER, FR_CITATION, MANAGEMENT_TYPE_USE,
+                  MANAGEMENT_STATUS_USE) |>
   # Create variable to indicate when there are multiple records per cluster per
   # FR_CITATION active at the same time but are SEASONAL with different
   # START_MONTH and START_DAY
-  dplyr::mutate(MULTI_REG_SEASONAL = as.numeric(dplyr::n() > 1 & dplyr::n_distinct(START_MONTH) > 1 & dplyr::n_distinct(START_DAY) > 1)) |>
+  dplyr::mutate(MULTI_REG_SEASONAL =
+                  as.numeric(dplyr::n() > 1 &
+                               dplyr::n_distinct(START_MONTH) > 1 &
+                               dplyr::n_distinct(START_DAY) > 1)) |>
   dplyr::ungroup() |>
   # Create flag to indicate cases where a CLUSTER has a multi_reg related flag
-  dplyr::mutate(MULTI_REG_CLUSTER = as.numeric(MULTI_REG_VALUE == 1 | MULTI_REG_FORECAST == 1 | MULTI_REG_SEASONAL == 1))
+  dplyr::mutate(MULTI_REG_CLUSTER =
+                  as.numeric(MULTI_REG_VALUE == 1 | MULTI_REG_FORECAST == 1 |
+                               MULTI_REG_SEASONAL == 1))
 
 ##################### Reversions ###################
 
@@ -510,29 +559,52 @@ mh_dates_detailed <- mh_cluster_ids |>
     LINK = dplyr::case_when(
       ADJUSTMENT == 1 & FIRST_REG == 1 ~ 0,
       ADJUSTMENT == 1 & dplyr::lead(REG_REMOVED, 1) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 1) != 1 ~ dplyr::lead(REGULATION_ID, 1),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 2) != 1 ~ dplyr::lead(REGULATION_ID, 2),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 3) != 1 ~ dplyr::lead(REGULATION_ID, 3),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 4) != 1 ~ dplyr::lead(REGULATION_ID, 4),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 5) != 1 ~ dplyr::lead(REGULATION_ID, 5),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 6) != 1 ~ dplyr::lead(REGULATION_ID, 6),
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 1) == 1 & dplyr::lead(FIRST_REG, 1) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 2) == 1 & dplyr::lead(FIRST_REG, 2) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 3) == 1 & dplyr::lead(FIRST_REG, 3) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 4) == 1 & dplyr::lead(FIRST_REG, 4) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 5) == 1 & dplyr::lead(FIRST_REG, 5) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 6) == 1 & dplyr::lead(FIRST_REG, 6) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 7) == 1 & dplyr::lead(FIRST_REG, 7) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 8) == 1 & dplyr::lead(FIRST_REG, 8) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 9) == 1 & dplyr::lead(FIRST_REG, 9) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 10) == 1 & dplyr::lead(FIRST_REG, 10) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 11) == 1 & dplyr::lead(FIRST_REG, 11) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 12) == 1 & dplyr::lead(FIRST_REG, 12) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 13) == 1 & dplyr::lead(FIRST_REG, 13) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 14) == 1 & dplyr::lead(FIRST_REG, 14) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 15) == 1 & dplyr::lead(FIRST_REG, 15) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 16) == 1 & dplyr::lead(FIRST_REG, 16) == 1 ~ 0,
-      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 17) == 1 & dplyr::lead(FIRST_REG, 17) == 1 ~ 0
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 1) != 1 ~
+        dplyr::lead(REGULATION_ID, 1),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 2) != 1 ~
+        dplyr::lead(REGULATION_ID, 2),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 3) != 1 ~
+        dplyr::lead(REGULATION_ID, 3),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 4) != 1 ~
+        dplyr::lead(REGULATION_ID, 4),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 5) != 1 ~
+        dplyr::lead(REGULATION_ID, 5),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 6) != 1 ~
+        dplyr::lead(REGULATION_ID, 6),
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 1) == 1 &
+        dplyr::lead(FIRST_REG, 1) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 2) == 1 &
+        dplyr::lead(FIRST_REG, 2) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 3) == 1 &
+        dplyr::lead(FIRST_REG, 3) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 4) == 1 &
+        dplyr::lead(FIRST_REG, 4) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 5) == 1 &
+        dplyr::lead(FIRST_REG, 5) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 6) == 1 &
+        dplyr::lead(FIRST_REG, 6) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 7) == 1 &
+        dplyr::lead(FIRST_REG, 7) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 8) == 1 &
+        dplyr::lead(FIRST_REG, 8) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 9) == 1 &
+        dplyr::lead(FIRST_REG, 9) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 10) == 1 &
+        dplyr::lead(FIRST_REG, 10) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 11) == 1 &
+        dplyr::lead(FIRST_REG, 11) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 12) == 1 &
+        dplyr::lead(FIRST_REG, 12) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 13) == 1 &
+        dplyr::lead(FIRST_REG, 13) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 14) == 1 &
+        dplyr::lead(FIRST_REG, 14) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 15) == 1 &
+        dplyr::lead(FIRST_REG, 15) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 16) == 1 &
+        dplyr::lead(FIRST_REG, 16) == 1 ~ 0,
+      ADJUSTMENT == 1 & dplyr::lead(ADJUSTMENT, 17) == 1 &
+        dplyr::lead(FIRST_REG, 17) == 1 ~ 0
     )
   )
 
@@ -592,7 +664,8 @@ mh_reversions <- mh_dates_detailed |>
   ) |>
   # Join mh_reversions data frame to the mh_dates_detailed data frame by
   # REGULATION_ID
-  dplyr::left_join(mh_dates_detailed, by = dplyr::join_by(REGULATION_ID), relationship = "many-to-many") |>
+  dplyr::left_join(mh_dates_detailed, by = dplyr::join_by(REGULATION_ID),
+                   relationship = "many-to-many") |>
   dplyr::bind_rows(mh_dates_detailed) |>
   # Adjust START_DATE_USE to accommodate REVERSION records in whole data set
   dplyr::mutate(
@@ -628,7 +701,8 @@ safe_max <- function(x) {
 }
 
 mh_dates1 <- mh_reversions |>
-  dplyr::arrange(CLUSTER, dplyr::desc(SORT_DATE_USE), dplyr::desc(vol), dplyr::desc(page)) |>
+  dplyr::arrange(CLUSTER, dplyr::desc(SORT_DATE_USE), dplyr::desc(vol),
+                 dplyr::desc(page)) |>
   dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE) |>
   # Create the variable of diff and diff_days to signify the length of time
   # between a regulation and its subsequent replacement (amount of days the
@@ -636,7 +710,8 @@ mh_dates1 <- mh_reversions |>
   # The most recent regulation in each grouping gets NA for diff because no
   # regulations happens after it (it is the most recent and at the top of the list)
   dplyr::mutate(
-    diff = as.numeric(dplyr::lag(START_DATE_USE) - START_DATE_USE, units = "days"),
+    diff = as.numeric(dplyr::lag(START_DATE_USE) - START_DATE_USE,
+                      units = "days"),
     # If a record doesn't have a START_TIME diff should be adjusted
     # by -1 (one day prior)
     # This indicates that the regulation started at start of the
@@ -721,12 +796,16 @@ mh_dates1 <- mh_reversions |>
     )
   ) |>
   # Added 9/25/26 - fix error with end date for case where its MULTI_REG_VALUE
-  dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE, FR_CITATION, REVERSION) |>
+  dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE,
+                  FR_CITATION, REVERSION) |>
   dplyr::mutate(END_DATE = dplyr::case_when(
     MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
-    MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") | REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~ END_DATE,
-    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) & !is.na(INEFFECTIVE_DATE) ~ min(END_DATE, na.rm = TRUE),
-    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) & is.na(INEFFECTIVE_DATE) ~ max(END_DATE, na.rm = TRUE),
+    MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") |
+      REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~ END_DATE,
+    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
+      !is.na(INEFFECTIVE_DATE) ~ min(END_DATE, na.rm = TRUE),
+    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
+      is.na(INEFFECTIVE_DATE) ~ max(END_DATE, na.rm = TRUE),
     TRUE ~ END_DATE
   )) |>
   # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were
@@ -744,7 +823,10 @@ mh_dates1 <- mh_reversions |>
   # flagged (1) meaning the regulation did not go into effect
   dplyr::mutate(
     NEVER_IMPLEMENTED = dplyr::case_when(
-      MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" & START_DATE_USE == dplyr::lag(START_DATE_USE) & END_DATE != dplyr::lag(END_DATE) & VALUE != dplyr::lag(VALUE) ~ 0,
+      MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" &
+        START_DATE_USE == dplyr::lag(START_DATE_USE) &
+        END_DATE != dplyr::lag(END_DATE) &
+        VALUE != dplyr::lag(VALUE) ~ 0,
       MULTI_REG_SEASONAL == 1 ~ 0,
       START_DATE_USE > END_DATE ~ 1,
       MULTI_REG_VALUE == 1 ~ 0,
@@ -753,8 +835,12 @@ mh_dates1 <- mh_reversions |>
       # reg forcast & only
       # include start year, do
       # not want to flag
-      MULTI_REG_FORECAST == 1 & is.na(START_DAY_USE) & is.na(START_MONTH) & !is.na(START_YEAR) ~ 0,
-      MULTI_REG_FORECAST == 1 & START_DATE_USE == purrr::map_dbl(FR_CITATION, \(current_fr) safe_max(START_DATE_USE[FR_CITATION > current_fr])) ~ 1,
+      MULTI_REG_FORECAST == 1 & is.na(START_DAY_USE) & is.na(START_MONTH) &
+        !is.na(START_YEAR) ~ 0,
+      MULTI_REG_FORECAST == 1 &
+        START_DATE_USE ==
+        purrr::map_dbl(FR_CITATION, \(current_fr)
+                       safe_max(START_DATE_USE[FR_CITATION > current_fr])) ~ 1,
       # Added 2/5/24 to hard code
       # the two cases of
       # WITHDRAWN/DELAYED
@@ -765,11 +851,17 @@ mh_dates1 <- mh_reversions |>
     # ADJUST THE START DATE AND START TIME FOR CLUSTER 306 WHEN THE
     # REOPENING ENDS IN THE MIDDLE OF THE DAY
     START_TIME_USE = dplyr::case_when(
-      dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == "SIMPLE" & VALUE == "OPEN") & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ format(as.POSIXct(dplyr::lead(END_TIME_USE), format = "%I:%M:%S %p") + lubridate::as.difftime(1, units = "mins"), "%I:%M:%S %p"),
+      dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == "SIMPLE" &
+                    VALUE == "OPEN") &
+        START_DATE_USE == dplyr::lead(END_DATE) + 1 ~
+        format(as.POSIXct(dplyr::lead(END_TIME_USE), format = "%I:%M:%S %p") +
+                 lubridate::as.difftime(1, units = "mins"), "%I:%M:%S %p"),
       TRUE ~ START_TIME_USE
     ),
     START_DATE_USE = dplyr::case_when(
-      dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == "SIMPLE" & VALUE == "OPEN") & START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ dplyr::lead(END_DATE),
+      dplyr::lead(!is.na(END_TIME_USE) & STATUS_TYPE == "SIMPLE" &
+                    VALUE == "OPEN") &
+        START_DATE_USE == dplyr::lead(END_DATE) + 1 ~ dplyr::lead(END_DATE),
       TRUE ~ START_DATE_USE
     )
   ) |>
@@ -797,8 +889,12 @@ mh_fs_numdays <- mh_fs |>
     # year
     # When a START_YEAR_USE is not available, use the current_year
     START_FY = dplyr::case_when(
-      !is.na(START_MONTH) & !is.na(START_DAY_USE) & is.na(START_YEAR_USE) ~ as.Date(paste0(current_year, "-", START_MONTH, "-", START_DAY_USE), "%Y-%m-%d"),
-      !is.na(START_MONTH) & !is.na(START_DAY_USE) & !is.na(START_YEAR_USE) ~ as.Date(paste0(START_YEAR_USE, "-", START_MONTH, "-", START_DAY_USE), "%Y-%m-%d")
+      !is.na(START_MONTH) & !is.na(START_DAY_USE) & is.na(START_YEAR_USE) ~
+        as.Date(paste0(current_year, "-", START_MONTH, "-", START_DAY_USE),
+                "%Y-%m-%d"),
+      !is.na(START_MONTH) & !is.na(START_DAY_USE) & !is.na(START_YEAR_USE) ~
+        as.Date(paste0(START_YEAR_USE, "-", START_MONTH, "-", START_DAY_USE),
+                "%Y-%m-%d")
     ),
     # CREATE: END_FY to indicate the end date of the fishing year
     # When END_YEAR_USE is not available, use the next_end_year
@@ -810,10 +906,20 @@ mh_fs_numdays <- mh_fs |>
     # and START_DAY_OF_WEEK_USE and END_DAY_OF_WEEK_USE is
     # available, use one day after the START_FY
     END_FY = dplyr::case_when(
-      END_MONTH_USE < START_MONTH & !is.na(END_MONTH_USE) & !is.na(END_DAY_USE) & is.na(END_YEAR_USE) ~ as.Date(paste0(next_end_year, "-", END_MONTH_USE, "-", END_DAY_USE), "%Y-%m-%d"),
-      END_MONTH_USE >= START_MONTH & !is.na(END_MONTH_USE) & !is.na(END_DAY_USE) & is.na(END_YEAR_USE) ~ as.Date(paste0(START_YEAR_USE, "-", END_MONTH_USE, "-", END_DAY_USE), "%Y-%m-%d"),
-      !is.na(END_MONTH_USE) & !is.na(END_DAY_USE) & !is.na(END_YEAR_USE) ~ as.Date(paste0(END_YEAR_USE, "-", END_MONTH_USE, "-", END_DAY_USE), "%Y-%m-%d"),
-      is.na(END_MONTH_USE) & is.na(END_DAY_USE) & is.na(END_YEAR_USE) & !is.na(END_DAY_OF_WEEK_USE) & !is.na(START_DAY_OF_WEEK_USE) ~ START_FY + 1
+      END_MONTH_USE < START_MONTH & !is.na(END_MONTH_USE) &
+        !is.na(END_DAY_USE) & is.na(END_YEAR_USE) ~
+        as.Date(paste0(next_end_year, "-", END_MONTH_USE, "-", END_DAY_USE),
+                "%Y-%m-%d"),
+      END_MONTH_USE >= START_MONTH & !is.na(END_MONTH_USE) &
+        !is.na(END_DAY_USE) & is.na(END_YEAR_USE) ~
+        as.Date(paste0(START_YEAR_USE, "-", END_MONTH_USE, "-", END_DAY_USE),
+                "%Y-%m-%d"),
+      !is.na(END_MONTH_USE) & !is.na(END_DAY_USE) & !is.na(END_YEAR_USE) ~
+        as.Date(paste0(END_YEAR_USE, "-", END_MONTH_USE, "-", END_DAY_USE),
+                "%Y-%m-%d"),
+      is.na(END_MONTH_USE) & is.na(END_DAY_USE) & is.na(END_YEAR_USE) &
+        !is.na(END_DAY_OF_WEEK_USE) & !is.na(START_DAY_OF_WEEK_USE) ~
+        START_FY + 1
     ),
     # CREATE: DIFF to calculate the amount of time between START_FY
     # and END_FY
@@ -855,9 +961,12 @@ mh_fy <- mh_dates1 |>
   # Recode CLUSTER ID of recoded MANAGEMENT_TYPEs so the CLUSTERs match
   # These are clusters that were entered as FISHING SEASON but are actually a
   # FISHING_YEAR
-  dplyr::mutate(NEW_CLUSTER = dplyr::case_when(!REGULATION_ID %in% fs_to_fy & SPECIES != "ALL" ~ CLUSTER)) |>
+  dplyr::mutate(NEW_CLUSTER = dplyr::case_when(!REGULATION_ID %in% fs_to_fy &
+                                                 SPECIES != "ALL" ~ CLUSTER)
+                ) |>
   dplyr::arrange(START_DATE_USE) |>
-  dplyr::group_by(MANAGEMENT_TYPE_USE, JURISDICTION, JURISDICTIONAL_WATERS, FMP, SECTOR_USE, SUBSECTOR_USE, REGION, SPECIES) |>
+  dplyr::group_by(MANAGEMENT_TYPE_USE, JURISDICTION, JURISDICTIONAL_WATERS,
+                  FMP, SECTOR_USE, SUBSECTOR_USE, REGION, SPECIES) |>
   # first down and then up - this satisfies cases where first date needs a new
   # cluster
   tidyr::fill(NEW_CLUSTER, .direction = "downup") |>
@@ -865,24 +974,30 @@ mh_fy <- mh_dates1 |>
 
 # Identify clusters that have a split fishing year
 mh_fy_split <- mh_fy |>
-  dplyr::group_by(FR_CITATION, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, EFFECTIVE_DATE) |>
+  dplyr::group_by(FR_CITATION, FMP, REGION, SPECIES, SECTOR_USE, SUBSECTOR_USE,
+                  ZONE_USE, EFFECTIVE_DATE) |>
   dplyr::summarise(N = dplyr::n()) |>
   dplyr::filter(N > 1)
 
 # WARNING fishing year should not be split -- these should be re-coded to
 # fishing seasons
 if ((nrow(mh_fy_split) != 0)) {
-  warning("Fishing year split, please investigate. These might need to be re-coded to fishing season")
+  warning("Fishing year split, please investigate. These might need to be
+          re-coded to fishing season")
 }
 
 # Identify clusters that have a fishing year < 365 days
 mh_fy_less365 <- mh_fy |>
-  dplyr::select(FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, MANAGEMENT_STATUS_USE, START_MONTH, START_DAY_USE, END_MONTH_USE, END_DAY_USE) |>
+  dplyr::select(FMP, REGION, SPP_NAME, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
+                MANAGEMENT_STATUS_USE, START_MONTH, START_DAY_USE,
+                END_MONTH_USE, END_DAY_USE) |>
   # CHECK VARIABLE: create a date field to subtract (the year is not important
   # here)
   dplyr::mutate(
-    START_FY = as.Date(paste0("2023-", START_MONTH, "-", START_DAY_USE), "%Y-%m-%d"),
-    END_FY = as.Date(paste0("2023-", END_MONTH_USE, "-", END_DAY_USE), "%Y-%m-%d"),
+    START_FY = as.Date(paste0("2023-", START_MONTH, "-", START_DAY_USE),
+                       "%Y-%m-%d"),
+    END_FY = as.Date(paste0("2023-", END_MONTH_USE, "-", END_DAY_USE),
+                     "%Y-%m-%d"),
     DIFF = START_FY - END_FY
   ) |>
   dplyr::filter(DIFF != 1 & DIFF != 0 & DIFF != -364)
@@ -895,11 +1010,14 @@ if (nrow(mh_fy_less365) != 0) {
 # FISHING YEAR
 mh_fy2 <- mh_fy |>
   dplyr::ungroup() |>
-  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH, START_DAY_USE) |>
+  dplyr::select(NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE,
+                SUBSECTOR_USE, ZONE_USE, START_DATE_USE, START_MONTH,
+                START_DAY_USE) |>
   # Format start month and day as FY_MONTH and FY_DAY
   # Get month from number to month name abbreviation
   dplyr::mutate(
-    START_MONTH2 = format(as.Date(paste0("2021-", START_MONTH, "-01"), "%Y-%m-%d"), "%b"),
+    START_MONTH2 = format(as.Date(paste0("2021-", START_MONTH, "-01"),
+                                  "%Y-%m-%d"), "%b"),
     FY = paste0(START_DAY_USE, "-", START_MONTH2)
   )
 
@@ -909,21 +1027,28 @@ mh_fy3 <- mh_fy2 |>
   dplyr::group_by(NEW_CLUSTER, ZONE_USE, FY) |>
   dplyr::mutate(EFFECTIVE_DATE_FY = min(START_DATE_USE)) |>
   dplyr::select(
-    NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
+    NEW_CLUSTER, FMP, REGION, SPECIES, SPECIES_ITIS, SECTOR_USE,
+    SUBSECTOR_USE, ZONE_USE,
     EFFECTIVE_DATE_FY, FY
   ) |>
   dplyr::distinct() |>
   # Remove error with royal red -- TEMP
-  dplyr::mutate(RM = dplyr::case_when(REGION == "GULF OF AMERICA" & SPECIES == "SHRIMP, ROYAL RED" & FY == "1-Jan" ~ 1, TRUE ~ 0)) |>
+  dplyr::mutate(RM = dplyr::case_when(
+    REGION == "GULF OF AMERICA" & SPECIES == "SHRIMP, ROYAL RED" &
+      FY == "1-Jan" ~ 1,
+    TRUE ~ 0)
+    ) |>
   dplyr::filter(RM == 0) |>
   dplyr::select(-RM) |>
-  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE, SPECIES_ITIS) |>
+  dplyr::group_by(FMP, REGION, SECTOR_USE, SUBSECTOR_USE, ZONE_USE,
+                  SPECIES_ITIS) |>
   dplyr::arrange(EFFECTIVE_DATE_FY) |>
   dplyr::mutate(reg_order = rank(EFFECTIVE_DATE_FY))
 
 # Structure fishing year data to wide-form for joining to the rest of MH data
 mh_fy3_w <- mh_fy3 |>
-  tidyr::pivot_wider(names_from = reg_order, values_from = c(EFFECTIVE_DATE_FY, FY)) |>
+  tidyr::pivot_wider(names_from = reg_order,
+                     values_from = c(EFFECTIVE_DATE_FY, FY)) |>
   dplyr::ungroup()
 
 # Check that fishing year for a FMP/region/species is the same by sector - this
@@ -931,8 +1056,10 @@ mh_fy3_w <- mh_fy3 |>
 # We will use the FMP/region/species FY to join to these records
 chk_sect_fy <- mh_fy3_w |>
   dplyr::filter(ZONE_USE == "ALL", SUBSECTOR_USE == "ALL") |>
-  dplyr::select(-c(NEW_CLUSTER, ZONE_USE, SUBSECTOR_USE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3)) |>
-  tidyr::pivot_wider(names_from = SECTOR_USE, values_from = c(FY_1, FY_2, FY_3)) |>
+  dplyr::select(-c(NEW_CLUSTER, ZONE_USE, SUBSECTOR_USE, EFFECTIVE_DATE_FY_1,
+                   EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3)) |>
+  tidyr::pivot_wider(names_from = SECTOR_USE,
+                     values_from = c(FY_1, FY_2, FY_3)) |>
   dplyr::filter(FY_1_COMMERCIAL != FY_1_RECREATIONAL)
 if (nrow(chk_sect_fy) > 0) {
   warning("Fishing year is different by sector")
@@ -958,7 +1085,8 @@ mh_fy4_all <- mh_fy3_w |>
 # Join by only species and region
 mh_fy4_sr <- mh_fy3_w |>
   dplyr::filter(ZONE_USE == "ALL", SUBSECTOR_USE == "ALL") |>
-  dplyr::select(-c(NEW_CLUSTER, SPECIES, SECTOR_USE, ZONE_USE, SUBSECTOR_USE)) |>
+  dplyr::select(-c(NEW_CLUSTER, SPECIES, SECTOR_USE,
+                   ZONE_USE, SUBSECTOR_USE)) |>
   # Take first row - this won't matter because both sectors
   # have the same FY - check line 635
   dplyr::group_by(FMP, REGION, SPECIES_ITIS) |>
@@ -977,7 +1105,8 @@ mh_combine <- Catchlim |>
   dplyr::ungroup() |>
   # Join by all columns
   dplyr::left_join(mh_fy4_all,
-    by = dplyr::join_by(FMP, REGION, SPECIES_ITIS, SECTOR_USE, SUBSECTOR_USE, ZONE_USE)
+    by = dplyr::join_by(FMP, REGION, SPECIES_ITIS, SECTOR_USE,
+                        SUBSECTOR_USE, ZONE_USE)
   ) |>
   # Join by only species and region
   dplyr::left_join(mh_fy4_sr,
@@ -985,16 +1114,20 @@ mh_combine <- Catchlim |>
   ) |>
   # Take the first non-null value
   dplyr::mutate(
-    EFFECTIVE_DATE_FY_1 = dplyr::coalesce(EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s),
-    EFFECTIVE_DATE_FY_2 = dplyr::coalesce(EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s),
-    EFFECTIVE_DATE_FY_3 = dplyr::coalesce(EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s),
+    EFFECTIVE_DATE_FY_1 =
+      dplyr::coalesce(EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s),
+    EFFECTIVE_DATE_FY_2 =
+      dplyr::coalesce(EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s),
+    EFFECTIVE_DATE_FY_3 =
+      dplyr::coalesce(EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s),
     FY_1 = dplyr::coalesce(FY_1_all, FY_1_s),
     FY_2 = dplyr::coalesce(FY_2_all, FY_2_s),
     FY_3 = dplyr::coalesce(FY_3_all, FY_3_s)
   ) |>
   # Remove unnecessary columns from join
   dplyr::select(-c(
-    EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s, EFFECTIVE_DATE_FY_2_all, EFFECTIVE_DATE_FY_2_s, EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s,
+    EFFECTIVE_DATE_FY_1_all, EFFECTIVE_DATE_FY_1_s, EFFECTIVE_DATE_FY_2_all,
+    EFFECTIVE_DATE_FY_2_s, EFFECTIVE_DATE_FY_3_all, EFFECTIVE_DATE_FY_3_s,
     FY_1_all, FY_1_s, FY_2_all, FY_2_s, FY_3_all, FY_3_s
   ))
 
@@ -1003,20 +1136,31 @@ mh_dates_adjust <- mh_combine |>
   # First adjust to 3rd FY, then 2nd, then 1st, default original start date if
   # no FY
   dplyr::mutate( # Take start year of start date if missing
-    START_YEAR = dplyr::case_when(is.na(START_YEAR) ~ lubridate::year(START_DATE), TRUE ~ START_YEAR),
+    START_YEAR = dplyr::case_when(
+      is.na(START_YEAR) ~ lubridate::year(START_DATE), TRUE ~ START_YEAR),
     START_DATE_ADJ = dplyr::case_when(
-      !is.na(FY_3) & START_DATE >= EFFECTIVE_DATE_FY_3 ~ as.Date(paste0(START_YEAR, "-", FY_3), format = "%Y-%d-%b"),
-      !is.na(FY_3) & START_DATE < EFFECTIVE_DATE_FY_3 ~ as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
-      is.na(FY_3) & !is.na(FY_2) & (START_DATE >= EFFECTIVE_DATE_FY_2 | lubridate::year(START_DATE) == lubridate::year(EFFECTIVE_DATE_FY_2)) ~ as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
-      is.na(FY_3) & !is.na(FY_2) & START_DATE < EFFECTIVE_DATE_FY_2 ~ as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
-      is.na(FY_3) & is.na(FY_2) & !is.na(FY_1) & (START_DATE >= EFFECTIVE_DATE_FY_1 | lubridate::year(START_DATE) == lubridate::year(EFFECTIVE_DATE_FY_1)) ~ as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
+      !is.na(FY_3) & START_DATE >= EFFECTIVE_DATE_FY_3 ~
+        as.Date(paste0(START_YEAR, "-", FY_3), format = "%Y-%d-%b"),
+      !is.na(FY_3) & START_DATE < EFFECTIVE_DATE_FY_3 ~
+        as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
+      is.na(FY_3) & !is.na(FY_2) &
+        (START_DATE >= EFFECTIVE_DATE_FY_2 | lubridate::year(START_DATE) ==
+           lubridate::year(EFFECTIVE_DATE_FY_2)) ~
+        as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
+      is.na(FY_3) & !is.na(FY_2) & START_DATE < EFFECTIVE_DATE_FY_2 ~
+        as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
+      is.na(FY_3) & is.na(FY_2) & !is.na(FY_1) &
+        (START_DATE >= EFFECTIVE_DATE_FY_1 | lubridate::year(START_DATE) ==
+           lubridate::year(EFFECTIVE_DATE_FY_1)) ~
+        as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
       TRUE ~ START_DATE
     )
   )
 
 # Prep to join to the rest of the MH data
 mh_catchlim_prep <- mh_dates_adjust |>
-  dplyr::select(-c(START_DATE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2, EFFECTIVE_DATE_FY_3, FY_1, FY_2, FY_3)) |>
+  dplyr::select(-c(START_DATE, EFFECTIVE_DATE_FY_1, EFFECTIVE_DATE_FY_2,
+                   EFFECTIVE_DATE_FY_3, FY_1, FY_2, FY_3)) |>
   dplyr::rename(START_DATE_USE = "START_DATE_ADJ")
 
 # Separate CATCH LIMITS regulations where REG_REMOVED == 1
@@ -1038,10 +1182,12 @@ mh_dates <- mh_dates1 |>
 
 ##################### Species Expansion ###################
 
-b_sp_info_use <- sp_info_use |> dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SCIENTIFIC_NAME, SPP_TYPE))
+b_sp_info_use <- sp_info_use |>
+  dplyr::select(-c(FMP_GROUP_ID, SUBGRP_NAME, SCIENTIFIC_NAME, SPP_TYPE))
 c_sp_info_use <- sp_info_use |>
   dplyr::filter(SPP_NAME == "ALL") |>
-  dplyr::select(FMP, SPECIES_ITIS_USE, SCIENTIFIC_NAME, ADDED_SP_DATE, REMOVED_SP_DATE) |>
+  dplyr::select(FMP, SPECIES_ITIS_USE, SCIENTIFIC_NAME, ADDED_SP_DATE,
+                REMOVED_SP_DATE) |>
   dplyr::rename(ADDED_DT = "ADDED_SP_DATE", REMOVED_DT = "REMOVED_SP_DATE")
 
 mh_sp_expanded <- mh_dates |>
@@ -1049,7 +1195,8 @@ mh_sp_expanded <- mh_dates |>
     by = dplyr::join_by(FMP, SPECIES == SPP_NAME),
     relationship = "many-to-many"
   ) |>
-  # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the data set or are regulated by FMPs that are not in the data set (i.e., HMS)
+  # Remove SPECIES_GROUP and SPECIES_AGGREGATE that do not appear in the
+  # data set or are regulated by FMPs that are not in the data set (i.e., HMS)
   dplyr::filter(!is.na(REGULATION_ID)) |>
   dplyr::mutate(
     COMMON_NAME_USE = dplyr::case_when(
@@ -1100,7 +1247,8 @@ mh_expanded <- mh_sp_expanded |>
     # regulation and the END_DATE of the regulation is after the
     # ADDED_SP_DATE2 (or for catch limits where end date is null)
     START_DATE2 = dplyr::case_when(
-      ADDED_SP_DATE > START_DATE_USE & (is.na(END_DATE) | END_DATE > ADDED_SP_DATE) ~ ADDED_SP_DATE,
+      ADDED_SP_DATE > START_DATE_USE &
+        (is.na(END_DATE) | END_DATE > ADDED_SP_DATE) ~ ADDED_SP_DATE,
       TRUE ~ START_DATE_USE
     ),
     # CREATE: the variable of END_DATE2 to adjust the END_DATE accordingly
@@ -1110,37 +1258,52 @@ mh_expanded <- mh_sp_expanded |>
     END_DATE2 = dplyr::case_when(
       MANAGEMENT_CATEGORY == "CATCH LIMITS" ~ END_DATE,
       is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE,
-      REMOVED_SP_DATE < END_DATE & REMOVED_SP_DATE > START_DATE_USE ~ REMOVED_SP_DATE,
+      REMOVED_SP_DATE < END_DATE &
+        REMOVED_SP_DATE > START_DATE_USE ~ REMOVED_SP_DATE,
       is.na(END_DATE) ~ end_timeseries,
       TRUE ~ END_DATE
     )
   ) |>
   # Clean cases where Common name is old or where using scientific name
   dplyr::mutate(COMMON_NAME_USE = dplyr::case_when(
-    COMMON_NAME_USE == "Caulolatilus" ~ "TILEFISHES",
-    COMMON_NAME_USE == "JEWFISH" ~ "GROUPER, GOLIATH",
-    COMMON_NAME_USE == "Centropristis melana" ~ "BASS, BLACK SEA",
-    COMMON_NAME_USE == "TILEFISH" & SPECIES_ITIS_USE == "168546" ~ "TILEFISH, GOLDEN",
-    COMMON_NAME_USE == "CONEY" ~ "GROUPER, CONEY",
-    COMMON_NAME_USE == "TUNNY, LITTLE" ~ "TUNA, LITTLE TUNNY",
-    COMMON_NAME_USE == "longsnout butterflyfish" ~ "BUTTERFLYFISH, LONGSNOUT",
-    COMMON_NAME_USE %in% c("Ogcocephalus", "Milleporidae") ~ toupper(COMMON_NAME_USE),
+    COMMON_NAME_USE == "Caulolatilus" ~
+      "TILEFISHES",
+    COMMON_NAME_USE == "JEWFISH" ~
+      "GROUPER, GOLIATH",
+    COMMON_NAME_USE == "Centropristis melana" ~
+      "BASS, BLACK SEA",
+    COMMON_NAME_USE == "TILEFISH" &  SPECIES_ITIS_USE == "168546" ~
+      "TILEFISH, GOLDEN",
+    COMMON_NAME_USE == "CONEY" ~
+      "GROUPER, CONEY",
+    COMMON_NAME_USE == "TUNNY, LITTLE" ~
+      "TUNA, LITTLE TUNNY",
+    COMMON_NAME_USE == "longsnout butterflyfish" ~
+      "BUTTERFLYFISH, LONGSNOUT",
+    COMMON_NAME_USE %in% c("Ogcocephalus", "Milleporidae") ~
+      toupper(COMMON_NAME_USE),
     TRUE ~ COMMON_NAME_USE
   )) |>
   dplyr::filter(RM_SPP != 1)
 
 mh_data_log <- mh_expanded |>
   dplyr::select(
-    CLUSTER, REGULATION_ID, FR_CITATION, FR_SECTION, FR_URL, FMP, ACTION, ACTION_TYPE, AMENDMENT_NUMBER, ACCOUNTABILITY_MEASURE,
-    MANAGEMENT_CATEGORY, MANAGEMENT_TYPE, MANAGEMENT_TYPE_USE, MANAGEMENT_STATUS, MANAGEMENT_STATUS_USE, STATUS_TYPE, DETAILED,
-    JURISDICTION, SECTOR, SECTOR_USE, SUBSECTOR, SUBSECTOR_USE, REGION, ZONE, ZONE_USE, JURISDICTIONAL_WATERS,
+    CLUSTER, REGULATION_ID, FR_CITATION, FR_SECTION, FR_URL, FMP,
+    ACTION, ACTION_TYPE, AMENDMENT_NUMBER, ACCOUNTABILITY_MEASURE,
+    MANAGEMENT_CATEGORY, MANAGEMENT_TYPE, MANAGEMENT_TYPE_USE,
+    MANAGEMENT_STATUS, MANAGEMENT_STATUS_USE, STATUS_TYPE, DETAILED,
+    JURISDICTION, SECTOR, SECTOR_USE, SUBSECTOR, SUBSECTOR_USE,
+    REGION, ZONE, ZONE_USE, JURISDICTIONAL_WATERS,
     COMMON_NAME_USE, SPP_TYPE, SPECIES, SPECIES_ITIS_USE,
-    ADJUSTMENT, REVERSION,
-    EFFECTIVE_DATE, INEFFECTIVE_DATE, START_DATE2, END_DATE2, diff_days,
-    START_MONTH, START_DAY, START_DAY_USE, START_YEAR, START_TIME, START_TIME_USE, START_DAY_OF_WEEK, START_DAY_OF_WEEK_USE,
-    END_MONTH, END_MONTH_USE, END_DAY, END_DAY_USE, END_YEAR, END_YEAR_USE, END_TIME, END_TIME_USE, END_DAY_OF_WEEK, END_DAY_OF_WEEK_USE,
+    ADJUSTMENT, REVERSION, EFFECTIVE_DATE, INEFFECTIVE_DATE,
+    START_DATE2, END_DATE2, diff_days,
+    START_MONTH, START_DAY, START_DAY_USE, START_YEAR, START_TIME,
+    START_TIME_USE, START_DAY_OF_WEEK, START_DAY_OF_WEEK_USE,
+    END_MONTH, END_MONTH_USE, END_DAY, END_DAY_USE, END_YEAR,
+    END_YEAR_USE, END_TIME, END_TIME_USE, END_DAY_OF_WEEK, END_DAY_OF_WEEK_USE,
     VALUE, VALUE_UNITS, VALUE_TYPE, VALUE_RATE,
-    MULTI_REG_VALUE, MULTI_REG_FORECAST, MULTI_REG_SEASONAL, MULTI_REG_CLUSTER, REG_REMOVED, NEVER_IMPLEMENTED, FLAG
+    MULTI_REG_VALUE, MULTI_REG_FORECAST, MULTI_REG_SEASONAL, MULTI_REG_CLUSTER,
+    REG_REMOVED, NEVER_IMPLEMENTED, FLAG
   )
 
 
@@ -1155,7 +1318,9 @@ mh_data_log <- mh_expanded |>
 # THOMAS AND ST. JOHN", "FMP FOR THE EEZ AROUND ST. CROIX"
 mh_data_log_final <- mh_data_log |>
   dplyr::mutate(END_DATE2 = dplyr::case_when(
-    FMP %in% c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS", "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
+    FMP %in% c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
+               "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
+               "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
       END_DATE2 > "2022-10-12" ~ as.Date("2022-10-12"),
     TRUE ~ END_DATE2
   ))
@@ -1202,12 +1367,17 @@ fishhist <- mh_data_log_final |>
   ) |>
   # Select order and only variables in MH ODM processed dataset
   dplyr::select(
-    CLUSTER_ID, REG_ID, FR_CITATION, FR_SECTION, FR_URL, FMP, ACTION, ACTIONTYPE, AMENDMENTNUMBER,
-    ACCOUNTABILITYMEASURE, MANAGEMENTCATEGORY, MANAGEMENT_TYPECLEAN, MANAGEMENT_STATUSCLEAN, JURISDICTION,
-    SECTOR_CLEAN, SUBSECTOR_CLEAN, REGION, ZONE_CLEAN, JURISDICTIONALWATERS, COMMON_NAME_CLEAN, SPECIES_ITIS_CLEAN, SPP_TYPE, SPP_NAME,
-    ADJUSTMENT, REVERSION, EFFECTIVE_DATE, INEFFECTIVE_DATE, STARTDATE_CLEAN, END_DATE, STARTMONTH, STARTDAY_CLEAN,
-    STARTYEAR, STARTTIME_CLEAN, START_DAYOF_WEEK_CLEAN, ENDDAY_CLEAN, END_DAYOF_WEEK_CLEAN, ENDMONTH_CLEAN,
-    ENDTIME_CLEAN, ENDYEAR_CLEAN, NEVERIMPLEMENTED, REGREMOVED, VALUE, VALUEUNITS, VALUETYPE, VALUERATE, FLAG
+    CLUSTER_ID, REG_ID, FR_CITATION, FR_SECTION, FR_URL, FMP, ACTION,
+    ACTIONTYPE, AMENDMENTNUMBER, ACCOUNTABILITYMEASURE, MANAGEMENTCATEGORY,
+    MANAGEMENT_TYPECLEAN, MANAGEMENT_STATUSCLEAN, JURISDICTION,
+    SECTOR_CLEAN, SUBSECTOR_CLEAN, REGION, ZONE_CLEAN, JURISDICTIONALWATERS,
+    COMMON_NAME_CLEAN, SPECIES_ITIS_CLEAN, SPP_TYPE, SPP_NAME,
+    ADJUSTMENT, REVERSION, EFFECTIVE_DATE, INEFFECTIVE_DATE, STARTDATE_CLEAN,
+    END_DATE, STARTMONTH, STARTDAY_CLEAN,
+    STARTYEAR, STARTTIME_CLEAN, START_DAYOF_WEEK_CLEAN, ENDDAY_CLEAN,
+    END_DAYOF_WEEK_CLEAN, ENDMONTH_CLEAN,
+    ENDTIME_CLEAN, ENDYEAR_CLEAN, NEVERIMPLEMENTED, REGREMOVED, VALUE,
+    VALUEUNITS, VALUETYPE, VALUERATE, FLAG
   )
 
 # Check that the number of starting FRs matches the number of FRs after
