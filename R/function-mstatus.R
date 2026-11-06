@@ -17,7 +17,9 @@ expand_status <- function(x, y) {
               # only retain records that were in effect
               NEVERIMPLEMENTED == 0, REGREMOVED == 0) |>
     dplyr::group_by(CLUSTER_ID, FR_CITATION, ZONE_CLEAN) |>
-    # Create variable to indicate when there are multiple records per cluster per FR_CITATION active at the same time with different VALUE_TYPE or VALUE_RATE (MULTI_REG_VALUE)
+    # Create variable to indicate when there are multiple records per cluster
+    # per FR_CITATION active at the same time with different VALUE_TYPE or
+    # VALUE_RATE (MULTI_REG_VALUE)
     dplyr::mutate(MULTI_REG_VALUE = as.numeric(dplyr::n() > 1 & (dplyr::n_distinct(VALUE) | dplyr::n_distinct(VALUETYPE) > 1 | dplyr::n_distinct(VALUERATE) > 1)))
 
   if(nrow(df) == 0) {stop("no records for that management type")}
@@ -31,7 +33,8 @@ expand_status <- function(x, y) {
     # One-time event
     # df_one <- dplyr::filter(df, MANAGEMENT_STATUSCLEAN == 'ONCE') |>
     #   dplyr::filter(END_DATE >= STARTDATE_CLEAN) |>
-    #   dplyr::mutate(date_sequence = purrr::map2(STARTDATE_CLEAN, END_DATE, seq, by = "1 day")) |>
+    #   dplyr::mutate(date_sequence = purrr::map2(STARTDATE_CLEAN, END_DATE,
+    # seq, by = "1 day")) |>
     #   tidyr::unnest(date_sequence) |>
     #   dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, CLUSTER_ID) |>
     #   dplyr::mutate(TIME = dplyr::case_when(date_sequence == STARTDATE_CLEAN & !is.na(STARTTIME_CLEAN) ~ STARTTIME_CLEAN,
@@ -296,40 +299,76 @@ expand_status <- function(x, y) {
       # Extract year from date_sequence
       dplyr::mutate(STARTYEAR_expand = lubridate::year(date_sequence),
              END_YEAR_expand = lubridate::year(date_sequence),
-             # Create STARTMONTH_expand and ENDMONTH_CLEAN_expand to eventually create the dates that are the bounds of which expansion dates should still be included
-             # The conditions address cases where the monthly recurring goes from the middle of one month to the start of next and eventually crosses year boundaries (Gulf red snapper - 15th to the 1st of the following month or 10th to the 1st of the following month)
-             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is a smaller value than the STARTDAY_CLEAN and the month of the date_sequence is not January,
-             # then the STARTMONTH_expand should be one month less than the month of the date_sequence
-             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is a smaller value than the STARTDAY_CLEAN but the month of the date_sequence is January,
+             # Create STARTMONTH_expand and ENDMONTH_CLEAN_expand to eventually
+             # create the dates that are the bounds of which expansion dates
+             # should still be included
+             # The conditions address cases where the monthly recurring goes
+             # from the middle of one month to the start of next and eventually
+             # crosses year boundaries (Gulf red snapper - 15th to the 1st of
+             # the following month or 10th to the 1st of the following month)
+             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN
+             # and the day of the date_sequence is a smaller value than the
+             # STARTDAY_CLEAN and the month of the date_sequence is not January,
+             # then the STARTMONTH_expand should be one month less than the
+             # month of the date_sequence
+             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN
+             # and the day of the date_sequence is a smaller value than the
+             # STARTDAY_CLEAN but the month of the date_sequence is January,
              # then the STARTMONTH_expand should be December
-             # Otherwise, the STARTMONTH_EXPAND should reflect the month of the date_sequence
+             # Otherwise, the STARTMONTH_EXPAND should reflect the month of the
+             # date_sequence
              STARTMONTH_expand = dplyr::case_when(ENDDAY_CLEAN < STARTDAY_CLEAN & lubridate::day(date_sequence) < STARTDAY_CLEAN & lubridate::month(date_sequence) != 1 ~ lubridate::month(date_sequence) - 1,
                                             ENDDAY_CLEAN < STARTDAY_CLEAN & lubridate::day(date_sequence) < STARTDAY_CLEAN & lubridate::month(date_sequence) == 1 ~ 12,
                                             TRUE ~ lubridate::month(date_sequence)),
-             # The conditions address cases where the monthly recurring goes from the middle of one month to the start of the next and eventually crosses year boundaries (Gulf red snapper - 15th to the 1st of the following month or 10th to the 1st of the following month)
-             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is a smaller value than the STARTDAY_CLEAN and the month of the date_sequence is not January
-             # then the ENDMONTH_CLEAN_expand should be the month of the date_sequence
-             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN and the day of the date_sequence is greater than or equal to the STARTDAY_CLEAN value and the month of the date_sequence + 1 month is less than or equal to 12 (December),
-             # then the ENDMONTH_CLEAN_expand should be the month of the date_sequence plus one month
-             # If the ENDMONTH_CLEAN_expand value is smaller than the STARTDAY_CLEAN and the day of the date_sequence is greater than or equal to the STARTDAY_CLEAN and the month of the date_sequence + 1 is equal to 13,
+             # The conditions address cases where the monthly recurring goes
+             # from the middle of one month to the start of the next and
+             # eventually crosses year boundaries (Gulf red snapper - 15th to
+             # the 1st of the following month or 10th to the 1st of the
+             # following month)
+             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN
+             # and the day of the date_sequence is a smaller value than the
+             # STARTDAY_CLEAN and the month of the date_sequence is not January
+             # then the ENDMONTH_CLEAN_expand should be the month of the
+             # date_sequence
+             # If the ENDDAY_CLEAN is a smaller value than the STARTDAY_CLEAN
+             # and the day of the date_sequence is greater than or equal to the
+             # STARTDAY_CLEAN value and the month of the date_sequence + 1 month
+             # is less than or equal to 12 (December),
+             # then the ENDMONTH_CLEAN_expand should be the month of the
+             # date_sequence plus one month
+             # If the ENDMONTH_CLEAN_expand value is smaller than the
+             # STARTDAY_CLEAN and the day of the date_sequence is greater than
+             # or equal to the STARTDAY_CLEAN and the month of the date_sequence
+             # + 1 is equal to 13,
              # then the ENDMONTH_CLEAN_expand should be January
              # Otherwise, the month of the date_sequence should be used
              ENDMONTH_CLEAN_expand = dplyr::case_when(ENDDAY_CLEAN < STARTDAY_CLEAN & lubridate::day(date_sequence) < STARTDAY_CLEAN & lubridate::month(date_sequence) != 1 ~ lubridate::month(date_sequence),
                                           ENDDAY_CLEAN < STARTDAY_CLEAN & lubridate::day(date_sequence) >= STARTDAY_CLEAN & lubridate::month(date_sequence) + 1 <= 12 ~ lubridate::month(date_sequence) + 1,
                                           ENDDAY_CLEAN < STARTDAY_CLEAN & lubridate::day(date_sequence) >= STARTDAY_CLEAN & lubridate::month(date_sequence) + 1 == 13 ~ 1,
                                           TRUE ~ lubridate::month(date_sequence)),
-             # Adjust END_YEAR_expand to address cases where the monthly recurring goes from the middle of one month to the start of the next and eventually crosses year boundaries (Gulf red snapper - 15th to the 1st of the following month or 10th to the 1st of the following month)
-             # If the day of the date_sequence is greater than or equal to the STARTDAY_CLEAN and the ENDMONTH_CLEAN is January & the month of the date_sequence is December, then the END_YEAR_expand should be changed to the following year
-             # If the day of the date_sequence is less than the STARTDAY_CLEAN and the ENDMONTH_CLEAN is January and the month of the date_sequence is December, then use the STARTYEAR_expand
+             # Adjust END_YEAR_expand to address cases where the monthly
+             # recurring goes from the middle of one month to the start of the
+             # next and eventually crosses year boundaries (Gulf red snapper -
+             # 15th to the 1st of the following month or 10th to the 1st of the
+             # following month)
+             # If the day of the date_sequence is greater than or equal to the
+             # STARTDAY_CLEAN and the ENDMONTH_CLEAN is January & the month of
+             # the date_sequence is December, then the END_YEAR_expand should be
+             # changed to the following year
+             # If the day of the date_sequence is less than the STARTDAY_CLEAN
+             # and the ENDMONTH_CLEAN is January and the month of the
+             # date_sequence is December, then use the STARTYEAR_expand
              # Otherwise, use the END_YEAR_expand
              END_YEAR_expand = dplyr::case_when(lubridate::day(date_sequence) >= STARTDAY_CLEAN & ENDMONTH_CLEAN == 1 & lubridate::month(date_sequence) == 12 ~ END_YEAR_expand + 1,
                                          lubridate::day(date_sequence) < STARTDAY_CLEAN & ENDMONTH_CLEAN == 1 & lubridate::month(date_sequence) == 12 ~ STARTYEAR_expand,
                                          TRUE ~ END_YEAR_expand)) |>
       # only include months within the start/end month range
-      # when monthly recurring, the start/end month range refers to the first and last month where the recurring closure applies
+      # when monthly recurring, the start/end month range refers to the first
+      # and last month where the recurring closure applies
       # i.e. start month = 2 and end month = 11
       # mean recurring closures start in Feb and end in Nov
-      # can't use ENDMONTH_CLEAN_expand in filter for cases when the recurring closures spans 2 months (i.e. 15th -1st)
+      # can't use ENDMONTH_CLEAN_expand in filter for cases when the recurring
+      # closures spans 2 months (i.e. 15th -1st)
       #filter(STARTMONTH_expand >= STARTMONTH &
       #        STARTMONTH_expand <= ENDMONTH_CLEAN) |>
       dplyr::mutate(START_DATE_EXPAND = as.Date(paste(STARTYEAR_expand, STARTMONTH_expand, STARTDAY_CLEAN, sep = "-")),
@@ -342,7 +381,8 @@ expand_status <- function(x, y) {
              CLUSTER_ID, REG_ID, FR_CITATION, VALUE, VALUEUNITS, VALUETYPE, VALUERATE) |>
       dplyr::arrange(date_sequence, dplyr::desc(FR_CITATION)) |>
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
-      # Retain only most recent FR if there are 2 records with the same date_sequence
+      # Retain only most recent FR if there are 2 records with the same
+      # date_sequence
       dplyr::slice(1) |>
       dplyr::rename(CLUSTER_monthly = "CLUSTER_ID",
              REG_ID_monthly = "REG_ID",
@@ -405,7 +445,8 @@ expand_status <- function(x, y) {
              CLUSTER_ID, REG_ID, FR_CITATION, VALUE, VALUEUNITS, VALUETYPE, VALUERATE) |>
       dplyr::arrange(date_sequence, dplyr::desc(FR_CITATION)) |>
       dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
-      # Retain only most recent FR if there are 2 records with the same date_sequence
+      # Retain only most recent FR if there are 2 records with the same
+      # date_sequence
       dplyr::slice(1) |>
       dplyr::rename(CLUSTER_weekly = "CLUSTER_ID",
              REG_ID_weekly = "REG_ID",

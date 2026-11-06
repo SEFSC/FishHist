@@ -1,22 +1,26 @@
-#' Process ad connect all closure-related management types for a species within a region
+#' Process and connect all closure-related management types for a species
+#' within a region
 #'
-#' Process closures to expand and incorporate all related mtypes for closures to know for a single day whether the fishery is open or closed
+#' Process closures to expand and incorporate all related mtypes for closures
+#' to know for a single day whether the fishery is open or closed
 #'
 #' @param data default=fishhist
 #' @param spp Filter to species of interest (common name).
 #' @param region Filter to region of interest
 #' @return A list
 #'
-#' @examples process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+#' @examples process_closures(fishhist, spp = "SNAPPER, RED", region =
+#' "SOUTH ATLANTIC")
 #'
 #' @export
 process_closures <- function(data=fishhist, spp, region, start, end) {
 
-  # Filter data to species, region, and all management types related to closures
+  # Filter data to species, region, and all management types related to
+  # closures
   mh_spp_closure <- data |>
     dplyr::filter(COMMON_NAME_CLEAN == spp,
            REGION == region,
-           MANAGEMENT_TYPECLEAN %in% c('CLOSURE', 'FISHING SEASON', 'FISHING YEAR',
+           MANAGEMENT_TYPECLEAN %in% c('CLOSURE', 'FISHING SEASON','FISHING YEAR',
                                       'PROHIBITED SALE AND PURCHASE',
                                       'PROHIBITED SPECIES'),
            STARTDATE_CLEAN <= end,
@@ -51,7 +55,8 @@ process_closures <- function(data=fishhist, spp, region, start, end) {
         FR_CITATION,
         # Secondary sort: Conditional tie-breaker
         is_close = dplyr::case_when(
-          # For 'fishing year', prioritize CLOSE over OPEN (CLOSE = TRUE, which ranks higher than FALSE)
+          # For 'fishing year', prioritize CLOSE over OPEN (CLOSE = TRUE, which
+          # ranks higher than FALSE)
           MANAGEMENT_TYPECLEAN == "FISHING YEAR" ~ (VALUE == "CLOSE"),
           # For closures / other types, prioritize OPEN over CLOSE if applicable
           MANAGEMENT_TYPECLEAN == "CLOSURE" ~ (VALUE == "OPEN"),
@@ -101,7 +106,8 @@ process_closures <- function(data=fishhist, spp, region, start, end) {
     # Create a gap identifier column (increments when dates are not consecutive)
     dplyr::mutate(date_gap = date_sequence > (dplyr::lag(date_sequence) + 1),
                   date_gap = ifelse(is.na(date_gap), FALSE, date_gap),
-                  # cumsum() creates a running ID (e.g., 77 FR 51939 episode 1 for 9/14-9/16, episode 2 for 9/21-9/23)
+                  # cumsum() creates a running ID (e.g., 77 FR 51939 episode 1
+                  # for 9/14-9/16, episode 2 for 9/21-9/23)
                   episode_id = cumsum(date_gap)) |>
     dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE, episode_id) |>
     dplyr::summarise(START = min(date_sequence),
@@ -117,11 +123,13 @@ process_closures <- function(data=fishhist, spp, region, start, end) {
     dplyr::mutate(date_clean = as.Date(date_sequence),
                   year = lubridate::year(date_clean),
                   month = lubridate::month(date_clean, label = TRUE, abbr = TRUE),
-                  # Calculate days in that specific month (handles leap years automatically)
+                  # Calculate days in that specific month (handles leap years
+                  # automatically)
                   days_in_m = lubridate::days_in_month(date_clean)) |>
     dplyr::filter(ZONE_CLEAN == 'ALL') |>
     dplyr::group_by(SECTOR_CLEAN, SUBSECTOR_CLEAN, year, month) |>
-    dplyr::summarise(n_open = sum(VALUE == 'OPEN', na.rm = TRUE), # Count open days
+    # Count open days
+    dplyr::summarise(n_open = sum(VALUE == 'OPEN', na.rm = TRUE),
                      total_days = max(days_in_m), # Get total days in month
                      .groups = "drop") |>
     # Ensure all year x month grid combinations exist for every sector
@@ -160,7 +168,8 @@ process_closures <- function(data=fishhist, spp, region, start, end) {
                     year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
                     month = factor(month.abb, levels = month.abb, ordered = TRUE), # Keeps factor ordering consistent
                     fill = list(n = 0)) |>
-    dplyr::mutate(# Construct a dummy first-of-month date to compute total days per month/year accurately
+    dplyr::mutate(# Construct a dummy first-of-month date to compute total days
+      # per month/year accurately
                   month_date = as.Date(paste(year, match(month, month.abb), "01", sep = "-")),
                   days_in_m = lubridate::days_in_month(month_date),
                   # Calculate proportion of closed days (0.0 to 1.0)
