@@ -212,7 +212,7 @@ mh_setup <- mh_raw |>
         !is.na(START_DAY) &
         !is.na(START_MONTH) &
         !is.na(START_YEAR) ~
-        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
+        as.Date(paste0(START_MONTH, "/", START_DAY, "/", START_YEAR), "%m/%d/%Y"),
       TRUE ~ EFFECTIVE_DATE
     ),
     # Adjust the start date if its after the effective date so the
@@ -798,15 +798,20 @@ mh_dates1 <- mh_reversions |>
   # Added 9/25/26 - fix error with end date for case where its MULTI_REG_VALUE
   dplyr::group_by(CLUSTER, ZONE_USE, MANAGEMENT_STATUS_USE,
                   FR_CITATION, REVERSION) |>
-  dplyr::mutate(END_DATE = dplyr::case_when(
-    MANAGEMENT_TYPE_USE == "DEFINITION" ~ end_timeseries,
-    MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") |
-      REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~ END_DATE,
-    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
-      !is.na(INEFFECTIVE_DATE) ~ min(END_DATE, na.rm = TRUE),
-    (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
-      is.na(INEFFECTIVE_DATE) ~ max(END_DATE, na.rm = TRUE),
-    TRUE ~ END_DATE
+  dplyr::mutate(
+    END_DATE = dplyr::case_when(
+      MANAGEMENT_TYPE_USE == "DEFINITION" ~
+        end_timeseries,
+      (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
+        !is.na(INEFFECTIVE_DATE) ~
+        min(END_DATE, na.rm = TRUE),
+      (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
+        is.na(INEFFECTIVE_DATE) ~
+        max(END_DATE, na.rm = TRUE),
+      MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") |
+        REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~
+        END_DATE,
+      TRUE ~ END_DATE
   )) |>
   # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were
   # created but never went into effect
@@ -831,9 +836,7 @@ mh_dates1 <- mh_reversions |>
       START_DATE_USE > END_DATE ~ 1,
       MULTI_REG_VALUE == 1 ~ 0,
       diff_days <= -1 ~ 1,
-      # Added 2/2/24 - if multi
-      # reg forcast & only
-      # include start year, do
+      # Added 2/2/24 - if multi reg forcast & only include start year, do
       # not want to flag
       MULTI_REG_FORECAST == 1 & is.na(START_DAY_USE) & is.na(START_MONTH) &
         !is.na(START_YEAR) ~ 0,
