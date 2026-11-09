@@ -55,7 +55,7 @@ process_closures(fishhist,
   start = "2000-01-01", end = "2025-12-31"
 )
 #> $data
-#> # A tibble: 18,994 × 11
+#> # A tibble: 146,558 × 11
 #>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN
 #>    <chr>        <chr>             <chr>  <chr>      <chr>        <chr>          
 #>  1 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
@@ -68,12 +68,12 @@ process_closures(fishhist,
 #>  8 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
 #>  9 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
 #> 10 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
-#> # ℹ 18,984 more rows
+#> # ℹ 146,548 more rows
 #> # ℹ 5 more variables: date_sequence <date>, MANAGEMENT_TYPECLEAN <chr>,
 #> #   FR_CITATION <chr>, TIME <chr>, VALUE <chr>
 #> 
 #> $tab_sum_days_open
-#> # A tibble: 52 × 8
+#> # A tibble: 46 × 8
 #>    FMP    COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN  YEAR
 #>    <chr>  <chr>             <chr>  <chr>      <chr>        <chr>           <dbl>
 #>  1 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2000
@@ -86,14 +86,14 @@ process_closures(fishhist,
 #>  8 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2007
 #>  9 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2008
 #> 10 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2009
-#> # ℹ 42 more rows
+#> # ℹ 36 more rows
 #> # ℹ 1 more variable: Days_Open <int>
 #> 
 #> $plot_days_open
 
 #> 
 #> $tab_fr_dateranges
-#> # A tibble: 27 × 11
+#> # A tibble: 116 × 11
 #>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN
 #>    <chr>        <chr>             <chr>  <chr>      <chr>        <chr>          
 #>  1 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
@@ -106,7 +106,7 @@ process_closures(fishhist,
 #>  8 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
 #>  9 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
 #> 10 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
-#> # ℹ 17 more rows
+#> # ℹ 106 more rows
 #> # ℹ 5 more variables: FR_CITATION <chr>, MANAGEMENT_TYPECLEAN <chr>,
 #> #   episode_id <int>, START <date>, END <date>
 #> 
