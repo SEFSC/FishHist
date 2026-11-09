@@ -13,6 +13,12 @@ process_closures(data = fishhist, spp, region, start, end)
 \item{spp}{Filter to species of interest (common name).}
 
 \item{region}{Filter to region of interest}
+
+\item{start}{Process all closure-related management types starting from
+a defined start date (formatted using `as.Date`)}
+
+\item{end}{Process all closure-related management types starting from
+a defined end date (formatted using `as.Date`)}
 }
 \value{
 A list where "data" is the full closure dataset (one row for each
@@ -33,8 +39,8 @@ to know for a single day whether the fishery is open or closed
 }
 \examples{
 process_closures(fishhist,
-  spp = "SNAPPER, RED", region =
-    "SOUTH ATLANTIC"
+  spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",
+  start = "2000-01-01", end = "2025-12-31"
 )
 
 }
