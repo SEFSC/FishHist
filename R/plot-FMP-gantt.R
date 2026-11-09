@@ -4,11 +4,10 @@
 #' published within a Fishery Management Plan (FMP) within the
 #' Southeast Fisheries Management History dataset.
 #'
-#' @param data default=fishhist
-#' @return A plot
+#' @param data A dataframe (default=fishhist)
+#' @return A ggplot object
 #'
 #' @examples gantt_FMP(fishhist)
-#'
 #' @export
 gantt_FMP <- function(data = fishhist) {
   custom_title_case <- function(text) {

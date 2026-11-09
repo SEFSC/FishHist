@@ -2,24 +2,39 @@
 % Please edit documentation in R/function-closures.R
 \name{process_closures}
 \alias{process_closures}
-\title{Process ad connect all closure-related management types for a species within a region}
+\title{Process and connect all closure-related management types for a species
+within a region}
 \usage{
 process_closures(data = fishhist, spp, region, start, end)
 }
 \arguments{
-\item{data}{default=fishhist}
+\item{data}{A dataframe (default=fishhist)}
 
 \item{spp}{Filter to species of interest (common name).}
 
 \item{region}{Filter to region of interest}
 }
 \value{
-A list
+A list where "data" is the full closure dataset (one row for each
+     day within the time series), "tab_sum_days_open" is a dataframe
+     summarizing the number of days the fishery is open within a strata
+     (year, region, zone, sector, subsector), "plot_days_open"  is a ggplot
+     plot object of the number of days open by year within a strata,
+     "tab_fr_dateranges" is a dataframe of the start and end date ranges
+     for the open and closed seasons by region, zone, sector subsector,
+     management type, and FR citation, "heatmap_open" is a ggplot object of
+     days open within a month and year (NOTE: this plot applies to zone ALL),
+     and "heatmap_closed" is a ggplot object of the days closed within
+     a month and year (NOTE: this plot applies to zone ALL)
 }
 \description{
-Process closures to expand and incorporate all related mtypes for closures to know for a single day whether the fishery is open or closed
+Process closures to expand and incorporate all related mtypes for closures
+to know for a single day whether the fishery is open or closed
 }
 \examples{
-process_closures(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+process_closures(fishhist,
+  spp = "SNAPPER, RED", region =
+    "SOUTH ATLANTIC"
+)
 
 }

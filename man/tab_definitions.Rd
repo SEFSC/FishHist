@@ -4,18 +4,22 @@
 \alias{tab_definitions}
 \title{Table of definitions provided under each Federal Registrar (FR) notice}
 \usage{
-tab_definitions(data = fishhist)
+tab_definitions(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{default=fishhist}
+\item{data}{A dataframe (default=fishhist)}
+
+\item{FMP_filter}{Filter to FMP of interest}
 }
 \value{
-A list of tables
+A flextable object
 }
 \description{
-List containing separate tables of Definitions for each FMP with associated FR notice for reference
+List containing separate tables of Definitions for each FMP with associated
+FR notice for reference
 }
 \examples{
-tab_definitions(fishhist)
+tab_definitions(fishhist,
+   FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
 
 }

@@ -7,15 +7,16 @@
 gantt_FMP(data = fishhist)
 }
 \arguments{
-\item{data}{default=fishhist}
+\item{data}{A dataframe (default=fishhist)}
 }
 \value{
-A plot
+A ggplot object
 }
 \description{
-Gantt chart of the first and last Federal Register (FR) published within a Fishery Management Plan (FMP) within the Southeast Fisheries Management History dataset.
+Gantt chart of the first and last Federal Register (FR)
+published within a Fishery Management Plan (FMP) within the
+Southeast Fisheries Management History dataset.
 }
 \examples{
 gantt_FMP(fishhist)
-
 }

@@ -7,17 +7,19 @@
 plot_mcats_sector(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{default=fishhist}
+\item{data}{A dataframe (default=fishhist)}
 
-\item{FMP_filter}{Filter to plot only a single FMP of interest.}
+\item{FMP_filter}{Filter to FMP of interest}
 }
 \value{
-A plot
+A ggplot object
 }
 \description{
-Percent of regulations by management type and sector (recreational vs. commerical)
+Percent of regulations by management type and sector
+(recreational vs. commercial)
 }
 \examples{
-plot_mcats_sector(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
+plot_mcats_sector(fishhist,
+  FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
 
 }

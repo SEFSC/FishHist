@@ -2,10 +2,10 @@
 #'
 #' Number of FRs published by management type and species
 #'
-#' @param data default=fishhist
-#' @param FMP_filter Filter to plot only a single FMP of interest.
+#' @param data A dataframe (default=fishhist)
+#' @param FMP_filter Filter to FMP of interest
 #'
-#' @return A plot
+#' @return A ggplot object
 #'
 #' @examples plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
 #'   GULF OF MEXICO")

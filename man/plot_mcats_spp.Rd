@@ -7,17 +7,18 @@
 plot_mcats_spp(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{default=fishhist}
+\item{data}{A dataframe (default=fishhist)}
 
-\item{FMP_filter}{Filter to plot only a single FMP of interest.}
+\item{FMP_filter}{Filter to FMP of interest}
 }
 \value{
-A plot
+A ggplot object
 }
 \description{
 Number of FRs published by management type and species
 }
 \examples{
-plot_mcats_spp(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
+plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
+  GULF OF MEXICO")
 
 }

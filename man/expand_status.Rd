@@ -2,20 +2,24 @@
 % Please edit documentation in R/function-mstatus.R
 \name{expand_status}
 \alias{expand_status}
-\title{Expand regulations based on the management status field (e.g. seasonal, monthly recurring, etc.)}
+\title{Expand regulations based on the management status field
+(e.g. seasonal, monthly recurring, etc.)}
 \usage{
 expand_status(x, y)
 }
 \arguments{
-\item{x}{data default=fishhist}
+\item{x}{A dataframe (default=fishhist)}
 
-\item{y}{Management Type Use}
+\item{y}{Management type}
 }
 \value{
-A dataframe
+A dataframe where the management status is expanded for the
+         selected management type
 }
 \description{
-Function to create multiple rows of a regulation with distinct date ranges that coincide with a recurring action (based on the management status field). In this function, the management type needs to be specified.
+Function to create multiple rows of a regulation with distinct date ranges
+that coincide with a recurring action (based on the management status field).
+In this function, the management type needs to be specified.
 }
 \examples{
 expand_status(fishhist, "FISHING YEAR")

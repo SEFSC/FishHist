@@ -1,12 +1,11 @@
 #' Plot of management categories recorded under an FMP by sector
 #'
 #' Percent of regulations by management type and sector
-#' (recreational vs. commerical)
+#' (recreational vs. commercial)
 #'
-#' @param data default=fishhist
-#' @param FMP_filter Filter to plot only a single FMP of interest.
-#'
-#' @return A plot
+#' @param data A dataframe (default=fishhist)
+#' @param FMP_filter Filter to FMP of interest
+#' @return A ggplot object
 #'
 #' @examples plot_mcats_sector(fishhist,
 #'   FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")

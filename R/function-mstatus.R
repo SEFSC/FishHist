@@ -1,10 +1,14 @@
-#' Expand regulations based on the management status field (e.g. seasonal, monthly recurring, etc.)
+#' Expand regulations based on the management status field
+#' (e.g. seasonal, monthly recurring, etc.)
 #'
-#' Function to create multiple rows of a regulation with distinct date ranges that coincide with a recurring action (based on the management status field). In this function, the management type needs to be specified.
+#' Function to create multiple rows of a regulation with distinct date ranges
+#' that coincide with a recurring action (based on the management status field).
+#' In this function, the management type needs to be specified.
 #'
-#' @param x data default=fishhist
-#' @param y Management Type Use
-#' @return A dataframe
+#' @param x A dataframe (default=fishhist)
+#' @param y Management type
+#' @return A dataframe where the management status is expanded for the
+#'          selected management type
 #'
 #' @examples expand_status(fishhist, "FISHING YEAR")
 #'
