@@ -260,12 +260,7 @@ mh_setup <- mh_raw |>
     ),
     # Added condition on 2/2/24 because of REG_ID 762
     END_DATE = dplyr::case_when(
-      MANAGEMENT_STATUS_USE == "ONCE" &
-        !is.na(END_DAY) &
-        !is.na(END_MONTH) &
-        !is.na(END_YEAR) &
-        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y") >
-        INEFFECTIVE_DATE ~ INEFFECTIVE_DATE,
+      END_DATE > INEFFECTIVE_DATE ~ INEFFECTIVE_DATE,
       TRUE ~ END_DATE
     ),
     # For records with an END_TIME of "12:01:00 AM", the END_DATE
