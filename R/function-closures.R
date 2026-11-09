@@ -7,6 +7,10 @@
 #' @param data A dataframe (default=fishhist)
 #' @param spp Filter to species of interest (common name).
 #' @param region Filter to region of interest
+#' @param start Process all closure-related management types starting from
+#'      a defined start date (formatted using `as.Date`)
+#' @param end Process all closure-related management types starting from
+#'      a defined end date (formatted using `as.Date`)
 #' @return A list where "data" is the full closure dataset (one row for each
 #'      day within the time series), "tab_sum_days_open" is a dataframe
 #'      summarizing the number of days the fishery is open within a strata
@@ -20,8 +24,8 @@
 #'      a month and year (NOTE: this plot applies to zone ALL)
 #'
 #' @examples process_closures(fishhist,
-#'   spp = "SNAPPER, RED", region =
-#'     "SOUTH ATLANTIC"
+#'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC"
+#'   start = "2000-01-01", end = "2025-12-31"
 #' )
 #'
 #' @export
@@ -37,12 +41,12 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
         "PROHIBITED SALE AND PURCHASE",
         "PROHIBITED SPECIES"
       ),
-      STARTDATE_CLEAN <= end,
-      END_DATE >= start
+      STARTDATE_CLEAN <= as.Date(end, "%Y-%m-%d"),
+      END_DATE >= as.Date(start, "%Y-%m-%d")
     ) |>
     dplyr::mutate(
-      STARTDATE_CLEAN = pmax(STARTDATE_CLEAN, start),
-      END_DATE = pmin(END_DATE, end),
+      STARTDATE_CLEAN = pmax(STARTDATE_CLEAN, as.Date(start, "%Y-%m-%d")),
+      END_DATE = pmin(END_DATE, as.Date(end, "%Y-%m-%d")),
       VALUE = dplyr::case_when(
         MANAGEMENT_TYPECLEAN %in% c("FISHING SEASON", "FISHING YEAR") ~ "OPEN",
         MANAGEMENT_TYPECLEAN == "PROHIBITED SALE AND PURCHASE" & FLAG == "YES" ~ "OPEN",
