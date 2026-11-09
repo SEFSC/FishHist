@@ -24,7 +24,7 @@
 #'      a month and year (NOTE: this plot applies to zone ALL)
 #'
 #' @examples process_closures(fishhist,
-#'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC"
+#'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",
 #'   start = "2000-01-01", end = "2025-12-31"
 #' )
 #'
