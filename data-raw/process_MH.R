@@ -355,14 +355,18 @@ mh_expanded_fy_fs <- mh_setup |>
                    relationship = "many-to-many") |>
   # Adjust start and end dates based on species added and removed dates
   dplyr::mutate(
+    # Flag to remove expanded records if the species was added after the
+    # regulation start date or removed before the reg start date
+    REMOVE = dplyr::case_when(!is.na(REMOVED_SP_DATE) &
+                                START_DATE > REMOVED_SP_DATE ~ 1,
+                              END_DATE < ADDED_SP_DATE ~ 1,
+                              TRUE ~ 0),
+    # Adjust start and end dates based on species add/remove dates
     END_DATE = dplyr::case_when(
       is.na(END_DATE) & !is.na(REMOVED_SP_DATE) ~ REMOVED_SP_DATE,
       TRUE ~ END_DATE),
     START_DATE = dplyr::case_when(
-      START_DATE < ADDED_SP_DATE ~ ADDED_SP_DATE, TRUE ~ START_DATE),
-    # Remove expanded records if the species was removed before the
-    # regulation start date
-    REMOVE = dplyr::case_when(START_DATE > REMOVED_SP_DATE ~ 1, TRUE ~ 0)
+      START_DATE < ADDED_SP_DATE ~ ADDED_SP_DATE, TRUE ~ START_DATE)
   ) |>
   dplyr::filter(REMOVE == 0) |>
   dplyr::select(-c(REMOVE, ADDED_SP_DATE, REMOVED_SP_DATE, SPECIES_ITIS)) |>
@@ -802,15 +806,16 @@ mh_dates1 <- mh_reversions |>
     END_DATE = dplyr::case_when(
       MANAGEMENT_TYPE_USE == "DEFINITION" ~
         end_timeseries,
+      (MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") &
+         MANAGEMENT_STATUS_USE == 'ONCE') |
+        REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~
+        END_DATE,
       (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
         !is.na(INEFFECTIVE_DATE) ~
         min(END_DATE, na.rm = TRUE),
       (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
         is.na(INEFFECTIVE_DATE) ~
         max(END_DATE, na.rm = TRUE),
-      MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") |
-        REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~
-        END_DATE,
       TRUE ~ END_DATE
   )) |>
   # CREATE: the variable of NEVER_IMPLEMENTED to signify regulations that were
@@ -1392,5 +1397,10 @@ if (length(lost_frs) > 0) {
     paste(lost_frs, collapse = ", ")
   )
 }
+
+# Check that Start Date is before End Date
+chk_dts <- fishhist |> dplyr::mutate(
+  flg = case_when(STARTDATE_CLEAN > END_DATE ~ 1, TRUE ~ 0)
+)
 
 usethis::use_data(fishhist, overwrite = TRUE)
