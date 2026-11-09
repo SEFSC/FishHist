@@ -70,28 +70,27 @@ tab_definitions <- function(data=fishhist, FMP_filter){
     dplyr::mutate(FMP = custom_title_case(FMP),
                   VALUE = str_to_title_acronyms(VALUE, replacements))
 
-  tab <- flextable::flextable(dat, col_keys = c("VALUE", "FR_CITATION")) |>
-        flextable::compose(
-          j = "FR_CITATION",
-          value =
-            flextable::as_paragraph(
-              flextable::hyperlink_text(
-                x = FR_CITATION, url = FR_URL,
-                props = flextable::fp_text_default(color = "blue",
-                                                   underline = TRUE)))
-          ) |>
-        flextable::set_header_labels(VALUE = "Defintion",
-                                     FR_CITATION = "FR Citation") |>
-        flextable::add_header_lines(values = fmp_name) |>
-        # Only merge visible columns in col_keys
-        flextable::merge_v(j = "VALUE") |>
-        flextable::valign(valign = "top") |>
-        flextable::theme_box() |>
-        flextable::fontsize(part = "all", size = 12) |>
-        flextable::font(part = "all", fontname = "Times New Roman") |>
-        flextable::line_spacing(space = 0.8, part = "body") |>
-        flextable::width(j=1, width= 5) |>
-        flextable::width(j=2, width= 2)
+  tab <- flextable::flextable(dat[2:4], col_keys = c("VALUE", "FR_CITATION")) |>
+    flextable::compose(
+      j = "FR_CITATION",
+      value = flextable::as_paragraph(
+        flextable::hyperlink_text(
+          x = FR_CITATION, url = FR_URL,
+          props = flextable::fp_text_default(color = "blue",
+                                             underline = TRUE)))
+    ) |>
+    flextable::set_header_labels(VALUE = "Defintion",
+                                 FR_CITATION = "FR Citation") |>
+    # Only merge visible columns in col_keys
+    flextable::merge_v(j = "VALUE") |>
+    flextable::valign(valign = "top") |>
+    flextable::theme_box() |>
+    flextable::fontsize(part = "all", size = 12) |>
+    flextable::font(part = "all", fontname = "Times New Roman") |>
+    flextable::line_spacing(space = 0.8, part = "body") |>
+    flextable::width(j=1, width= 5) |>
+    flextable::width(j=2, width= 2) |>
+    flextable::set_caption(caption = unique(dat$FMP))
 
   return(tab)
 }
