@@ -3,13 +3,15 @@
 #' List containing separate tables of Definitions for each FMP with associated
 #' FR notice for reference
 #'
-#' @param data default=fishhist
-#' @return A list of tables
+#' @param data A dataframe (default=fishhist)
+#' @param FMP_filter Filter to FMP of interest
+#' @return A flextable object
 #'
-#' @examples tab_definitions(fishhist)
+#' @examples tab_definitions(fishhist,
+#'    FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
 #'
 #' @export
-tab_definitions <- function(data=fishhist){
+tab_definitions <- function(data=fishhist, FMP_filter){
 
   # Format acronyms to stay all CAPS in the table
   acronyms <- c("U.S.", "ABC", "TAC", "IFQ", "TED", "NMFS",
@@ -61,18 +63,14 @@ tab_definitions <- function(data=fishhist){
     return(title_text)
   }
 
-  dat <- data |> dplyr::filter(MANAGEMENT_TYPECLEAN == 'DEFINITION') |>
+  dat <- data |> dplyr::filter(MANAGEMENT_TYPECLEAN == 'DEFINITION',
+                               FMP == FMP_filter) |>
     dplyr::select(FMP, VALUE, FR_CITATION, FR_URL) |> dplyr::distinct() |>
     dplyr::arrange(VALUE) |>
     dplyr::mutate(FMP = custom_title_case(FMP),
                   VALUE = str_to_title_acronyms(VALUE, replacements))
 
-  tabs <- dat |>
-    dplyr::group_split(FMP) |>
-    purrr::map(~ {
-      fmp_name <- .x$FMP[1]
-
-      flextable::flextable(.x, col_keys = c("VALUE", "FR_CITATION")) |>
+  tab <- flextable::flextable(dat, col_keys = c("VALUE", "FR_CITATION")) |>
         flextable::compose(
           j = "FR_CITATION",
           value =
@@ -94,8 +92,6 @@ tab_definitions <- function(data=fishhist){
         flextable::line_spacing(space = 0.8, part = "body") |>
         flextable::width(j=1, width= 5) |>
         flextable::width(j=2, width= 2)
-    }) |>
-    purrr::set_names(sort(unique(dat$FMP)))
 
-  return(tabs)
+  return(tab)
 }
