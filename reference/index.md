@@ -18,7 +18,7 @@ fisheries management data
 - [`plot_species_timeline()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_species_timeline.md)
   : Timeline of management types recorded for a species within a region
 - [`process_closures()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/process_closures.md)
-  : Process ad connect all closure-related management types for a
+  : Process and connect all closure-related management types for a
   species within a region
 - [`tab_definitions()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/tab_definitions.md)
   : Table of definitions provided under each Federal Registrar (FR)
@@ -30,4 +30,4 @@ Example processed analysis-ready Southeast Fisheries Management Dataset
 that can be used for practicing use of the package’s functions
 
 - [`fishhist`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/fishhist.md)
-  : Management History data through 2025
+  : Management History data through 2026

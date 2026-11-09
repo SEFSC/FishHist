@@ -13,11 +13,11 @@ plot_species_timeline(data = fishhist, spp, region)
 
 - data:
 
-  default=fishhist
+  A dataframe (default=fishhist)
 
 - spp:
 
-  Filter to species of interest (common name).
+  Filter to species of interest (common name)
 
 - region:
 
@@ -25,11 +25,14 @@ plot_species_timeline(data = fishhist, spp, region)
 
 ## Value
 
-A plot
+A ggplot object
 
 ## Examples
 
 ``` r
-plot_species_timeline(fishhist, spp = "SNAPPER, RED", region = "SOUTH ATLANTIC")
+plot_species_timeline(fishhist,
+  spp = "SNAPPER, RED", region =
+    "SOUTH ATLANTIC"
+)
 
 ```

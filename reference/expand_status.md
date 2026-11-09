@@ -15,15 +15,16 @@ expand_status(x, y)
 
 - x:
 
-  data default=fishhist
+  A dataframe (default=fishhist)
 
 - y:
 
-  Management Type Use
+  Management type
 
 ## Value
 
-A dataframe
+A dataframe where the management status is expanded for the selected
+management type
 
 ## Examples
 

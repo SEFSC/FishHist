@@ -12,19 +12,20 @@ plot_mcats_spp(data = fishhist, FMP_filter)
 
 - data:
 
-  default=fishhist
+  A dataframe (default=fishhist)
 
 - FMP_filter:
 
-  Filter to plot only a single FMP of interest.
+  Filter to FMP of interest
 
 ## Value
 
-A plot
+A ggplot object
 
 ## Examples
 
 ``` r
-plot_mcats_spp(fishhist, FMP_filter="REEF FISH RESOURCES OF THE GULF OF MEXICO")
-
+plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
+  GULF OF MEXICO")
+#> Error in plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE\n  GULF OF MEXICO"): Check filters
 ```

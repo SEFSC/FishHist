@@ -1,4 +1,4 @@
-# Management History data through 2025
+# Management History data through 2026
 
 A processed and cleaned management history dataframe.
 
@@ -18,7 +18,7 @@ A data frame with 45 variables:
   cluster is a group of like MANAGEMENT_TYPEs for like species/species
   groupings within the same FMP, JURISDICTION, JURISDICTIONAL_WATERS,
   REGION, SECTOR_CLEAN, and SUBSECTOR_CLEAN that overwrite one another
-  (i.e., BAG LIMIT for red snapper in the Gulf of Mexico). Regulations
+  (i.e., BAG LIMIT for Red Snapper in the Gulf of America). Regulations
   within the same cluster will have the same cluster ID number.
 
 - REG_ID:
@@ -74,8 +74,8 @@ A data frame with 45 variables:
   A YES/NO field to indicate whether an ACL allocation was or is
   projected to be reached. If the resulting management measures
   contained in the FR Notice are intended to mitigate an overage, this
-  field will show “YES.” This field is recorded at the FR level so all
-  associated regulations will show “YES.”
+  field will show “YES”. This field is recorded at the FR level so all
+  associated regulations will show "YES”.
 
 - MANAGEMENTCATEGORY:
 
