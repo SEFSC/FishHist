@@ -23,6 +23,16 @@ process_closures(data = fishhist, spp, region, start, end)
 
   Filter to region of interest
 
+- start:
+
+  Process all closure-related management types starting from a defined
+  start date (formatted using \`as.Date\`)
+
+- end:
+
+  Process all closure-related management types starting from a defined
+  end date (formatted using \`as.Date\`)
+
 ## Value
 
 A list where "data" is the full closure dataset (one row for each day
@@ -41,10 +51,69 @@ plot applies to zone ALL)
 
 ``` r
 process_closures(fishhist,
-  spp = "SNAPPER, RED", region =
-    "SOUTH ATLANTIC"
+  spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",
+  start = "2000-01-01", end = "2025-12-31"
 )
-#> Error in dplyr::filter(data, COMMON_NAME_CLEAN == spp, REGION == region,     MANAGEMENT_TYPECLEAN %in% c("CLOSURE", "FISHING SEASON",         "FISHING YEAR", "PROHIBITED SALE AND PURCHASE", "PROHIBITED SPECIES"),     STARTDATE_CLEAN <= end, END_DATE >= start): ℹ In argument: `STARTDATE_CLEAN <= end`.
-#> Caused by error:
-#> ! argument "end" is missing, with no default
+#> $data
+#> # A tibble: 18,994 × 11
+#>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN
+#>    <chr>        <chr>             <chr>  <chr>      <chr>        <chr>          
+#>  1 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  2 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  3 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  4 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  5 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  6 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  7 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  8 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  9 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#> 10 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#> # ℹ 18,984 more rows
+#> # ℹ 5 more variables: date_sequence <date>, MANAGEMENT_TYPECLEAN <chr>,
+#> #   FR_CITATION <chr>, TIME <chr>, VALUE <chr>
+#> 
+#> $tab_sum_days_open
+#> # A tibble: 52 × 8
+#>    FMP    COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN  YEAR
+#>    <chr>  <chr>             <chr>  <chr>      <chr>        <chr>           <dbl>
+#>  1 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2000
+#>  2 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2001
+#>  3 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2002
+#>  4 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2003
+#>  5 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2004
+#>  6 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2005
+#>  7 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2006
+#>  8 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2007
+#>  9 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2008
+#> 10 SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              2009
+#> # ℹ 42 more rows
+#> # ℹ 1 more variable: Days_Open <int>
+#> 
+#> $plot_days_open
+
+#> 
+#> $tab_fr_dateranges
+#> # A tibble: 27 × 11
+#>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN
+#>    <chr>        <chr>             <chr>  <chr>      <chr>        <chr>          
+#>  1 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  2 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  3 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  4 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  5 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  6 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  7 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  8 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#>  9 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#> 10 SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            
+#> # ℹ 17 more rows
+#> # ℹ 5 more variables: FR_CITATION <chr>, MANAGEMENT_TYPECLEAN <chr>,
+#> #   episode_id <int>, START <date>, END <date>
+#> 
+#> $heatmap_open
+
+#> 
+#> $heatmap_closed
+
+#> 
 ```

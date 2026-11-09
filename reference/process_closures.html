@@ -58,6 +58,16 @@ to know for a single day whether the fishery is open or closed</p>
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
 <dd><p>Filter to region of interest</p></dd>
 
+
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>Process all closure-related management types starting from
+a defined start date (formatted using `as.Date`)</p></dd>
+
+
+<dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
+<dd><p>Process all closure-related management types starting from
+a defined end date (formatted using `as.Date`)</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -77,12 +87,71 @@ to know for a single day whether the fishery is open or closed</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">process_closures</span><span class="op">(</span><span class="va">fishhist</span>,</span></span>
-<span class="r-in"><span>  spp <span class="op">=</span> <span class="st">"SNAPPER, RED"</span>, region <span class="op">=</span></span></span>
-<span class="r-in"><span>    <span class="st">"SOUTH ATLANTIC"</span></span></span>
+<span class="r-in"><span>  spp <span class="op">=</span> <span class="st">"SNAPPER, RED"</span>, region <span class="op">=</span> <span class="st">"SOUTH ATLANTIC"</span>,</span></span>
+<span class="r-in"><span>  start <span class="op">=</span> <span class="st">"2000-01-01"</span>, end <span class="op">=</span> <span class="st">"2025-12-31"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(data, COMMON_NAME_CLEAN == spp, REGION == region,     MANAGEMENT_TYPECLEAN %in% c("CLOSURE", "FISHING SEASON",         "FISHING YEAR", "PROHIBITED SALE AND PURCHASE", "PROHIBITED SPECIES"),     STARTDATE_CLEAN &lt;= end, END_DATE &gt;= start):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `STARTDATE_CLEAN &lt;= end`.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> argument "end" is missing, with no default</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 18,994 × 11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 18,984 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more variables: date_sequence &lt;date&gt;, MANAGEMENT_TYPECLEAN &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   FR_CITATION &lt;chr&gt;, TIME &lt;chr&gt;, VALUE &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tab_sum_days_open</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 52 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    FMP    COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN  YEAR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>004</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>006</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>007</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SNAPP… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL              <span style="text-decoration: underline;">2</span>009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 42 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: Days_Open &lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $plot_days_open</span>
+<span class="r-plt img"><img src="process_closures-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tab_fr_dateranges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 27 × 11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SNAPPER-GRO… SNAPPER, RED      SOUTH… ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 17 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more variables: FR_CITATION &lt;chr&gt;, MANAGEMENT_TYPECLEAN &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   episode_id &lt;int&gt;, START &lt;date&gt;, END &lt;date&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $heatmap_open</span>
+<span class="r-plt img"><img src="process_closures-2.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $heatmap_closed</span>
+<span class="r-plt img"><img src="process_closures-3.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
