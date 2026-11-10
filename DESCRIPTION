@@ -1,13 +1,13 @@
 Package: FishHist
 Type: Package
 Title: Southeast Fisheries Management History Data
-Version: 0.1.0
+Version: 1.0
 Authors@R: c(person("Sarina", "Atkinson", , "sarina.atkinson@noaa.gov", role = c("aut", "cre")), person("Gaitlyn", "Malone", role="aut"))
 BugReports: https://github.com/SEFSC/FishHist/issues
-Description: This package houses code to process fisheries management data
-    into an analysis-friendly format where all indivudal regualtions published
-    from Federal Registrar (FR) notices are connected. There are also functions
-    within this package to analyze and visualize the analysis-friendly 
+Description: The FishHist package houses code to process fisheries management 
+    data into an analysis-friendly format where all indivudal regualtions 
+    published from Federal Registrar (FR) notices are connected. 
+    There are also functions to analyze and visualize the analysis-friendly 
     management history data.
 Imports: ggplot2, dplyr, flextable, lubridate, purrr, stringr, tibble, tidyr, scales
 License: GPL-3 + file LICENSE 
