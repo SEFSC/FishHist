@@ -111,13 +111,16 @@
 #'          SPECIES_AGGREGATE, or SPECIES_GROUP to indicate how the species
 #'          information was originally captured during data entry. Indicates
 #'          the species category to which the SPECIES_NAME field relates.}
+#'   \item{SPP_NAME}{Common name or species aggregate name. This allows you
+#'          to trace back to whether the regulation was for an individual
+#'          species or species within a grouping.}
 #'   \item{ADJUSTMENT}{Flag to indicate whether the MANAGEMENT_TYPE for the
 #'          regulation is an “ADJUSTMENT”. An “ADJUSTMENT” MANAGEMENT_TYPE
 #'          indicates that a regulation is temporarily overwritten for a period
 #'          of time, after which the previous regulation will continue to be in
 #'          place. During data processing, “ADJUSTMENTs” that happen and then
-#'          revert to prior regulations and reopenings that happen until a
-#'          closure is reimplemented are treated the same and are flagged as
+#'          revert to prior regulations and re-openings that happen until a
+#'          closure is re-implemented are treated the same and are flagged as
 #'          an “ADJUSTMENT”. A value of 1 indicates that the MANAGEMENT_TYPE
 #'          is an ADJUSTMENT, while 0 will indicate that it is not.}
 #'   \item{REVERSION}{TRUE/FALSE field to indicate whether the record is a
