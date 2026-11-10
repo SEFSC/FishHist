@@ -17,7 +17,7 @@ process_closures(data = fishhist, spp, region, start, end)
 
 - spp:
 
-  Filter to species of interest (common name).
+  Filter to species of interest (common name)
 
 - region:
 
