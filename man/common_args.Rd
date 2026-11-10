@@ -3,6 +3,9 @@
 \name{common_args}
 \alias{common_args}
 \title{Shared Parameter Definitions}
+\usage{
+common_args(data, na_rm)
+}
 \arguments{
 \item{data}{A dataframe (default=fishhist)}
 
