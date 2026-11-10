@@ -136,15 +136,15 @@ plot_species_timeline <- function(data = fishhist, spp, region) {
     ggplot2::expand_limits(y = 0) +
     # Set x-axis limits and labels
     ggplot2::scale_x_date(
-      limits = c(as.Date(paste0(min(spp_dat$start_year), "-01-01")),
-                 as.Date(paste0(max(spp_dat$start_year), "-12-31"))),
+      limits = as.Date(c(paste0(min(spp_dat$start_year), "-01-01"),
+                         paste0(max(spp_dat$start_year), "-12-31"))),
       date_breaks = "1 year",
       date_labels = "%Y",
       expand = c(0.01, 0.01)
     ) +
     ggplot2::coord_cartesian(
-      xlim = c(as.Date(paste0(min(spp_dat$start_year), "-01-01")),
-               as.Date(paste0(max(spp_dat$start_year), "-12-31")))) +
+      xlim = as.Date(c(paste0(min(spp_dat$start_year), "-01-01"),
+                       paste0(max(spp_dat$start_year), "-12-31")))) +
     # Customize the theme
     ggplot2::theme(
       axis.line.y = ggplot2::element_blank(),
