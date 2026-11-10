@@ -11,15 +11,19 @@
 #' @export
 gantt_FMP <- function(data = fishhist) {
 
+  # FMPs by region
+  fmp_reg <- data |> dplyr::select(FMP, REGION) |>
+    dplyr::distinct()
+
   data_summary <- data |>
     dplyr::group_by(FMP) |>
     dplyr::summarise(
       start_year = min(lubridate::year(STARTDATE_CLEAN)),
       end_year = max(lubridate::year(END_DATE))
     ) |>
-    # Arrange by region (if FMP in multiple regions, take first row)
-    dplyr::left_join(data |> dplyr::select(FMP, REGION) |>
-                       dplyr::distinct(), by = dplyr::join_by(FMP)) |>
+    # Arrange by region
+    # If FMP in multiple regions, take first row using slice
+    dplyr::left_join(fmp_reg, by = dplyr::join_by(FMP)) |>
     dplyr::group_by(FMP) |>
     dplyr::slice(1) |>
     dplyr::ungroup() |>
