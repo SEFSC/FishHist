@@ -7,8 +7,8 @@
 #'
 #' @return A ggplot object
 #'
-#' @examples plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
-#'   GULF OF MEXICO")
+#' @examples plot_mcats_spp(fishhist,
+#'     FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
 #'
 #' @export
 plot_mcats_spp <- function(data = fishhist, FMP_filter) {
