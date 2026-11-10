@@ -9,4 +9,7 @@
 #'
 #' @name common_args
 #' @keywords internal
+common_args <- function(data, na_rm) {
+# Dummy function goodpractice::gp() checks if function name exists
+}
 NULL
