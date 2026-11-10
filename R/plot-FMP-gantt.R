@@ -14,13 +14,13 @@ gantt_FMP <- function(data = fishhist) {
 
   # FMPs by region
   fmp_reg <- data |> dplyr::select(FMP, REGION) |>
-    dplyr::distinct()
+    dplyr::distinct() |> dplyr::arrange(REGION)
 
   data_summary <- data |>
     dplyr::group_by(FMP) |>
     dplyr::summarise(
       start_year = min(lubridate::year(STARTDATE_CLEAN)),
-      end_year = max(lubridate::year(END_DATE))
+      end_year = max(lubridate::year(END_DATE), na.rm = TRUE)
     ) |>
     # Arrange by region
     # If FMP in multiple regions, take first row using slice
