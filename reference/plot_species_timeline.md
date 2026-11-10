@@ -17,7 +17,7 @@ plot_species_timeline(data = fishhist, spp, region)
 
 - spp:
 
-  Filter to species of interest (common name)
+  Filter to species of interest (common name).
 
 - region:
 

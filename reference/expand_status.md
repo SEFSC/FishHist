@@ -13,10 +13,6 @@ expand_status(x, y)
 
 ## Arguments
 
-- x:
-
-  A dataframe (default=fishhist)
-
 - y:
 
   Management type
