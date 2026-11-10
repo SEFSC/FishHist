@@ -120,7 +120,8 @@ mh_setup <- mh_raw |>
     # ended at the end of the calendar year was being flagged as an
     # adjustment instead of ceasing to exist.
     ADJUSTMENT = dplyr::case_when(
-      stringr::str_detect(MANAGEMENT_TYPE, "ADJUSTMENT") ~ 1,
+      stringr::str_detect(
+        MANAGEMENT_TYPE, "ADJUSTMENT", fixed = TRUE) ~ 1,
       MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" &
         lubridate::month(INEFFECTIVE_DATE) == 12 &
         lubridate::day(INEFFECTIVE_DATE) == 31 ~ 0,
@@ -129,8 +130,9 @@ mh_setup <- mh_raw |>
     ),
     MANAGEMENT_TYPE_USE = dplyr::case_when(
       stringr::str_detect(
-        MANAGEMENT_TYPE, "ADJUSTMENT") ~
-        stringr::str_replace(MANAGEMENT_TYPE, " ADJUSTMENT", ""),
+        MANAGEMENT_TYPE, "ADJUSTMENT", fixed = TRUE) ~
+        stringr::str_replace(
+          MANAGEMENT_TYPE, " ADJUSTMENT", "", fixed = TRUE),
       TRUE ~ MANAGEMENT_TYPE
     ),
     # Rename records with the MANAGEMENT_TYPE of REOPENING to the
@@ -242,7 +244,6 @@ mh_setup <- mh_raw |>
         as.numeric(START_DAY_OF_WEEK) + 1,
       TRUE ~ as.numeric(START_DAY_OF_WEEK)
     ),
-
     # CREATE: END_DATE from the END_DAY, END_MONTH, and END_YEAR
     # fields
     # The END_DATE field is only created using END_DAY, END_MONTH,
