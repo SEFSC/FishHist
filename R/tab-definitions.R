@@ -8,7 +8,7 @@
 #' @return A flextable object
 #'
 #' @examples tab_definitions(fishhist,
-#'    FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
+#'    FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")
 #'
 #' @export
 tab_definitions <- function(data=fishhist, FMP_filter){

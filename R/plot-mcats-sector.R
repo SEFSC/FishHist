@@ -8,7 +8,7 @@
 #' @return A ggplot object
 #'
 #' @examples plot_mcats_sector(fishhist,
-#'   FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
+#'   FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")
 #'
 #' @export
 plot_mcats_sector <- function(data = fishhist, FMP_filter) {

@@ -84,4 +84,6 @@ gantt_FMP <- function(data = fishhist) {
       panel.grid.minor = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_text(size = 10, face = "bold")
     )
+
+  return(plot)
 }

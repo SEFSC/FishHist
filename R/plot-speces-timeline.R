@@ -8,8 +8,7 @@
 #' @param region Filter to region of interest
 #' @return A ggplot object
 #'
-#' @examples plot_species_timeline(fishhist,
-#'   spp = "SNAPPER, RED",
+#' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED",
 #'   region = "SOUTH ATLANTIC")
 #'
 #' @export

@@ -21,9 +21,7 @@ Timeline of management actions published for a species within a FMP
 (filter set to region)
 }
 \examples{
-plot_species_timeline(fishhist,
-  spp = "SNAPPER, RED", region =
-    "SOUTH ATLANTIC"
-)
+plot_species_timeline(fishhist, spp = "SNAPPER, RED",
+  region = "SOUTH ATLANTIC")
 
 }

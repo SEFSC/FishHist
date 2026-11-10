@@ -18,7 +18,7 @@ A ggplot object
 Number of FRs published by management type and species
 }
 \examples{
-plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
-  GULF OF MEXICO")
+plot_mcats_spp(fishhist,
+    FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")
 
 }
