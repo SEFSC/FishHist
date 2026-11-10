@@ -10,7 +10,7 @@ process_closures(data = fishhist, spp, region, start, end)
 \arguments{
 \item{data}{A dataframe (default=fishhist)}
 
-\item{spp}{Filter to species of interest (common name).}
+\item{spp}{Filter to species of interest (common name)}
 
 \item{region}{Filter to region of interest}
 
