@@ -11,12 +11,12 @@
 #'
 #' @export
 plot_mcats_spp <- function(data = fishhist, FMP_filter) {
-  dt <- data |>
-    dplyr::filter(!is.na(END_DATE)) |>
-    dplyr::group_by(END_DATE) |>
-    dplyr::summarize(n = dplyr::n()) |>
-    dplyr::filter(n == max(n)) |>
-    dplyr::pull(END_DATE)
+
+  # Get end date for filter
+  dt <- with(na.omit(data["END_DATE"]), {
+    tab <- table(END_DATE)
+    as.Date(names(tab)[tab == max(tab)])
+  })
 
   # Get currently managed species
   managed_spp <- data |>
