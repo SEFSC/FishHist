@@ -49,8 +49,10 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
       END_DATE = pmin(END_DATE, as.Date(end, "%Y-%m-%d")),
       VALUE = dplyr::case_when(
         MANAGEMENT_TYPECLEAN %in% c("FISHING SEASON", "FISHING YEAR") ~ "OPEN",
-        MANAGEMENT_TYPECLEAN == "PROHIBITED SALE AND PURCHASE" & FLAG == "YES" ~ "OPEN",
-        MANAGEMENT_TYPECLEAN == "PROHIBITED SALE AND PURCHASE" & FLAG == "NO" ~ "CLOSE",
+        MANAGEMENT_TYPECLEAN == "PROHIBITED SALE AND PURCHASE" &
+          FLAG == "YES" ~ "OPEN",
+        MANAGEMENT_TYPECLEAN == "PROHIBITED SALE AND PURCHASE" &
+          FLAG == "NO" ~ "CLOSE",
         MANAGEMENT_TYPECLEAN == "PROHIBITED SPECIES" ~ "CLOSE",
         TRUE ~ VALUE
       )
@@ -65,16 +67,19 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
 
   # Process all types dynamically (long form)
   start <- Sys.time()
-  all_spp_closures <- purrr::map_dfr(unique_types, ~ expand_status(mh_spp_closure, .x))
+  all_spp_closures <- purrr::map_dfr(unique_types,
+                                     ~ expand_status(mh_spp_closure, .x))
   runtime <- Sys.time() - start
   runtime
 
   spp_closure_story <- all_spp_closures |>
     dplyr::select(
-      FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence,
-      MANAGEMENT_TYPECLEAN, FR_CITATION, TIME, VALUE
+      FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+      SUBSECTOR_CLEAN, date_sequence, MANAGEMENT_TYPECLEAN, FR_CITATION,
+      TIME, VALUE
     ) |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, date_sequence) |>
     # Keep ONLY the row with the most recent FR_CITATION within each group
     # IF there are two then take the CLOSE record because that overwrites OPEN
     dplyr::slice_max(
@@ -99,12 +104,16 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
   # Summarize the open and closed periods for each year
   summ_spp_closures <- spp_closure_story |>
     dplyr::mutate(YEAR = lubridate::year(date_sequence)) |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR) |>
-    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, date_sequence) |>
-    dplyr::mutate(change = VALUE != dplyr::lag(VALUE, default = dplyr::first(VALUE)) |
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, YEAR) |>
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                   SUBSECTOR_CLEAN, date_sequence) |>
+    dplyr::mutate(
+      change = VALUE != dplyr::lag(VALUE, default = dplyr::first(VALUE)) |
       YEAR != dplyr::lag(YEAR, default = dplyr::first(YEAR))) |>
     dplyr::mutate(group = cumsum(change)) |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR, VALUE, group) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, YEAR, VALUE, group) |>
     dplyr::summarize(
       ndays = dplyr::n(),
       start = min(date_sequence),
@@ -115,32 +124,42 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
       is.na(VALUE) ~ "OPEN",
       TRUE ~ VALUE
     )) |>
-    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR, start)
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                   SUBSECTOR_CLEAN, YEAR, start)
 
   # Summarize the number of days open per year
   summ_days_open <- summ_spp_closures |>
     dplyr::filter(VALUE == "OPEN") |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, YEAR) |>
     dplyr::summarize(Days_Open = sum(ndays), .groups = "drop") |>
-    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, YEAR)
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                   SUBSECTOR_CLEAN, YEAR)
 
   # Plot number of Days Open
   plot_days_open <- ggplot2::ggplot(
-    summ_days_open |> dplyr::mutate(SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)),
+    summ_days_open |> dplyr::mutate(
+      SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)),
     ggplot2::aes(x = YEAR, y = Days_Open)
   ) +
     ggplot2::geom_col(fill = "steelblue") +
-    ggplot2::geom_text(ggplot2::aes(label = Days_Open), vjust = -0.5, size = 2.5) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
-    ggplot2::scale_x_continuous(n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR)) / 3) +
+    ggplot2::geom_text(
+      ggplot2::aes(label = Days_Open), vjust = -0.5, size = 2.5) +
+    ggplot2::scale_y_continuous(
+      expand = ggplot2::expansion(mult = c(0, 0.1))) +
+    ggplot2::scale_x_continuous(
+      n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR)) / 3) +
     ggplot2::labs(x = "", y = "Number of Days Open") +
     ggplot2::facet_wrap(~SECT_SUBSECT, ncol = 1) +
     ggplot2::theme_bw()
 
   # Summarize table for start-end dates by management type and values
   mtype_fr_tab <- spp_closure_story |>
-    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE) |>
+    dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                   SUBSECTOR_CLEAN, MANAGEMENT_TYPECLEAN, date_sequence) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN,
+                    VALUE) |>
     # Create a gap identifier column (increments when dates are not consecutive)
     dplyr::mutate(
       date_gap = date_sequence > (dplyr::lag(date_sequence) + 1),
@@ -149,7 +168,9 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
       # for 9/14-9/16, episode 2 for 9/21-9/23)
       episode_id = cumsum(date_gap)
     ) |>
-    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN, SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE, episode_id) |>
+    dplyr::group_by(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
+                    SUBSECTOR_CLEAN, FR_CITATION, MANAGEMENT_TYPECLEAN, VALUE,
+                    episode_id) |>
     dplyr::summarise(
       START = min(date_sequence),
       END = max(date_sequence), .groups = "drop"
@@ -187,16 +208,28 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
       fill = list(n_open = 0)
     ) |>
     dplyr::mutate( # Recalculate total_days for filled rows if needed
-      total_days = ifelse(is.na(total_days), lubridate::days_in_month(as.Date(paste(year, month, "01", sep = "-"), "%Y-%b-%d")), total_days),
+      total_days = ifelse(is.na(total_days),
+                          lubridate::days_in_month(as.Date(
+                            paste(year, month, "01", sep = "-"), "%Y-%b-%d")),
+                          total_days),
       # Calculate proportion of open days (0.0 to 1.0)
       prop_open = n_open / total_days,
       SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)
     )
 
-  plot_heatmap_o <- ggplot2::ggplot(heatmap_o, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = prop_open)) +
+  plot_heatmap_o <- ggplot2::ggplot(heatmap_o,
+                                    ggplot2::aes(
+                                      x = factor(month, levels = month.abb),
+                                      y = year,
+                                      fill = prop_open)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "magma", name = "% Days Open", labels = scales::percent, limits = c(0, 1)) +
-    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_o$year) - min(heatmap_o$year)) / 3) +
+    ggplot2::scale_fill_viridis_c(
+      option = "magma", name = "% Days Open",
+      labels = scales::percent,
+      limits = c(0, 1)) +
+    ggplot2::scale_y_continuous(
+      trans = "reverse", expand = c(0, 0),
+      n.breaks = (max(heatmap_o$year) - min(heatmap_o$year)) / 3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
     ggplot2::labs(x = "", y = "") +
     ggplot2::theme_classic() +
@@ -220,26 +253,40 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
     # Complete all year/month combinations
     tidyr::complete(tidyr::nesting(SECTOR_CLEAN, SUBSECTOR_CLEAN),
-      year = min(lubridate::year(spp_closure_story$date_sequence)):max(lubridate::year(spp_closure_story$date_sequence)),
-      month = factor(month.abb, levels = month.abb, ordered = TRUE), # Keeps factor ordering consistent
+      year = min(
+        lubridate::year(spp_closure_story$date_sequence)):max(
+          lubridate::year(spp_closure_story$date_sequence)),
+      # Keeps factor ordering consistent
+      month = factor(month.abb, levels = month.abb, ordered = TRUE),
       fill = list(n = 0)
     ) |>
-    dplyr::mutate( # Construct a dummy first-of-month date to compute total days
+    dplyr::mutate(# Construct a dummy first-of-month date to compute total days
       # per month/year accurately
-      month_date = as.Date(paste(year, match(month, month.abb), "01", sep = "-")),
+      month_date = as.Date(paste(year, match(month, month.abb), "01",
+                                 sep = "-")),
       days_in_m = lubridate::days_in_month(month_date),
       # Calculate proportion of closed days (0.0 to 1.0)
       prop_closed = n / days_in_m,
       SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)
     )
 
-  plot_heatmap_c <- ggplot2::ggplot(heatmap_c, ggplot2::aes(x = factor(month, levels = month.abb), y = year, fill = prop_closed)) +
+  plot_heatmap_c <- ggplot2::ggplot(heatmap_c,
+                                    ggplot2::aes(
+                                      x = factor(month, levels = month.abb),
+                                      y = year,
+                                      fill = prop_closed)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(
-      option = "magma", name = "% Days Closed", labels = scales::percent,
-      limits = c(0, 1), na.value = "white", direction = -1
-    ) +
-    ggplot2::scale_y_continuous(trans = "reverse", expand = c(0, 0), n.breaks = (max(heatmap_c$year) - min(heatmap_c$year)) / 3) +
+      option = "magma",
+      name = "% Days Closed",
+      labels = scales::percent,
+      limits = c(0, 1),
+      na.value = "white",
+      direction = -1) +
+    ggplot2::scale_y_continuous(
+      trans = "reverse",
+      expand = c(0, 0),
+      n.breaks = (max(heatmap_c$year) - min(heatmap_c$year)) / 3) +
     ggplot2::facet_wrap(~SECT_SUBSECT, axes = "all", drop = TRUE) +
     ggplot2::labs(x = "", y = "") +
     ggplot2::theme_classic() +
@@ -252,7 +299,9 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     )
 
   # Save everything as a list
-  out <- list(spp_closure_story, summ_days_open, plot_days_open, mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
-  names(out) <- c("data", "tab_sum_days_open", "plot_days_open", "tab_fr_dateranges", "heatmap_open", "heatmap_closed")
+  out <- list(spp_closure_story, summ_days_open, plot_days_open,
+              mtype_fr_tab, plot_heatmap_o, plot_heatmap_c)
+  names(out) <- c("data", "tab_sum_days_open", "plot_days_open",
+                  "tab_fr_dateranges", "heatmap_open", "heatmap_closed")
   return(out)
 }

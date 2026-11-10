@@ -212,7 +212,8 @@ mh_setup <- mh_raw |>
         !is.na(START_DAY) &
         !is.na(START_MONTH) &
         !is.na(START_YEAR) ~
-        as.Date(paste0(START_MONTH, "/", START_DAY, "/", START_YEAR), "%m/%d/%Y"),
+        as.Date(paste0(START_MONTH, "/", START_DAY, "/", START_YEAR),
+                "%m/%d/%Y"),
       TRUE ~ EFFECTIVE_DATE
     ),
     # Adjust the start date if its after the effective date so the
@@ -707,7 +708,8 @@ mh_dates1 <- mh_reversions |>
   # between a regulation and its subsequent replacement (amount of days the
   # regulation is effective for)
   # The most recent regulation in each grouping gets NA for diff because no
-  # regulations happens after it (it is the most recent and at the top of the list)
+  # regulations happens after it (it is the most recent and at the top of
+  # the list)
   dplyr::mutate(
     diff = as.numeric(dplyr::lag(START_DATE_USE) - START_DATE_USE,
                       units = "days"),
@@ -1320,10 +1322,12 @@ mh_data_log <- mh_expanded |>
 # new FMPs = "FMP FOR THE EEZ AROUND PUERTO RICO", "FMP FOR THE EEZ AROUND ST.
 # THOMAS AND ST. JOHN", "FMP FOR THE EEZ AROUND ST. CROIX"
 mh_data_log_final <- mh_data_log |>
-  dplyr::mutate(END_DATE2 = dplyr::case_when(
-    FMP %in% c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
-               "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
-               "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
+  dplyr::mutate(
+    END_DATE2 = dplyr::case_when(
+      FMP %in%
+        c("SPINY LOBSTER FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
+          "QUEEN CONCH RESOURCES OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS",
+          "REEF FISH FISHERY OF PUERTO RICO AND THE U.S. VIRGIN ISLANDS") &
       END_DATE2 > "2022-10-12" ~ as.Date("2022-10-12"),
     TRUE ~ END_DATE2
   ))
