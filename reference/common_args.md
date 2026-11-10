@@ -3,6 +3,12 @@
 This script houses argument documentation shared across multiple
 functions
 
+## Usage
+
+``` r
+common_args(data, na_rm)
+```
+
 ## Arguments
 
 - data:
