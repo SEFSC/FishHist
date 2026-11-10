@@ -42,8 +42,7 @@ plot_species_timeline <- function(data = fishhist, spp, region) {
         MANAGEMENTCATEGORY == "GEAR REQUIREMENTS" ~ "GEAR REQUIREMENTS",
         MANAGEMENTCATEGORY == "CATCH LIMITS" ~ "CATCH LIMITS",
         TRUE ~ MANAGEMENT_TYPECLEAN
-      )))
-    ) |>
+      ))) |>
     dplyr::group_by(COMMON_NAME_CLEAN, start_year,
                     MANAGEMENTCATEGORY, MANAGEMENT_USE) |>
     dplyr::summarize(date = dplyr::first(date), .groups = "drop") |>
