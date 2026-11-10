@@ -17,7 +17,7 @@ plot_mcats_sector <- function(data = fishhist, FMP_filter) {
     dplyr::group_by(FMP, SECTOR_CLEAN, MANAGEMENTCATEGORY) |>
     dplyr::summarise(nrecs = dplyr::n_distinct(REG_ID)) |>
     dplyr::group_by(FMP, SECTOR_CLEAN) |>
-    dplyr::mutate(tot = sum(nrecs), perc = nrecs / tot,
+    dplyr::mutate(perc = nrecs / sum(nrecs),
                   labels = paste0(round(perc * 100, 1), "%"))
 
   if (nrow(dat2) == 0) {
