@@ -34,12 +34,10 @@ mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
     EFFECTIVE_DATE = as.Date(EFFECTIVE_DATE, "%m/%d/%Y"),
     INEFFECTIVE_DATE = as.Date(INEFFECTIVE_DATE, "%m/%d/%Y"),
     # Remove ="..." characters in species ITIS codes
-    SPECIES_ITIS = gsub('="', "", SPECIES_ITIS),
-    SPECIES_ITIS = gsub('"', "", SPECIES_ITIS)
-  ) |>
-  # Issue with species ITIS appearing as "\t173138"
-  dplyr::mutate(
-    SPECIES_ITIS = gsub("\t", "", SPECIES_ITIS),
+    SPECIES_ITIS = gsub('="', "", SPECIES_ITIS, fixed = TRUE),
+    SPECIES_ITIS = gsub('"', "", SPECIES_ITIS, fixed = TRUE),
+    # Issue with species ITIS appearing as "\t173138"
+    SPECIES_ITIS = gsub("\t", "", SPECIES_ITIS, fixed = TRUE),
     # Remove A or B in FR Citation (example regulation ID = 11514)
     FR_CITATION = stringr::str_remove(FR_CITATION, " [AB]"),
     # Add code for getting zone name for 3 regulations that are not
@@ -109,8 +107,8 @@ mh_setup <- mh_raw |>
   # CREATE: vol and page but pulling out the volume and page number as separate
   # fields from the FR_CITATION
   dplyr::mutate(
-    vol = as.numeric(sub(" FR.*", "", FR_CITATION)),
-    page = as.numeric(sub(".*FR ", "", FR_CITATION)),
+    vol = as.numeric(sub(" FR.*", "", FR_CITATION, fixed = TRUE)),
+    page = as.numeric(sub(".*FR ", "", FR_CITATION, fixed = TRUE)),
     # CREATE: ADJUSTMENT variable to flag when the MANAGEMENT_TYPE
     # contains the word "ADJUSTMENT" and remove "ADJUSTMENT" from
     # the MANAGEMENT_TYPE name
@@ -212,8 +210,8 @@ mh_setup <- mh_raw |>
         !is.na(START_DAY) &
         !is.na(START_MONTH) &
         !is.na(START_YEAR) ~
-        as.Date(paste0(START_MONTH, "/", START_DAY, "/", START_YEAR),
-                "%m/%d/%Y"),
+        as.Date(file.path(START_MONTH, START_DAY, START_YEAR),
+                format = "%m/%d/%Y"),
       TRUE ~ EFFECTIVE_DATE
     ),
     # Adjust the start date if its after the effective date so the
@@ -256,7 +254,8 @@ mh_setup <- mh_raw |>
         !is.na(END_DAY) &
         !is.na(END_MONTH) &
         !is.na(END_YEAR) ~
-        as.Date(paste0(END_MONTH, "/", END_DAY, "/", END_YEAR), "%m/%d/%Y"),
+        as.Date(file.path(END_MONTH, END_DAY, END_YEAR),
+                format = "%m/%d/%Y")
       TRUE ~ INEFFECTIVE_DATE
     ),
     # Added condition on 2/2/24 because of REG_ID 762
@@ -805,7 +804,8 @@ mh_dates1 <- mh_reversions |>
         end_timeseries,
       (MANAGEMENT_TYPE_USE %in% c("CLOSURE", "FISHING SEASON") &
          MANAGEMENT_STATUS_USE == 'ONCE') |
-        REVERSION == TRUE | MULTI_REG_FORECAST == 1 ~
+        # Reversion is true
+        REVERSION | MULTI_REG_FORECAST == 1 ~
         END_DATE,
       (MULTI_REG_VALUE == 1 | MULTI_REG_SEASONAL == 1) &
         !is.na(INEFFECTIVE_DATE) ~
@@ -872,7 +872,7 @@ mh_dates1 <- mh_reversions |>
   ) |>
   # Added 2/2/24 - do not include records that were added because of an
   # adjustment, but not actually implemented
-  dplyr::filter(!(NEVER_IMPLEMENTED == 1 & REVERSION == TRUE))
+  dplyr::filter(!(NEVER_IMPLEMENTED == 1 & REVERSION))
 
 ##################### Catch Limits Adjust Start Date using Fishing Year #######
 
@@ -1005,7 +1005,9 @@ mh_fy_less365 <- mh_fy |>
                      "%Y-%m-%d"),
     DIFF = START_FY - END_FY
   ) |>
-  dplyr::filter(DIFF != 1 & DIFF != 0 & DIFF != -364)
+  dplyr::filter(DIFF != 1,
+                DIFF != 0,
+                DIFF != -364)
 # WARNING fishing year should be a year
 if (nrow(mh_fy_less365) != 0) {
   warning("Fishing year not 365 days")
@@ -1074,7 +1076,8 @@ if (nrow(chk_sect_fy) > 0) {
 # REG_REMOVED == 0 because if a catch limit was removed (effective ==
 # ineffective), we do not want to adjust the start date of these
 Catchlim <- mh_cluster_ids |>
-  dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS" & REG_REMOVED == 0)
+  dplyr::filter(MANAGEMENT_CATEGORY == "CATCH LIMITS",
+                REG_REMOVED == 0)
 
 # Join by all columns
 mh_fy4_all <- mh_fy3_w |>
