@@ -10,41 +10,6 @@
 #' @examples gantt_FMP(fishhist)
 #' @export
 gantt_FMP <- function(data = fishhist) {
-  custom_title_case <- function(text) {
-    # 1. Convert everything to title case first using stringr::str_to_title
-    title_text <- stringr::str_to_title(text)
-
-    # 2. Words to force to LOWERCASE (unless they appear at the very start)
-    lower_words <- c("of", "the", "and", "in", "on",
-                     "at", "for", "to", "a", "an")
-    lower_pattern <- base::paste0(
-      "(?<!^)\\b(",
-      base::paste(stringr::str_to_title(lower_words), collapse = "|"),
-      ")\\b"
-    )
-
-    title_text <- stringr::str_replace_all(
-      title_text,
-      stringr::regex(lower_pattern),
-      function(m) stringr::str_to_lower(m)
-    )
-
-    # 3. Acronyms to force to UPPERCASE
-    upper_acronyms <- c("FMP", "EEZ", "U.S.")
-    upper_pattern <- base::paste0(
-      "\\b(",
-      base::paste(stringr::str_to_title(upper_acronyms), collapse = "|"),
-      ")\\b"
-    )
-
-    title_text <- stringr::str_replace_all(
-      title_text,
-      stringr::regex(upper_pattern, ignore_case = TRUE),
-      function(m) stringr::str_to_upper(m)
-    )
-
-    return(title_text)
-  }
 
   data_summary <- data |>
     dplyr::group_by(FMP) |>

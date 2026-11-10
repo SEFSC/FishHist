@@ -22,7 +22,7 @@ plot_species_timeline <- function(data = fishhist, spp, region) {
     dplyr::mutate(
       date = lubridate::ymd(EFFECTIVE_DATE),
       start_year = lubridate::year(EFFECTIVE_DATE),
-      MANAGEMENT_USE = stringr::str_to_title(dplyr::case_when(
+      MANAGEMENT_USE = custom_title_case(dplyr::case_when(
         MANAGEMENT_TYPECLEAN %in%
           c("BAG LIMIT", "CREW BAG LIMIT") ~
           "BAG LIMITS",
@@ -42,15 +42,7 @@ plot_species_timeline <- function(data = fishhist, spp, region) {
         MANAGEMENTCATEGORY == "GEAR REQUIREMENTS" ~ "GEAR REQUIREMENTS",
         MANAGEMENTCATEGORY == "CATCH LIMITS" ~ "CATCH LIMITS",
         TRUE ~ MANAGEMENT_TYPECLEAN
-      )),
-      # Fix IFQ and ITF that need to stay all cap
-      MANAGEMENT_USE = dplyr::case_when(
-        MANAGEMENT_USE == "Ifq Program Established" ~
-          "IFQ Program Established",
-        MANAGEMENT_USE == "Itq Program Established" ~
-          "ITQ Program Established",
-        TRUE ~ MANAGEMENT_USE
-      )
+      )))
     ) |>
     dplyr::group_by(COMMON_NAME_CLEAN, start_year,
                     MANAGEMENTCATEGORY, MANAGEMENT_USE) |>
