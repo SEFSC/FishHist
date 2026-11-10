@@ -9,7 +9,7 @@ plot_species_timeline(data = fishhist, spp, region)
 \arguments{
 \item{data}{A dataframe (default=fishhist)}
 
-\item{spp}{Filter to species of interest (common name)}
+\item{spp}{Filter to species of interest (common name).}
 
 \item{region}{Filter to region of interest}
 }

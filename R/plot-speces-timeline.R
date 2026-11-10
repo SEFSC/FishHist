@@ -3,9 +3,8 @@
 #' Timeline of management actions published for a species within a FMP
 #' (filter set to region)
 #'
-#' @param data A dataframe (default=fishhist)
-#' @param spp Filter to species of interest (common name)
-#' @param region Filter to region of interest
+#' @inheritParams common_args
+#'
 #' @return A ggplot object
 #'
 #' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED",

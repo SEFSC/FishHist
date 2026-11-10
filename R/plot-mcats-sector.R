@@ -3,8 +3,8 @@
 #' Percent of regulations by management type and sector
 #' (recreational vs. commercial)
 #'
-#' @param data A dataframe (default=fishhist)
-#' @param FMP_filter Filter to FMP of interest
+#' @inheritParams common_args
+#'
 #' @return A ggplot object
 #'
 #' @examples plot_mcats_sector(fishhist,

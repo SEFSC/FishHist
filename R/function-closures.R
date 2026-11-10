@@ -4,13 +4,12 @@
 #' Process closures to expand and incorporate all related mtypes for closures
 #' to know for a single day whether the fishery is open or closed
 #'
-#' @param data A dataframe (default=fishhist)
-#' @param spp Filter to species of interest (common name).
-#' @param region Filter to region of interest
+#' @inheritParams common_args
 #' @param start Process all closure-related management types starting from
 #'      a defined start date (formatted using `as.Date`)
 #' @param end Process all closure-related management types starting from
 #'      a defined end date (formatted using `as.Date`)
+#'
 #' @return A list where "data" is the full closure dataset (one row for each
 #'      day within the time series), "tab_sum_days_open" is a dataframe
 #'      summarizing the number of days the fishery is open within a strata
@@ -136,12 +135,12 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     dplyr::arrange(FMP, COMMON_NAME_CLEAN, REGION, ZONE_CLEAN, SECTOR_CLEAN,
                    SUBSECTOR_CLEAN, YEAR)
 
+  # Combine sector and subsector for plot label
+  summ_days_open_plotlab <- summ_days_open |> dplyr::mutate(
+    SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
   # Plot number of Days Open
-  plot_days_open <- ggplot2::ggplot(
-    summ_days_open |> dplyr::mutate(
-      SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN)),
-    ggplot2::aes(x = YEAR, y = Days_Open)
-  ) +
+  plot_days_open <- ggplot2::ggplot(summ_days_open_plotlab,
+    ggplot2::aes(x = YEAR, y = Days_Open)) +
     ggplot2::geom_col(fill = "steelblue") +
     ggplot2::geom_text(
       ggplot2::aes(label = Days_Open), vjust = -0.5, size = 2.5) +

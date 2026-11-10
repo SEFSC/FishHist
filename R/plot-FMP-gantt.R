@@ -4,7 +4,8 @@
 #' published within a Fishery Management Plan (FMP) within the
 #' Southeast Fisheries Management History dataset.
 #'
-#' @param data A dataframe (default=fishhist)
+#' @inheritParams common_args
+#'
 #' @return A ggplot object
 #'
 #' @examples gantt_FMP(fishhist)

@@ -8,8 +8,6 @@
 expand_status(x, y)
 }
 \arguments{
-\item{x}{A dataframe (default=fishhist)}
-
 \item{y}{Management type}
 }
 \value{

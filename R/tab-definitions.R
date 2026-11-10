@@ -3,8 +3,8 @@
 #' List containing separate tables of Definitions for each FMP with associated
 #' FR notice for reference
 #'
-#' @param data A dataframe (default=fishhist)
-#' @param FMP_filter Filter to FMP of interest
+#' @inheritParams common_args
+#'
 #' @return A flextable object
 #'
 #' @examples tab_definitions(fishhist,

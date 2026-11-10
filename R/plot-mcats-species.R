@@ -2,8 +2,7 @@
 #'
 #' Number of FRs published by management type and species
 #'
-#' @param data A dataframe (default=fishhist)
-#' @param FMP_filter Filter to FMP of interest
+#' @inheritParams common_args
 #'
 #' @return A ggplot object
 #'

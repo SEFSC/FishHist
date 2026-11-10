@@ -5,8 +5,9 @@
 #' that coincide with a recurring action (based on the management status field).
 #' In this function, the management type needs to be specified.
 #'
-#' @param x A dataframe (default=fishhist)
+#' @inheritParams common_args
 #' @param y Management type
+#'
 #' @return A dataframe where the management status is expanded for the
 #'          selected management type
 #'

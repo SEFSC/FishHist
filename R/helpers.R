@@ -1,7 +1,7 @@
 #' Formatting names for tables and plots
 #' @param text String to be formatted
 #' @keywords internal
-#' @NoRd
+#' @noRd
 custom_title_case <- function(text) {
 
   title_text <- stringr::str_to_title(text)
