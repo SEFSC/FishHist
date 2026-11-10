@@ -24,4 +24,6 @@ A ggplot object
 
 ``` r
 gantt_FMP(fishhist)
+#> Warning: Removed 14 rows containing missing values or values outside the scale range
+#> (`geom_segment()`).
 ```

@@ -27,6 +27,6 @@ A ggplot object
 
 ``` r
 plot_mcats_sector(fishhist,
-  FMP_filter = "REEF FISH RESOURCES OF THE GULF OF MEXICO")
+  FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")
 
 ```

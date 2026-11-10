@@ -25,7 +25,7 @@ A ggplot object
 ## Examples
 
 ``` r
-plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE
-  GULF OF MEXICO")
-#> Error in plot_mcats_spp(fishhist, FMP_filter = "REEF FISH RESOURCES OF THE\n  GULF OF MEXICO"): Check filters
+plot_mcats_spp(fishhist,
+    FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")
+
 ```

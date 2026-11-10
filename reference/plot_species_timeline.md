@@ -30,9 +30,7 @@ A ggplot object
 ## Examples
 
 ``` r
-plot_species_timeline(fishhist,
-  spp = "SNAPPER, RED", region =
-    "SOUTH ATLANTIC"
-)
+plot_species_timeline(fishhist, spp = "SNAPPER, RED",
+  region = "SOUTH ATLANTIC")
 
 ```
