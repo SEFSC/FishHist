@@ -9,9 +9,8 @@
 #' @return A ggplot object
 #'
 #' @examples plot_species_timeline(fishhist,
-#'   spp = "SNAPPER, RED", region =
-#'     "SOUTH ATLANTIC"
-#' )
+#'   spp = "SNAPPER, RED",
+#'   region = "SOUTH ATLANTIC")
 #'
 #' @export
 plot_species_timeline <- function(data = fishhist, spp, region) {
