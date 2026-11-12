@@ -13,7 +13,7 @@
 plot_mcats_spp <- function(data = fishhist, FMP_filter) {
 
   # Get end date for filter
-  dt <- with(na.omit(data["END_DATE"]), {
+  dt <- with(stats::na.omit(data["END_DATE"]), {
     tab <- table(END_DATE)
     as.Date(names(tab)[tab == max(tab)])
   })
