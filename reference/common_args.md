@@ -6,7 +6,7 @@ functions
 ## Usage
 
 ``` r
-common_args(data, na_rm)
+common_args(data, spp)
 ```
 
 ## Arguments
