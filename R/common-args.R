@@ -9,4 +9,7 @@
 #'
 #' @name common_args
 #' @keywords internal
-NULL
+common_args <- function(data, spp){
+  NULL # dummy function to fix issue with goodpractice::gp()
+}
+
