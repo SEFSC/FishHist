@@ -4,7 +4,7 @@
 
 <!-- badges: end -->
 
-## Overview
+### Overview
 
 Fisheries management history data are essential for properly
 understanding trends in fishery-dependent data as well as results from
@@ -14,25 +14,24 @@ Data Assessment and Review (SEDAR) process, management histories for an
 upcoming stock assessment were previously provided on a species by
 species basis, and often lacked consistent documentation to the FR
 notice where the rule was published. To standardize the collection of
-these data, a Southeast Fisheries Management History Database was build
+these data, a Southeast Fisheries Management History Database was built
 and populated for Federal Management Plans (FMPs) throughout the Gulf of
 America, South Atlantic, and U.S. Caribbean regions. Compilation of this
 database was a collaborative process involving South Atlantic Fishery
 Management Council (SAFMC), Gulf Fishery Management Council (GFMC),
 Southeast Regional Office (SERO), and Southeast Fisheries Science Center
-(SEFSC) personnel. Funding for this project beginning in 2020 was made
+(SEFSC) personnel. Funding for this project, beginning in 2020, was made
 possible through NOAA’s Fisheries Information System (FIS) program. In
-total, this project entered FRs from 16 FMPs within the Southeast
-region.
+total, FRs from 16 FMPs were entered from the Southeast region.
 
 Each record within the database contains a regulation from a FR notice,
-however in this raw format, the individual management actions are
-disjointed because each rule often overwrites or changes an existing
-rule. The FishHist data set within this package contains an
-analysis-ready Fisheries Management History data set that links and
-reconciles overlapping actions that modify or replace prior rules over
-time. Functions built within this package assist in visualizing and
-analyzing fisheries management history data for science and management.
+however in this unprocessed format, the individual management actions
+are disjointed because each rule often overwrites or changes an existing
+rule. The FishHist package provides an analysis-ready Fisheries
+Management History dataset that links and reconciles overlapping
+regulatory actions over time. Built-in functions further support
+visualizing and analyzing these data for scientific research and
+management.
 
 ## Installation
 
