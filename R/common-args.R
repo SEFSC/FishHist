@@ -9,5 +9,4 @@
 #'
 #' @name common_args
 #' @keywords internal
-#' @export
 NULL
