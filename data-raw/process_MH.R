@@ -1397,7 +1397,7 @@ lost_frs <- setdiff(mh_raw$FR_CITATION, fishhist$FR_CITATION)
 if (length(lost_frs) > 0) {
   warning(
     "FRs lost somewhere in processing code - ",
-    paste(lost_frs, collapse = ", ")
+    paste0(lost_frs, collapse = ", ")
   )
 }
 
