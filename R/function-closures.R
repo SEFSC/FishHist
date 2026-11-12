@@ -224,6 +224,7 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
     ggplot2::scale_fill_viridis_c(
       option = "magma", name = "% Days Open",
+      direction = -1,
       labels = scales::percent,
       limits = c(0, 1)) +
     ggplot2::scale_y_continuous(
