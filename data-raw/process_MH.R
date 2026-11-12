@@ -256,7 +256,7 @@ mh_setup <- mh_raw |>
         !is.na(END_MONTH) &
         !is.na(END_YEAR) ~
         as.Date(file.path(END_MONTH, END_DAY, END_YEAR),
-                format = "%m/%d/%Y")
+                format = "%m/%d/%Y"),
       TRUE ~ INEFFECTIVE_DATE
     ),
     # Added condition on 2/2/24 because of REG_ID 762
