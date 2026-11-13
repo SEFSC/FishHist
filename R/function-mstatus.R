@@ -6,10 +6,10 @@
 #' In this function, the management type needs to be specified.
 #'
 #' @inheritParams common_args
-#' @param y Management type
+#' @param y Management type.
 #'
 #' @return A dataframe where the management status is expanded for the
-#'          selected management type
+#'          selected management type.
 #'
 #' @examples expand_status(fishhist, "FISHING YEAR")
 #'

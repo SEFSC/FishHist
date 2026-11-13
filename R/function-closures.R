@@ -2,25 +2,34 @@
 #' within a region
 #'
 #' Process closures to expand and incorporate all related mtypes for closures
-#' to know for a single day whether the fishery is open or closed
+#' to know for a single day whether the fishery is open or closed.
 #'
 #' @inheritParams common_args
 #' @param start Process all closure-related management types starting from
-#'      a defined start date (formatted using `as.Date`)
+#'      a defined start date (formatted using \code{as.Date}).
 #' @param end Process all closure-related management types starting from
-#'      a defined end date (formatted using `as.Date`)
+#'      a defined end date (formatted using \code{as.Date}).
 #'
-#' @return A list where "data" is the full closure dataset (one row for each
-#'      day within the time series), "tab_sum_days_open" is a dataframe
-#'      summarizing the number of days the fishery is open within a strata
-#'      (year, region, zone, sector, subsector), "plot_days_open"  is a ggplot
-#'      plot object of the number of days open by year within a strata,
-#'      "tab_fr_dateranges" is a dataframe of the start and end date ranges
-#'      for the open and closed seasons by region, zone, sector subsector,
-#'      management type, and FR citation, "heatmap_open" is a ggplot object of
-#'      days open within a month and year (NOTE: this plot applies to zone ALL),
-#'      and "heatmap_closed" is a ggplot object of the days closed within
-#'      a month and year (NOTE: this plot applies to zone ALL)
+#' @return A list containing 6 items:
+#'      \itemize{
+#'      \item **data** is the full closure dataset where each row represents
+#'      a day within a time series. An additional field is added to indicate
+#'      whether that day the fishery is OPEN or CLOSED.
+#'      \item **tab_sum_days_open** is a dataframe summarizing the number of
+#'      days the fishery is open within a strata
+#'      (year, region, zone, sector, subsector).
+#'      \item **plot_days_open** is a ggplot plot object of the number of
+#'      days the fishery is open by year within a strata.
+#'      \item **tab_fr_dateranges** is a dataframe of the start and end date
+#'      ranges for the open and closed seasons by region, zone,
+#'      sector, subsector, management type, and FR citation.
+#'      \item **heatmap_open** is a ggplot object of the percent days open
+#'      within a month and year (NOTE: this plot applies to zone ALL).
+#'      \item **heatmap_closed** is a ggplot object of the percent days closed
+#'      within a month and year (NOTE: this plot applies to zone ALL).
+#'
+#'      The heatmap_open and heatmap_closed plots show the same information
+#'      two different ways and color coding.
 #'
 #' @examples process_closures(fishhist,
 #'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",

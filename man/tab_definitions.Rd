@@ -7,16 +7,16 @@
 tab_definitions(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{FMP_filter}{Filter to FMP of interest}
+\item{FMP_filter}{Filter to FMP of interest.}
 }
 \value{
-A flextable object
+A flextable object.
 }
 \description{
 List containing separate tables of Definitions for each FMP with associated
-FR notice for reference
+FR notice for reference.
 }
 \examples{
 tab_definitions(fishhist,

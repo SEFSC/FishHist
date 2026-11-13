@@ -1,10 +1,10 @@
 #' Plot of management categories recorded under an FMP for all managed species
 #'
-#' Number of FRs published by management type and species
+#' Number of FRs published by management type and species.
 #'
 #' @inheritParams common_args
 #'
-#' @return A ggplot object
+#' @return A ggplot object.
 #'
 #' @examples plot_mcats_spp(fishhist,
 #'     FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")

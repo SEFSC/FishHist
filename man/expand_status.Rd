@@ -8,11 +8,11 @@
 expand_status(x, y)
 }
 \arguments{
-\item{y}{Management type}
+\item{y}{Management type.}
 }
 \value{
 A dataframe where the management status is expanded for the
-         selected management type
+         selected management type.
 }
 \description{
 Function to create multiple rows of a regulation with distinct date ranges

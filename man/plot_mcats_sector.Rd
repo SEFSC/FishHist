@@ -7,16 +7,16 @@
 plot_mcats_sector(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{FMP_filter}{Filter to FMP of interest}
+\item{FMP_filter}{Filter to FMP of interest.}
 }
 \value{
-A ggplot object
+A ggplot object.
 }
 \description{
 Percent of regulations by management type and sector
-(recreational vs. commercial)
+(recreational vs. commercial).
 }
 \examples{
 plot_mcats_sector(fishhist,

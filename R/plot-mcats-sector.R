@@ -1,11 +1,11 @@
 #' Plot of management categories recorded under an FMP by sector
 #'
 #' Percent of regulations by management type and sector
-#' (recreational vs. commercial)
+#' (recreational vs. commercial).
 #'
 #' @inheritParams common_args
 #'
-#' @return A ggplot object
+#' @return A ggplot object.
 #'
 #' @examples plot_mcats_sector(fishhist,
 #'   FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")

@@ -1,11 +1,11 @@
 #' Table of definitions provided under each Federal Registrar (FR) notice
 #'
 #' List containing separate tables of Definitions for each FMP with associated
-#' FR notice for reference
+#' FR notice for reference.
 #'
 #' @inheritParams common_args
 #'
-#' @return A flextable object
+#' @return A flextable object.
 #'
 #' @examples tab_definitions(fishhist,
 #'    FMP_filter = "SNAPPER-GROUPER FISHERY OF THE SOUTH ATLANTIC REGION")

@@ -6,7 +6,7 @@
 #'
 #' @inheritParams common_args
 #'
-#' @return A ggplot object
+#' @return A ggplot object.
 #'
 #' @examples gantt_FMP(fishhist)
 #' @export

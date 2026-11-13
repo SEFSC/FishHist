@@ -7,15 +7,15 @@
 common_args(data, spp)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{spp}{Filter to species of interest (common name)}
+\item{spp}{Filter to species of interest (common name).}
 
-\item{region}{Filter to region of interest}
+\item{region}{Filter to region of interest.}
 
-\item{FMP_filter}{Filter to FMP of interest}
+\item{FMP_filter}{Filter to FMP of interest.}
 }
 \description{
-This script houses argument documentation shared across multiple functions
+This script houses argument documentation shared across multiple functions.
 }
 \keyword{internal}

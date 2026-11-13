@@ -1,11 +1,11 @@
 #' Timeline of management types recorded for a species within a region
 #'
 #' Timeline of management actions published for a species within a FMP
-#' (filter set to region)
+#' (filter set to region).
 #'
 #' @inheritParams common_args
 #'
-#' @return A ggplot object
+#' @return A ggplot object.
 #'
 #' @examples plot_species_timeline(fishhist, spp = "SNAPPER, RED",
 #'   region = "SOUTH ATLANTIC")

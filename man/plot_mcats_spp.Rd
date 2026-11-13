@@ -7,15 +7,15 @@
 plot_mcats_spp(data = fishhist, FMP_filter)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{FMP_filter}{Filter to FMP of interest}
+\item{FMP_filter}{Filter to FMP of interest.}
 }
 \value{
-A ggplot object
+A ggplot object.
 }
 \description{
-Number of FRs published by management type and species
+Number of FRs published by management type and species.
 }
 \examples{
 plot_mcats_spp(fishhist,

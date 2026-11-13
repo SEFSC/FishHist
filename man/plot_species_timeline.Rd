@@ -7,18 +7,18 @@
 plot_species_timeline(data = fishhist, spp, region)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{spp}{Filter to species of interest (common name)}
+\item{spp}{Filter to species of interest (common name).}
 
-\item{region}{Filter to region of interest}
+\item{region}{Filter to region of interest.}
 }
 \value{
-A ggplot object
+A ggplot object.
 }
 \description{
 Timeline of management actions published for a species within a FMP
-(filter set to region)
+(filter set to region).
 }
 \examples{
 plot_species_timeline(fishhist, spp = "SNAPPER, RED",

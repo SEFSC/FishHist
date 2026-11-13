@@ -3,7 +3,7 @@
 \docType{data}
 \name{fishhist}
 \alias{fishhist}
-\title{Management History data through 2026}
+\title{Management History data through 2026.}
 \format{
 A data frame with 45 variables:
 \describe{

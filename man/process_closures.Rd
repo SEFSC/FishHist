@@ -8,34 +8,24 @@ within a region}
 process_closures(data = fishhist, spp, region, start, end)
 }
 \arguments{
-\item{data}{A dataframe (default=fishhist)}
+\item{data}{A dataframe (default=fishhist).}
 
-\item{spp}{Filter to species of interest (common name)}
+\item{spp}{Filter to species of interest (common name).}
 
-\item{region}{Filter to region of interest}
+\item{region}{Filter to region of interest.}
 
 \item{start}{Process all closure-related management types starting from
-a defined start date (formatted using `as.Date`)}
+a defined start date (formatted using \code{as.Date}).}
 
 \item{end}{Process all closure-related management types starting from
-a defined end date (formatted using `as.Date`)}
+a defined end date (formatted using \code{as.Date}).}
 }
 \value{
-A list where "data" is the full closure dataset (one row for each
-     day within the time series), "tab_sum_days_open" is a dataframe
-     summarizing the number of days the fishery is open within a strata
-     (year, region, zone, sector, subsector), "plot_days_open"  is a ggplot
-     plot object of the number of days open by year within a strata,
-     "tab_fr_dateranges" is a dataframe of the start and end date ranges
-     for the open and closed seasons by region, zone, sector subsector,
-     management type, and FR citation, "heatmap_open" is a ggplot object of
-     days open within a month and year (NOTE: this plot applies to zone ALL),
-     and "heatmap_closed" is a ggplot object of the days closed within
-     a month and year (NOTE: this plot applies to zone ALL)
+
 }
 \description{
 Process closures to expand and incorporate all related mtypes for closures
-to know for a single day whether the fishery is open or closed
+to know for a single day whether the fishery is open or closed.
 }
 \examples{
 process_closures(fishhist,
