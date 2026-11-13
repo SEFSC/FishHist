@@ -1,9 +1,11 @@
-# Expand regulations based on the management status field (e.g. seasonal, monthly recurring, etc.)
+# Expand regulations based on the management status field
 
-Function to create multiple rows of a regulation with distinct date
-ranges that coincide with a recurring action (based on the management
-status field). In this function, the management type needs to be
-specified.
+Expand each regulation based on the start and end dates while
+incorporating the dates for the recurring action using the management
+status field. The management status may be once, seasonal, monthly
+recurring, weekly recurring, or daily recurring. However, daily
+recurring regulations are not being called at this time. In this
+function, the management type needs to be specified.
 
 ## Usage
 
@@ -69,9 +71,9 @@ most important indicating the rule in effect for each date:
 | VALUERATE_monthly | Chr | Value rate for regulation with status MONTHLY |
 | **FR_CITATION** | Chr | Maximum FR Citation across all status types (ONCE, WEEKLY, SEASONAL, and MONTHLY). The maximum FR Citation indicates the most recent FR |
 | **TIME** | Chr | Time that corresponds to the maximum FR Citation |
-| **VALUE** | Chr | Value that correspond to the maximum FR Citation |
-| **VALUEUNITS** | Chr | Value units that correspond to the maximum FR Citation |
-| **VALUETYPE** | Chr | Value type that correspond to the maximum FR Citation |
+| **VALUE** | Chr | Value that corresponds to the maximum FR Citation |
+| **VALUEUNITS** | Chr | Value units that corresponds to the maximum FR Citation |
+| **VALUETYPE** | Chr | Value type that corresponds to the maximum FR Citation |
 | **VALUERATE** | Chr | Value rate that correspond to the maximum FR Citation |
 
 ## Examples

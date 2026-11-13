@@ -93,8 +93,7 @@ The functions built within this package to visualize and format
 fisheries management data
 
 - [`expand_status()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/expand_status.md)
-  : Expand regulations based on the management status field (e.g.
-  seasonal, monthly recurring, etc.)
+  : Expand regulations based on the management status field
 - [`gantt_FMP()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/gantt_FMP.md)
   : Gantt chart of FMPs
 - [`plot_mcats_sector()`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/plot_mcats_sector.md)
