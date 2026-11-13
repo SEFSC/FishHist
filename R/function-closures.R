@@ -12,25 +12,27 @@
 #'
 #' @return A list containing 6 items:
 #'    \itemize{
-#'      \item **data** is the full closure dataset where each row represents
+#'      \item \strong{data} is the full closure dataset where each row represents
 #'      a day within a time series. An additional field is added to indicate
 #'      whether that day the fishery is OPEN or CLOSED.
-#'      \item **tab_sum_days_open** is a dataframe summarizing the number of
+#'      \item \strong{tab_sum_days_open} is a dataframe summarizing the number of
 #'      days the fishery is open within a strata
 #'      (year, region, zone, sector, subsector).
-#'      \item **plot_days_open** is a ggplot plot object of the number of
-#'      days the fishery is open by year within a strata.
-#'      \item **tab_fr_dateranges** is a dataframe of the start and end date
+#'      \item \strong{plot_days_open} is a ggplot plot object of the number of
+#'      days the fishery is open by year within a strata. The plot is faceted
+#'      to show a plot for each zone and sector-subsector.
+#'      \item \strong{tab_fr_dateranges} is a dataframe of the start and end date
 #'      ranges for the open and closed seasons by region, zone,
 #'      sector, subsector, management type, and FR citation.
-#'      \item **heatmap_open** is a ggplot object of the percent days open
+#'      \item \strong{heatmap_open} is a ggplot object of the percent days open
 #'      within a month and year (NOTE: this plot applies to zone ALL).
-#'      \item **heatmap_closed** is a ggplot object of the percent days closed
+#'      \item \strong{heatmap_closed} is a ggplot object of the percent days closed
 #'      within a month and year (NOTE: this plot applies to zone ALL).
 #'    }
 #'
 #'    The heatmap_open and heatmap_closed plots show the same information
 #'    two different ways and color coding.
+#'
 #'
 #' @examples process_closures(fishhist,
 #'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",
@@ -147,7 +149,10 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
 
   # Combine sector and subsector for plot label
   summ_days_open_plotlab <- summ_days_open |> dplyr::mutate(
-    SECT_SUBSECT = paste0(SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN))
+    ZONE_SECT_SUBSECT = paste0(
+      "Zone (", ZONE_CLEAN, ") ",
+      "Sector (", SECTOR_CLEAN, " - ", SUBSECTOR_CLEAN, ")")
+    )
   # Plot number of Days Open
   plot_days_open <- ggplot2::ggplot(summ_days_open_plotlab,
     ggplot2::aes(x = YEAR, y = Days_Open)) +
@@ -159,7 +164,7 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     ggplot2::scale_x_continuous(
       n.breaks = (max(summ_days_open$YEAR) - min(summ_days_open$YEAR)) / 3) +
     ggplot2::labs(x = "", y = "Number of Days Open") +
-    ggplot2::facet_wrap(~SECT_SUBSECT, ncol = 1) +
+    ggplot2::facet_wrap(~ZONE_SECT_SUBSECT, ncol = 1) +
     ggplot2::theme_bw()
 
   # Summarize table for start-end dates by management type and values
