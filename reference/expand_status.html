@@ -43,22 +43,69 @@ In this function, the management type needs to be specified.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">expand_status</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">expand_status</span><span class="op">(</span>data <span class="op">=</span> <span class="va">fishhist</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A dataframe (default=fishhist).</p></dd>
+
+
+<dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
 <dd><p>Management type.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A dataframe where the management status is expanded for the
-         selected management type.</p>
-    </div>
+   selected management type and each represents a day within
+   a time series. The status is formatted into wide to view how regulations
+   with differing status types are overwritten depending on the FR Citation.</p>
+<p>The resulting columns include the following:</p><table class="table table"><tr><td><em>Field</em></td><td><em>Data Type</em></td><td><em>Description</em></td></tr><tr><td>COMMON_NAME_CLEAN</td><td>Chr</td><td>Common name of species</td></tr><tr><td>REGION</td><td>Chr</td><td>Region</td></tr><tr><td>ZONE_CLEAN</td><td>Chr</td><td>Zone name</td></tr><tr><td>SECTOR_CLEAN</td><td>Chr</td><td>Sector name</td></tr><tr><td>SUBSECTOR_CLEAN</td><td>Chr</td><td>Subsector name</td></tr><tr><td>MANAGEMENT_TYPECLEAN</td><td>Chr</td><td>Management type</td></tr><tr><td>date_sequence</td><td>Date</td><td>Date within time series</td></tr><tr><td>TIME_one</td><td>Chr</td><td>Time for regulation with status
+                                        ONCE</td></tr><tr><td>CLUSTER_one</td><td>Int</td><td>Cluster ID for regulation with
+                                        status ONCE</td></tr><tr><td>REG_ID_one</td><td>Num</td><td>Regulation ID for regulation with
+                                        status ONCE</td></tr><tr><td>FR_CITATION_one</td><td>Chr</td><td>FR Citation for regulation with
+                                        status ONCE</td></tr><tr><td>VALUE_one</td><td>Chr</td><td>Value for regulation with status
+                                        ONCE</td></tr><tr><td>VALUEUNITS_one</td><td>Chr</td><td>Value units for regulation with
+                                        status ONCE</td></tr><tr><td>VALUETYPE_one</td><td>Chr</td><td>Value type for regulation with
+                                        status ONCE</td></tr><tr><td>VALUERATE_one</td><td>Chr</td><td>Value rate for regulation with
+                                        status ONCE</td></tr><tr><td>TIME_weekly</td><td>Chr</td><td>Time for regulation with status
+                                        WEEKLY</td></tr><tr><td>CLUSTER_weekly</td><td>Int</td><td>Cluster ID for regulation with
+                                        status WEEKLY</td></tr><tr><td>REG_ID_weekly</td><td>Num</td><td>Regulation ID for regulation with
+                                        status WEEKLY</td></tr><tr><td>FR_CITATION_weekly</td><td>Chr</td><td>FR Citation for regulation with
+                                        status WEEKLY</td></tr><tr><td>VALUE_weekly</td><td>Chr</td><td>Value for regulation with status
+                                        WEEKLY</td></tr><tr><td>VALUEUNITS_weekly</td><td>Chr</td><td>Value units for regulation with
+                                        status WEEKLY</td></tr><tr><td>VALUETYPE_weekly</td><td>Chr</td><td>Value type for regulation with
+                                        status WEEKLY</td></tr><tr><td>VALUERATE_weekly</td><td>Chr</td><td>Value rate for regulation with
+                                        status WEEKLY</td></tr><tr><td>TIME_seasonal</td><td>Chr</td><td>Time for regulation with status
+                                        SEASONAL</td></tr><tr><td>CLUSTER_seasonal</td><td>Int</td><td>Cluster ID for regulation with
+                                        status SEASONAL</td></tr><tr><td>REG_ID_seasonal</td><td>Num</td><td>Regulation ID for regulation with
+                                        status SEASONAL</td></tr><tr><td>FR_CITATION_seasonal</td><td>Chr</td><td>FR Citation for regulation with
+                                        status SEASONAL</td></tr><tr><td>VALUE_seasonal</td><td>Chr</td><td>Value for regulation with status
+                                        SEASONAL</td></tr><tr><td>VALUEUNITS_seasonal</td><td>Chr</td><td>Value units for regulation with
+                                        status SEASONAL</td></tr><tr><td>VALUETYPE_seasonal</td><td>Chr</td><td>Value type for regulation with
+                                        status SEASONAL</td></tr><tr><td>VALUERATE_seasonal</td><td>Chr</td><td>Value rate for regulation with
+                                        status SEASONAL</td></tr><tr><td>TIME_monthly</td><td>Chr</td><td>Time for regulation with status
+                                        MONTHLY</td></tr><tr><td>CLUSTER_monthly</td><td>Int</td><td>Cluster ID for regulation with
+                                        status MONTHLY</td></tr><tr><td>REG_ID_monthly</td><td>Num</td><td>Regulation ID for regulation with
+                                        status MONTHLY</td></tr><tr><td>FR_CITATION_monthly</td><td>Chr</td><td>FR Citation for regulation with
+                                        status MONTHLY</td></tr><tr><td>VALUE_monthly</td><td>Chr</td><td>Value for regulation with status
+                                        MONTHLY</td></tr><tr><td>VALUEUNITS_monthly</td><td>Chr</td><td>Value units for regulation with
+                                        status MONTHLY</td></tr><tr><td>VALUETYPE_monthly</td><td>Chr</td><td>Value type for regulation with
+                                        status MONTHLY</td></tr><tr><td>VALUERATE_monthly</td><td>Chr</td><td>Value rate for regulation with
+                                        status MONTHLY</td></tr><tr><td>FR_CITATION</td><td>Chr</td><td>Maximum FR Citation across all
+                                        status types (ONCE, WEEKLY,
+                                        SEASONAL, and MONTHLY). The maximum
+                                        FR Citation indicates the most
+                                        recent FR</td></tr><tr><td>TIME</td><td>Chr</td><td>Time that corresponds to the maximum
+                                        FR Citation</td></tr><tr><td>VALUE</td><td>Chr</td><td>Value that correspond to the maximum
+                                        FR Citation</td></tr><tr><td>VALUEUNITS</td><td>Chr</td><td>Value units that correspond to the
+                                        maximum FR Citation</td></tr><tr><td>VALUETYPE</td><td>Chr</td><td>Value type that correspond to the
+                                        maximum FR Citation</td></tr><tr><td>VALUERATE</td><td>Chr</td><td>Value rate that correspond to the
+                                        maximum FR Citation</td></tr></table></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

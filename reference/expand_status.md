@@ -8,10 +8,14 @@ specified.
 ## Usage
 
 ``` r
-expand_status(x, y)
+expand_status(data = fishhist, y)
 ```
 
 ## Arguments
+
+- data:
+
+  A dataframe (default=fishhist).
 
 - y:
 
@@ -20,7 +24,60 @@ expand_status(x, y)
 ## Value
 
 A dataframe where the management status is expanded for the selected
-management type.
+management type and each represents a day within a time series. The
+status is formatted into wide to view how regulations with differing
+status types are overwritten depending on the FR Citation.
+
+The resulting columns include the following:
+
+|  |  |  |
+|----|----|----|
+| *Field* | *Data Type* | *Description* |
+| COMMON_NAME_CLEAN | Chr | Common name of species |
+| REGION | Chr | Region |
+| ZONE_CLEAN | Chr | Zone name |
+| SECTOR_CLEAN | Chr | Sector name |
+| SUBSECTOR_CLEAN | Chr | Subsector name |
+| MANAGEMENT_TYPECLEAN | Chr | Management type |
+| date_sequence | Date | Date within time series |
+| TIME_one | Chr | Time for regulation with status ONCE |
+| CLUSTER_one | Int | Cluster ID for regulation with status ONCE |
+| REG_ID_one | Num | Regulation ID for regulation with status ONCE |
+| FR_CITATION_one | Chr | FR Citation for regulation with status ONCE |
+| VALUE_one | Chr | Value for regulation with status ONCE |
+| VALUEUNITS_one | Chr | Value units for regulation with status ONCE |
+| VALUETYPE_one | Chr | Value type for regulation with status ONCE |
+| VALUERATE_one | Chr | Value rate for regulation with status ONCE |
+| TIME_weekly | Chr | Time for regulation with status WEEKLY |
+| CLUSTER_weekly | Int | Cluster ID for regulation with status WEEKLY |
+| REG_ID_weekly | Num | Regulation ID for regulation with status WEEKLY |
+| FR_CITATION_weekly | Chr | FR Citation for regulation with status WEEKLY |
+| VALUE_weekly | Chr | Value for regulation with status WEEKLY |
+| VALUEUNITS_weekly | Chr | Value units for regulation with status WEEKLY |
+| VALUETYPE_weekly | Chr | Value type for regulation with status WEEKLY |
+| VALUERATE_weekly | Chr | Value rate for regulation with status WEEKLY |
+| TIME_seasonal | Chr | Time for regulation with status SEASONAL |
+| CLUSTER_seasonal | Int | Cluster ID for regulation with status SEASONAL |
+| REG_ID_seasonal | Num | Regulation ID for regulation with status SEASONAL |
+| FR_CITATION_seasonal | Chr | FR Citation for regulation with status SEASONAL |
+| VALUE_seasonal | Chr | Value for regulation with status SEASONAL |
+| VALUEUNITS_seasonal | Chr | Value units for regulation with status SEASONAL |
+| VALUETYPE_seasonal | Chr | Value type for regulation with status SEASONAL |
+| VALUERATE_seasonal | Chr | Value rate for regulation with status SEASONAL |
+| TIME_monthly | Chr | Time for regulation with status MONTHLY |
+| CLUSTER_monthly | Int | Cluster ID for regulation with status MONTHLY |
+| REG_ID_monthly | Num | Regulation ID for regulation with status MONTHLY |
+| FR_CITATION_monthly | Chr | FR Citation for regulation with status MONTHLY |
+| VALUE_monthly | Chr | Value for regulation with status MONTHLY |
+| VALUEUNITS_monthly | Chr | Value units for regulation with status MONTHLY |
+| VALUETYPE_monthly | Chr | Value type for regulation with status MONTHLY |
+| VALUERATE_monthly | Chr | Value rate for regulation with status MONTHLY |
+| FR_CITATION | Chr | Maximum FR Citation across all status types (ONCE, WEEKLY, SEASONAL, and MONTHLY). The maximum FR Citation indicates the most recent FR |
+| TIME | Chr | Time that corresponds to the maximum FR Citation |
+| VALUE | Chr | Value that correspond to the maximum FR Citation |
+| VALUEUNITS | Chr | Value units that correspond to the maximum FR Citation |
+| VALUETYPE | Chr | Value type that correspond to the maximum FR Citation |
+| VALUERATE | Chr | Value rate that correspond to the maximum FR Citation |
 
 ## Examples
 
