@@ -27,6 +27,7 @@
 #'      within a month and year (NOTE: this plot applies to zone ALL).
 #'      \item **heatmap_closed** is a ggplot object of the percent days closed
 #'      within a month and year (NOTE: this plot applies to zone ALL).
+#'      }
 #'
 #'      The heatmap_open and heatmap_closed plots show the same information
 #'      two different ways and color coding.
