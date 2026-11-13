@@ -95,16 +95,16 @@ process_closures <- function(data = fishhist, spp, region, start, end) {
     # IF there are two then take the CLOSE record because that overwrites OPEN
     dplyr::slice_max(
       order_by = tibble::tibble(
-        # Primary sort: Always pick the most recent citation first
+        # First - pick the most recent citation first
         FR_CITATION,
-        # Secondary sort: Conditional tie-breaker
+        # Second - tie-breaker
         is_close = dplyr::case_when(
-          # For 'fishing year', prioritize CLOSE over OPEN (CLOSE = TRUE, which
-          # ranks higher than FALSE)
+          # For fishing year, prioritize CLOSE over OPEN
           MANAGEMENT_TYPECLEAN == "FISHING YEAR" ~ (VALUE == "CLOSE"),
-          # For closures / other types, prioritize OPEN over CLOSE if applicable
+          # For closures, prioritize OPEN over CLOSE because these are the
+          # reopenings
           MANAGEMENT_TYPECLEAN == "CLOSURE" ~ (VALUE == "OPEN"),
-          # Default fallback for any other management types
+          # All else prioritize CLOSE
           TRUE ~ (VALUE == "CLOSE")
         )
       ),
