@@ -2,8 +2,7 @@
 % Please edit documentation in R/function-mstatus.R
 \name{expand_status}
 \alias{expand_status}
-\title{Expand regulations based on the management status field
-(e.g. seasonal, monthly recurring, etc.)}
+\title{Expand regulations based on the management status field}
 \usage{
 expand_status(data = fishhist, y)
 }
@@ -94,19 +93,22 @@ A dataframe where the management status is expanded for the
                                         recent FR\cr
     \strong{TIME}        \tab Chr  \tab Time that corresponds to the maximum
                                         FR Citation\cr
-    \strong{VALUE}       \tab Chr  \tab Value that correspond to the maximum
-                                        FR Citation\cr
-    \strong{VALUEUNITS}  \tab Chr  \tab Value units that correspond to the
+    \strong{VALUE}       \tab Chr  \tab Value that corresponds to the
                                         maximum FR Citation\cr
-    \strong{VALUETYPE}   \tab Chr  \tab Value type that correspond to the
+    \strong{VALUEUNITS}  \tab Chr  \tab Value units that corresponds to the
+                                        maximum FR Citation\cr
+    \strong{VALUETYPE}   \tab Chr  \tab Value type that corresponds to the
                                         maximum FR Citation\cr
     \strong{VALUERATE}   \tab Chr  \tab Value rate that correspond to the
                                         maximum FR Citation\cr
    }
 }
 \description{
-Function to create multiple rows of a regulation with distinct date ranges
-that coincide with a recurring action (based on the management status field).
+Expand each regulation based on the start and end dates while
+incorporating the dates for the recurring action using the management status
+field. The management status may be once, seasonal, monthly recurring,
+weekly recurring, or daily recurring. However, daily recurring regulations
+are not being called at this time.
 In this function, the management type needs to be specified.
 }
 \examples{
