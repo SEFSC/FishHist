@@ -18,15 +18,10 @@ A dataframe where the management status is expanded for the
    a time series. The status is formatted into wide to view how regulations
    with differing status types are overwritten depending on the FR Citation.
 
-   The resulting columns include the following:
+   The additional columns include the following. The fields in bold
+   are the most important indicating the rule in effect for each date:
    \tabular{lll}{
     \emph{Field}         \tab \emph{Data Type} \tab \emph{Description}\cr
-    COMMON_NAME_CLEAN    \tab Chr  \tab Common name of species\cr
-    REGION               \tab Chr  \tab Region\cr
-    ZONE_CLEAN           \tab Chr  \tab Zone name\cr
-    SECTOR_CLEAN         \tab Chr  \tab Sector name\cr
-    SUBSECTOR_CLEAN      \tab Chr  \tab Subsector name\cr
-    MANAGEMENT_TYPECLEAN \tab Chr  \tab Management type\cr
     date_sequence        \tab Date \tab Date within time series\cr
     TIME_one             \tab Chr  \tab Time for regulation with status
                                         ONCE\cr
@@ -92,20 +87,20 @@ A dataframe where the management status is expanded for the
                                         status MONTHLY\cr
     VALUERATE_monthly    \tab Chr  \tab Value rate for regulation with
                                         status MONTHLY\cr
-    FR_CITATION          \tab Chr  \tab Maximum FR Citation across all
+    \strong{FR_CITATION} \tab Chr  \tab Maximum FR Citation across all
                                         status types (ONCE, WEEKLY,
                                         SEASONAL, and MONTHLY). The maximum
                                         FR Citation indicates the most
                                         recent FR\cr
-    TIME                 \tab Chr  \tab Time that corresponds to the maximum
+    \strong{TIME}        \tab Chr  \tab Time that corresponds to the maximum
                                         FR Citation\cr
-    VALUE                \tab Chr  \tab Value that correspond to the maximum
+    \strong{VALUE}       \tab Chr  \tab Value that correspond to the maximum
                                         FR Citation\cr
-    VALUEUNITS           \tab Chr  \tab Value units that correspond to the
+    \strong{VALUEUNITS}  \tab Chr  \tab Value units that correspond to the
                                         maximum FR Citation\cr
-    VALUETYPE            \tab Chr  \tab Value type that correspond to the
+    \strong{VALUETYPE}   \tab Chr  \tab Value type that correspond to the
                                         maximum FR Citation\cr
-    VALUERATE            \tab Chr  \tab Value rate that correspond to the
+    \strong{VALUERATE}   \tab Chr  \tab Value rate that correspond to the
                                         maximum FR Citation\cr
    }
 }
