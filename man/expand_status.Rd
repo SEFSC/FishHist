@@ -5,14 +5,109 @@
 \title{Expand regulations based on the management status field
 (e.g. seasonal, monthly recurring, etc.)}
 \usage{
-expand_status(x, y)
+expand_status(data = fishhist, y)
 }
 \arguments{
+\item{data}{A dataframe (default=fishhist).}
+
 \item{y}{Management type.}
 }
 \value{
 A dataframe where the management status is expanded for the
-         selected management type.
+   selected management type and each represents a day within
+   a time series. The status is formatted into wide to view how regulations
+   with differing status types are overwritten depending on the FR Citation.
+
+   The resulting columns include the following:
+   \tabular{lll}{
+    \emph{Field}         \tab \emph{Data Type} \tab \emph{Description}\cr
+    COMMON_NAME_CLEAN    \tab Chr  \tab Common name of species\cr
+    REGION               \tab Chr  \tab Region\cr
+    ZONE_CLEAN           \tab Chr  \tab Zone name\cr
+    SECTOR_CLEAN         \tab Chr  \tab Sector name\cr
+    SUBSECTOR_CLEAN      \tab Chr  \tab Subsector name\cr
+    MANAGEMENT_TYPECLEAN \tab Chr  \tab Management type\cr
+    date_sequence        \tab Date \tab Date within time series\cr
+    TIME_one             \tab Chr  \tab Time for regulation with status
+                                        ONCE\cr
+    CLUSTER_one          \tab Int  \tab Cluster ID for regulation with
+                                        status ONCE\cr
+    REG_ID_one           \tab Num  \tab Regulation ID for regulation with
+                                        status ONCE\cr
+    FR_CITATION_one      \tab Chr  \tab FR Citation for regulation with
+                                        status ONCE\cr
+    VALUE_one            \tab Chr  \tab Value for regulation with status
+                                        ONCE\cr
+    VALUEUNITS_one       \tab Chr  \tab Value units for regulation with
+                                        status ONCE\cr
+    VALUETYPE_one        \tab Chr  \tab Value type for regulation with
+                                        status ONCE\cr
+    VALUERATE_one        \tab Chr  \tab Value rate for regulation with
+                                        status ONCE\cr
+    TIME_weekly          \tab Chr  \tab Time for regulation with status
+                                        WEEKLY\cr
+    CLUSTER_weekly       \tab Int  \tab Cluster ID for regulation with
+                                        status WEEKLY\cr
+    REG_ID_weekly        \tab Num  \tab Regulation ID for regulation with
+                                        status WEEKLY\cr
+    FR_CITATION_weekly   \tab Chr  \tab FR Citation for regulation with
+                                        status WEEKLY\cr
+    VALUE_weekly         \tab Chr  \tab Value for regulation with status
+                                        WEEKLY\cr
+    VALUEUNITS_weekly    \tab Chr  \tab Value units for regulation with
+                                        status WEEKLY\cr
+    VALUETYPE_weekly     \tab Chr  \tab Value type for regulation with
+                                        status WEEKLY\cr
+    VALUERATE_weekly     \tab Chr  \tab Value rate for regulation with
+                                        status WEEKLY\cr
+    TIME_seasonal        \tab Chr  \tab Time for regulation with status
+                                        SEASONAL\cr
+    CLUSTER_seasonal     \tab Int  \tab Cluster ID for regulation with
+                                        status SEASONAL\cr
+    REG_ID_seasonal      \tab Num  \tab Regulation ID for regulation with
+                                        status SEASONAL\cr
+    FR_CITATION_seasonal \tab Chr  \tab FR Citation for regulation with
+                                        status SEASONAL\cr
+    VALUE_seasonal       \tab Chr  \tab Value for regulation with status
+                                        SEASONAL\cr
+    VALUEUNITS_seasonal  \tab Chr  \tab Value units for regulation with
+                                        status SEASONAL\cr
+    VALUETYPE_seasonal   \tab Chr  \tab Value type for regulation with
+                                        status SEASONAL\cr
+    VALUERATE_seasonal   \tab Chr  \tab Value rate for regulation with
+                                        status SEASONAL\cr
+    TIME_monthly         \tab Chr  \tab Time for regulation with status
+                                        MONTHLY\cr
+    CLUSTER_monthly      \tab Int  \tab Cluster ID for regulation with
+                                        status MONTHLY\cr
+    REG_ID_monthly       \tab Num  \tab Regulation ID for regulation with
+                                        status MONTHLY\cr
+    FR_CITATION_monthly  \tab Chr  \tab FR Citation for regulation with
+                                        status MONTHLY\cr
+    VALUE_monthly        \tab Chr  \tab Value for regulation with status
+                                        MONTHLY\cr
+    VALUEUNITS_monthly   \tab Chr  \tab Value units for regulation with
+                                        status MONTHLY\cr
+    VALUETYPE_monthly    \tab Chr  \tab Value type for regulation with
+                                        status MONTHLY\cr
+    VALUERATE_monthly    \tab Chr  \tab Value rate for regulation with
+                                        status MONTHLY\cr
+    FR_CITATION          \tab Chr  \tab Maximum FR Citation across all
+                                        status types (ONCE, WEEKLY,
+                                        SEASONAL, and MONTHLY). The maximum
+                                        FR Citation indicates the most
+                                        recent FR\cr
+    TIME                 \tab Chr  \tab Time that corresponds to the maximum
+                                        FR Citation\cr
+    VALUE                \tab Chr  \tab Value that correspond to the maximum
+                                        FR Citation\cr
+    VALUEUNITS           \tab Chr  \tab Value units that correspond to the
+                                        maximum FR Citation\cr
+    VALUETYPE            \tab Chr  \tab Value type that correspond to the
+                                        maximum FR Citation\cr
+    VALUERATE            \tab Chr  \tab Value rate that correspond to the
+                                        maximum FR Citation\cr
+   }
 }
 \description{
 Function to create multiple rows of a regulation with distinct date ranges
