@@ -15,12 +15,12 @@ expand_status(x, y)
 
 - y:
 
-  Management type
+  Management type.
 
 ## Value
 
 A dataframe where the management status is expanded for the selected
-management type
+management type.
 
 ## Examples
 

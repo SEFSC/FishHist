@@ -1,7 +1,7 @@
 # Plot of management categories recorded under an FMP by sector
 
 Percent of regulations by management type and sector (recreational vs.
-commercial)
+commercial).
 
 ## Usage
 
@@ -13,15 +13,15 @@ plot_mcats_sector(data = fishhist, FMP_filter)
 
 - data:
 
-  A dataframe (default=fishhist)
+  A dataframe (default=fishhist).
 
 - FMP_filter:
 
-  Filter to FMP of interest
+  Filter to FMP of interest.
 
 ## Value
 
-A ggplot object
+A ggplot object.
 
 ## Examples
 

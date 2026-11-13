@@ -1,6 +1,6 @@
 # Plot of management categories recorded under an FMP for all managed species
 
-Number of FRs published by management type and species
+Number of FRs published by management type and species.
 
 ## Usage
 
@@ -12,15 +12,15 @@ plot_mcats_spp(data = fishhist, FMP_filter)
 
 - data:
 
-  A dataframe (default=fishhist)
+  A dataframe (default=fishhist).
 
 - FMP_filter:
 
-  Filter to FMP of interest
+  Filter to FMP of interest.
 
 ## Value
 
-A ggplot object
+A ggplot object.
 
 ## Examples
 

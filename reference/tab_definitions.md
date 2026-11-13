@@ -1,7 +1,7 @@
 # Table of definitions provided under each Federal Registrar (FR) notice
 
 List containing separate tables of Definitions for each FMP with
-associated FR notice for reference
+associated FR notice for reference.
 
 ## Usage
 
@@ -13,15 +13,15 @@ tab_definitions(data = fishhist, FMP_filter)
 
 - data:
 
-  A dataframe (default=fishhist)
+  A dataframe (default=fishhist).
 
 - FMP_filter:
 
-  Filter to FMP of interest
+  Filter to FMP of interest.
 
 ## Value
 
-A flextable object
+A flextable object.
 
 ## Examples
 

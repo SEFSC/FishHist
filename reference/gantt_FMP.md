@@ -14,11 +14,11 @@ gantt_FMP(data = fishhist)
 
 - data:
 
-  A dataframe (default=fishhist)
+  A dataframe (default=fishhist).
 
 ## Value
 
-A ggplot object
+A ggplot object.
 
 ## Examples
 

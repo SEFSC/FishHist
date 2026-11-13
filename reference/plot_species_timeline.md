@@ -1,7 +1,7 @@
 # Timeline of management types recorded for a species within a region
 
 Timeline of management actions published for a species within a FMP
-(filter set to region)
+(filter set to region).
 
 ## Usage
 
@@ -13,19 +13,19 @@ plot_species_timeline(data = fishhist, spp, region)
 
 - data:
 
-  A dataframe (default=fishhist)
+  A dataframe (default=fishhist).
 
 - spp:
 
-  Filter to species of interest (common name)
+  Filter to species of interest (common name).
 
 - region:
 
-  Filter to region of interest
+  Filter to region of interest.
 
 ## Value
 
-A ggplot object
+A ggplot object.
 
 ## Examples
 

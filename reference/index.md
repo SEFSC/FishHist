@@ -30,4 +30,4 @@ Example processed analysis-ready Southeast Fisheries Management Dataset
 that can be used for practicing use of the package’s functions
 
 - [`fishhist`](https://supreme-broccoli-2mkenmw.pages.github.io/reference/fishhist.md)
-  : Management History data through 2026
+  : Management History data through 2026.
