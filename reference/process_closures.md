@@ -37,25 +37,26 @@ process_closures(data = fishhist, spp, region, start, end)
 
 A list containing 6 items:
 
-- \*\*data\*\* is the full closure dataset where each row represents a
-  day within a time series. An additional field is added to indicate
-  whether that day the fishery is OPEN or CLOSED.
+- **data** is the full closure dataset where each row represents a day
+  within a time series. An additional field is added to indicate whether
+  that day the fishery is OPEN or CLOSED.
 
-- \*\*tab_sum_days_open\*\* is a dataframe summarizing the number of
-  days the fishery is open within a strata (year, region, zone, sector,
+- **tab_sum_days_open** is a dataframe summarizing the number of days
+  the fishery is open within a strata (year, region, zone, sector,
   subsector).
 
-- \*\*plot_days_open\*\* is a ggplot plot object of the number of days
-  the fishery is open by year within a strata.
+- **plot_days_open** is a ggplot plot object of the number of days the
+  fishery is open by year within a strata. The plot is faceted to show a
+  plot for each zone and sector-subsector.
 
-- \*\*tab_fr_dateranges\*\* is a dataframe of the start and end date
-  ranges for the open and closed seasons by region, zone, sector,
-  subsector, management type, and FR citation.
+- **tab_fr_dateranges** is a dataframe of the start and end date ranges
+  for the open and closed seasons by region, zone, sector, subsector,
+  management type, and FR citation.
 
-- \*\*heatmap_open\*\* is a ggplot object of the percent days open
-  within a month and year (NOTE: this plot applies to zone ALL).
+- **heatmap_open** is a ggplot object of the percent days open within a
+  month and year (NOTE: this plot applies to zone ALL).
 
-- \*\*heatmap_closed\*\* is a ggplot object of the percent days closed
+- **heatmap_closed** is a ggplot object of the percent days closed
   within a month and year (NOTE: this plot applies to zone ALL).
 
 The heatmap_open and heatmap_closed plots show the same information two
