@@ -28,17 +28,12 @@ management type and each represents a day within a time series. The
 status is formatted into wide to view how regulations with differing
 status types are overwritten depending on the FR Citation.
 
-The resulting columns include the following:
+The additional columns include the following. The fields in bold are the
+most important indicating the rule in effect for each date:
 
 |  |  |  |
 |----|----|----|
 | *Field* | *Data Type* | *Description* |
-| COMMON_NAME_CLEAN | Chr | Common name of species |
-| REGION | Chr | Region |
-| ZONE_CLEAN | Chr | Zone name |
-| SECTOR_CLEAN | Chr | Sector name |
-| SUBSECTOR_CLEAN | Chr | Subsector name |
-| MANAGEMENT_TYPECLEAN | Chr | Management type |
 | date_sequence | Date | Date within time series |
 | TIME_one | Chr | Time for regulation with status ONCE |
 | CLUSTER_one | Int | Cluster ID for regulation with status ONCE |
@@ -72,12 +67,12 @@ The resulting columns include the following:
 | VALUEUNITS_monthly | Chr | Value units for regulation with status MONTHLY |
 | VALUETYPE_monthly | Chr | Value type for regulation with status MONTHLY |
 | VALUERATE_monthly | Chr | Value rate for regulation with status MONTHLY |
-| FR_CITATION | Chr | Maximum FR Citation across all status types (ONCE, WEEKLY, SEASONAL, and MONTHLY). The maximum FR Citation indicates the most recent FR |
-| TIME | Chr | Time that corresponds to the maximum FR Citation |
-| VALUE | Chr | Value that correspond to the maximum FR Citation |
-| VALUEUNITS | Chr | Value units that correspond to the maximum FR Citation |
-| VALUETYPE | Chr | Value type that correspond to the maximum FR Citation |
-| VALUERATE | Chr | Value rate that correspond to the maximum FR Citation |
+| **FR_CITATION** | Chr | Maximum FR Citation across all status types (ONCE, WEEKLY, SEASONAL, and MONTHLY). The maximum FR Citation indicates the most recent FR |
+| **TIME** | Chr | Time that corresponds to the maximum FR Citation |
+| **VALUE** | Chr | Value that correspond to the maximum FR Citation |
+| **VALUEUNITS** | Chr | Value units that correspond to the maximum FR Citation |
+| **VALUETYPE** | Chr | Value type that correspond to the maximum FR Citation |
+| **VALUERATE** | Chr | Value rate that correspond to the maximum FR Citation |
 
 ## Examples
 

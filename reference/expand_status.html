@@ -64,7 +64,8 @@ In this function, the management type needs to be specified.</p>
    selected management type and each represents a day within
    a time series. The status is formatted into wide to view how regulations
    with differing status types are overwritten depending on the FR Citation.</p>
-<p>The resulting columns include the following:</p><table class="table table"><tr><td><em>Field</em></td><td><em>Data Type</em></td><td><em>Description</em></td></tr><tr><td>COMMON_NAME_CLEAN</td><td>Chr</td><td>Common name of species</td></tr><tr><td>REGION</td><td>Chr</td><td>Region</td></tr><tr><td>ZONE_CLEAN</td><td>Chr</td><td>Zone name</td></tr><tr><td>SECTOR_CLEAN</td><td>Chr</td><td>Sector name</td></tr><tr><td>SUBSECTOR_CLEAN</td><td>Chr</td><td>Subsector name</td></tr><tr><td>MANAGEMENT_TYPECLEAN</td><td>Chr</td><td>Management type</td></tr><tr><td>date_sequence</td><td>Date</td><td>Date within time series</td></tr><tr><td>TIME_one</td><td>Chr</td><td>Time for regulation with status
+<p>The additional columns include the following. The fields in bold
+   are the most important indicating the rule in effect for each date:</p><table class="table table"><tr><td><em>Field</em></td><td><em>Data Type</em></td><td><em>Description</em></td></tr><tr><td>date_sequence</td><td>Date</td><td>Date within time series</td></tr><tr><td>TIME_one</td><td>Chr</td><td>Time for regulation with status
                                         ONCE</td></tr><tr><td>CLUSTER_one</td><td>Int</td><td>Cluster ID for regulation with
                                         status ONCE</td></tr><tr><td>REG_ID_one</td><td>Num</td><td>Regulation ID for regulation with
                                         status ONCE</td></tr><tr><td>FR_CITATION_one</td><td>Chr</td><td>FR Citation for regulation with
@@ -96,15 +97,15 @@ In this function, the management type needs to be specified.</p>
                                         MONTHLY</td></tr><tr><td>VALUEUNITS_monthly</td><td>Chr</td><td>Value units for regulation with
                                         status MONTHLY</td></tr><tr><td>VALUETYPE_monthly</td><td>Chr</td><td>Value type for regulation with
                                         status MONTHLY</td></tr><tr><td>VALUERATE_monthly</td><td>Chr</td><td>Value rate for regulation with
-                                        status MONTHLY</td></tr><tr><td>FR_CITATION</td><td>Chr</td><td>Maximum FR Citation across all
+                                        status MONTHLY</td></tr><tr><td><strong>FR_CITATION</strong></td><td>Chr</td><td>Maximum FR Citation across all
                                         status types (ONCE, WEEKLY,
                                         SEASONAL, and MONTHLY). The maximum
                                         FR Citation indicates the most
-                                        recent FR</td></tr><tr><td>TIME</td><td>Chr</td><td>Time that corresponds to the maximum
-                                        FR Citation</td></tr><tr><td>VALUE</td><td>Chr</td><td>Value that correspond to the maximum
-                                        FR Citation</td></tr><tr><td>VALUEUNITS</td><td>Chr</td><td>Value units that correspond to the
-                                        maximum FR Citation</td></tr><tr><td>VALUETYPE</td><td>Chr</td><td>Value type that correspond to the
-                                        maximum FR Citation</td></tr><tr><td>VALUERATE</td><td>Chr</td><td>Value rate that correspond to the
+                                        recent FR</td></tr><tr><td><strong>TIME</strong></td><td>Chr</td><td>Time that corresponds to the maximum
+                                        FR Citation</td></tr><tr><td><strong>VALUE</strong></td><td>Chr</td><td>Value that correspond to the maximum
+                                        FR Citation</td></tr><tr><td><strong>VALUEUNITS</strong></td><td>Chr</td><td>Value units that correspond to the
+                                        maximum FR Citation</td></tr><tr><td><strong>VALUETYPE</strong></td><td>Chr</td><td>Value type that correspond to the
+                                        maximum FR Citation</td></tr><tr><td><strong>VALUERATE</strong></td><td>Chr</td><td>Value rate that correspond to the
                                         maximum FR Citation</td></tr></table></div>
 
     <div class="section level2">
