@@ -6,12 +6,12 @@
 #'
 #' @inheritParams common_args
 #' @param start Process all closure-related management types starting from
-#'      a defined start date (formatted using \code{as.Date}).
+#'    a defined start date (formatted using \code{as.Date}).
 #' @param end Process all closure-related management types starting from
-#'      a defined end date (formatted using \code{as.Date}).
+#'    a defined end date (formatted using \code{as.Date}).
 #'
 #' @return A list containing 6 items:
-#'      \itemize{
+#'    \itemize{
 #'      \item **data** is the full closure dataset where each row represents
 #'      a day within a time series. An additional field is added to indicate
 #'      whether that day the fishery is OPEN or CLOSED.
@@ -27,10 +27,10 @@
 #'      within a month and year (NOTE: this plot applies to zone ALL).
 #'      \item **heatmap_closed** is a ggplot object of the percent days closed
 #'      within a month and year (NOTE: this plot applies to zone ALL).
-#'      }
+#'    }
 #'
-#'      The heatmap_open and heatmap_closed plots show the same information
-#'      two different ways and color coding.
+#'    The heatmap_open and heatmap_closed plots show the same information
+#'    two different ways and color coding.
 #'
 #' @examples process_closures(fishhist,
 #'   spp = "SNAPPER, RED", region = "SOUTH ATLANTIC",
