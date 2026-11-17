@@ -1,4 +1,4 @@
-url: https://supreme-broccoli-2mkenmw.pages.github.io/
+url: https://sefsc.github.io/FishHist/
 template:
   bootstrap: 5
 reference:
@@ -17,4 +17,3 @@ reference:
   desc: >
     Example processed analysis-ready Southeast Fisheries Management Dataset that can be used for practicing use of the package's functions
   contents: fishhist
-
