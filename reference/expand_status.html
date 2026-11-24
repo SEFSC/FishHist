@@ -120,22 +120,22 @@ In this function, the management type needs to be specified.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">expand_status</span><span class="op">(</span><span class="va">fishhist</span>, <span class="st">"FISHING YEAR"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7,079,973 × 49</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7,072,111 × 49</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    FMP          COMMON_NAME_CLEAN REGION ZONE_CLEAN SECTOR_CLEAN SUBSECTOR_CLEAN</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        RECREATIONAL ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> SHRIMP FISH… SHRIMP, ROYAL RED GULF … ALL        RECREATIONAL ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> SHRIMP FISH… SHRIMP, ROYAL RED GULF … ALL        COMMERCIAL   ALL            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        RECREATIONAL ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        RECREATIONAL ALL            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        RECREATIONAL ALL            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        COMMERCIAL   ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SHRIMP FISH… SHRIMP, ROCK      GULF … ALL        RECREATIONAL ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SHRIMP FISH… SHRIMP, ROCK      GULF … ALL        COMMERCIAL   ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SHRIMP FISH… SHRIMP, ATLANIC … GULF … ALL        RECREATIONAL ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SHRIMP FISH… SHRIMP, ATLANIC … GULF … ALL        COMMERCIAL   ALL            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 7,079,963 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SHRIMP FISH… SHRIMP, NORTHERN… GULF … ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SHRIMP FISH… SHRIMP, ROYAL RED GULF … ALL        RECREATIONAL ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SHRIMP FISH… SHRIMP, ROYAL RED GULF … ALL        COMMERCIAL   ALL            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 7,072,101 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 43 more variables: MANAGEMENT_TYPECLEAN &lt;chr&gt;, date_sequence &lt;date&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   TIME_one &lt;chr&gt;, CLUSTER_one &lt;int&gt;, REG_ID_one &lt;dbl&gt;, FR_CITATION_one &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   TIME_one &lt;chr&gt;, CLUSTER_one &lt;dbl&gt;, REG_ID_one &lt;dbl&gt;, FR_CITATION_one &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   VALUE_one &lt;chr&gt;, VALUEUNITS_one &lt;chr&gt;, VALUETYPE_one &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   VALUERATE_one &lt;chr&gt;, MULTI_REG_VALUE &lt;dbl&gt;, CLUSTER_weekly &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   REG_ID_weekly &lt;dbl&gt;, FR_CITATION_weekly &lt;chr&gt;, TIME_weekly &lt;chr&gt;,</span></span>
