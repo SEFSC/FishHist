@@ -1250,7 +1250,7 @@ mh_expanded <- mh_sp_expanded |>
     RM_SPP = dplyr::case_when(
       REMOVED_SP_DATE < START_DATE_USE ~ 1,
       ADDED_SP_DATE > START_DATE_USE & END_DATE < ADDED_SP_DATE ~ 1,
-      REMOVED_SP_DATE == START_DATE_USE ~ 1,
+      REMOVED_SP_DATE == START_DATE_USE & START_DATE_USE != END_DATE ~ 1,
       TRUE ~ 0
     ),
     # CREATE: the variable of START_DATE2 to adjust the START_DATE_USE
