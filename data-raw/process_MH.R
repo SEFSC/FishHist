@@ -9,7 +9,7 @@ library(tibble) # add_column
 
 set_end_timeseries <- "2026-12-31"
 
-mh_raw <- read.csv("data-raw/MH_DOWNLOAD_OCT_28_2026.csv",
+mh_raw <- read.csv("data-raw/MH_DOWNLOAD_NOV_24_2026.csv",
   stringsAsFactors = FALSE,
   colClasses = c(
     "REGULATION_ID" = "numeric",
@@ -107,8 +107,9 @@ mh_setup <- mh_raw |>
   # CREATE: vol and page but pulling out the volume and page number as separate
   # fields from the FR_CITATION
   dplyr::mutate(
-    vol = as.numeric(sub(" FR.*", "", FR_CITATION, fixed = TRUE)),
-    page = as.numeric(sub(".*FR ", "", FR_CITATION, fixed = TRUE)),
+    ZONE_USE = dplyr::case_when(is.na(ZONE_USE) ~ ZONE, TRUE ~ ZONE_USE),
+    vol  = as.numeric(stringr::str_extract(FR_CITATION, "^\\s*\\d+")),
+    page = as.numeric(stringr::str_extract(FR_CITATION, "(?<=FR\\s)\\d+")),
     # CREATE: ADJUSTMENT variable to flag when the MANAGEMENT_TYPE
     # contains the word "ADJUSTMENT" and remove "ADJUSTMENT" from
     # the MANAGEMENT_TYPE name
@@ -120,8 +121,7 @@ mh_setup <- mh_raw |>
     # ended at the end of the calendar year was being flagged as an
     # adjustment instead of ceasing to exist.
     ADJUSTMENT = dplyr::case_when(
-      stringr::str_detect(
-        MANAGEMENT_TYPE, "ADJUSTMENT", fixed = TRUE) ~ 1,
+      stringr::str_detect(MANAGEMENT_TYPE, stringr::fixed("ADJUSTMENT")) ~ 1,
       MANAGEMENT_CATEGORY == "TEMPORAL CONTROLS" &
         lubridate::month(INEFFECTIVE_DATE) == 12 &
         lubridate::day(INEFFECTIVE_DATE) == 31 ~ 0,
@@ -130,9 +130,9 @@ mh_setup <- mh_raw |>
     ),
     MANAGEMENT_TYPE_USE = dplyr::case_when(
       stringr::str_detect(
-        MANAGEMENT_TYPE, "ADJUSTMENT", fixed = TRUE) ~
+        MANAGEMENT_TYPE, stringr::fixed("ADJUSTMENT")) ~
         stringr::str_replace(
-          MANAGEMENT_TYPE, " ADJUSTMENT", "", fixed = TRUE),
+          MANAGEMENT_TYPE, stringr::fixed(" ADJUSTMENT"), ""),
       TRUE ~ MANAGEMENT_TYPE
     ),
     # Rename records with the MANAGEMENT_TYPE of REOPENING to the
@@ -335,7 +335,7 @@ mh_setup <- mh_raw |>
 ##################### Species Expansion Fishing Year and Fishing Season #######
 
 # Read in sp_info_use
-sp_info_use <- readRDS("data-raw/MH_spp_table_20261028.RDS") |>
+sp_info_use <- readRDS("data-raw/MH_spp_table_20261124.RDS") |>
   dplyr::mutate(
     SPP_NAME = stringr::str_replace_all(SPP_NAME, stringr::fixed("?"), "—"))
 
@@ -1156,7 +1156,10 @@ mh_dates_adjust <- mh_combine |>
         (START_DATE >= EFFECTIVE_DATE_FY_2 | lubridate::year(START_DATE) ==
            lubridate::year(EFFECTIVE_DATE_FY_2)) ~
         as.Date(paste0(START_YEAR, "-", FY_2), format = "%Y-%d-%b"),
-      is.na(FY_3) & !is.na(FY_2) & START_DATE < EFFECTIVE_DATE_FY_2 ~
+      is.na(FY_3) & !is.na(FY_2) & START_DATE < EFFECTIVE_DATE_FY_2 &
+        # Start date must be after effective date FY1
+        (START_DATE >= EFFECTIVE_DATE_FY_1 | lubridate::year(START_DATE) ==
+           lubridate::year(EFFECTIVE_DATE_FY_1)) ~
         as.Date(paste0(START_YEAR, "-", FY_1), format = "%Y-%d-%b"),
       is.na(FY_3) & is.na(FY_2) & !is.na(FY_1) &
         (START_DATE >= EFFECTIVE_DATE_FY_1 | lubridate::year(START_DATE) ==
@@ -1403,7 +1406,10 @@ if (length(lost_frs) > 0) {
 
 # Check that Start Date is before End Date
 chk_dts <- fishhist |> dplyr::mutate(
-  flg = case_when(STARTDATE_CLEAN > END_DATE ~ 1, TRUE ~ 0)
-)
+  flg = case_when(STARTDATE_CLEAN > END_DATE ~ 1, TRUE ~ 0)) |>
+  dplyr::filter(flg==1)
+if (nrow(chk_dts) > 0) {
+  warning("Some records have the start date after the end date")
+}
 
 usethis::use_data(fishhist, overwrite = TRUE)
